@@ -38,7 +38,7 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 └─────────────────────────────────┘                │
                                                    │
 ┌──────────────────────────────────────────────────┴──────────────────┐
-│   XFINITY GATEWAY  →  PATCH PANEL  →  TP-LINK TL-SG108 (8-port)   │
+│   XFINITY GATEWAY  →  PATCH PANEL  →  NETGEAR GS308EP (8-port PoE+)   │
 │   No port forwarding — all ingress via Ngrok tunnel                │
 └──────────────────────────────────┬──────────────────────────────────┘
                                    │ Ethernet
@@ -142,7 +142,7 @@ Each page has: `page_brand.json` (identity), topic banks, performance data, bran
 | Device | Model | Role | Connection |
 |---|---|---|---|
 | ISP Gateway | Xfinity xFi Gateway | Modem + Router + WiFi | WAN: Coax |
-| Network Switch | TP-Link TL-SG108 | 8-port Gigabit distribution | Ethernet ← Gateway |
+| Network Switch | Netgear GS308EP | 8-port PoE+ Gigabit Managed (62W) | Ethernet ← Gateway |
 | Home Server | Acer Aspire 3 15 (AMD Ryzen) | MCP Server + Content System (24/7) | Ethernet via wall jack |
 | Display | Dell Monitor | Server management | HDMI ← Acer |
 | Smart Home | Somfy Hub | Blind/shade automation | WiFi |

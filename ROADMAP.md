@@ -11,7 +11,7 @@ The platform is **already in production** — 3 repos, 546+ posts/week, 24/7 upt
 
 | Component | Current State | Target State |
 |---|---|---|
-| Network switch | TP-Link TL-SG108 (unmanaged) | TP-Link TL-SG108E (managed, VLANs) |
+| Network switch | TP-Link TL-SG108 (unmanaged) | Netgear GS308EP (managed, VLANs) |
 | Server process mgmt | Manual / scripts | Docker Compose + systemd |
 | Monitoring | Email alerts via logger.error | Uptime Kuma + status dashboard |
 | Tunnel | Ngrok (free/paid tier) | Evaluate Cloudflare Tunnel |
@@ -39,13 +39,13 @@ The platform is **already in production** — 3 repos, 546+ posts/week, 24/7 upt
 
 **Goal:** Replace unmanaged switch, implement VLANs, establish network segmentation.
 
-**Hardware:** TP-Link TL-SG108E (~$30)
+**Hardware:** Netgear GS308EP (~$30)
 
 **Est. hours:** 10-12
 
 | Task | Hours | Skills Demonstrated |
 |---|---|---|
-| Purchase & install TL-SG108E (direct swap in panel) | 1 | Hardware installation |
+| Purchase & install GS308EP (direct swap in panel) | 1 | Hardware installation |
 | Access switch web GUI, change default credentials | 0.5 | Device management, first-login security |
 | Design VLAN scheme | 1 | Network architecture |
 | Configure VLAN 10 — Servers (port 2: Acer MCP server) | 1 | 802.1Q VLAN configuration |
@@ -270,7 +270,7 @@ services:
 | Phase | Hours | Difficulty | Prereq |
 |---|---|---|---|
 | Phase 1: Documentation ✅ | 6 | ⭐ | None |
-| Phase 2: Network Hardening | 12 | ⭐⭐ | TL-SG108E (~$30) |
+| Phase 2: Network Hardening | 12 | ⭐⭐ | GS308EP (~$30) |
 | Phase 3: Server Hardening | 16 | ⭐⭐ | Phase 2 |
 | Phase 4: Monitoring | 12 | ⭐⭐ | Phase 3 |
 | Phase 5: Security Audit | 16 | ⭐⭐⭐ | Phase 2 + 3 |
