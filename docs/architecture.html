@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home Lab — Production AI Content Platform</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+  :root{--bg:#0a0e17;--bg2:#111827;--bg3:#1a2235;--border:#2a3550;--text:#e2e8f0;--dim:#8892a8;--accent:#60a5fa;--accent2:#818cf8;--green:#34d399;--orange:#fb923c;--pink:#f472b6;--cyan:#22d3ee;--yellow:#fbbf24;--red:#f87171}
+  *{margin:0;padding:0;box-sizing:border-box}body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+  .page{max-width:1440px;margin:0 auto;padding:40px 24px 80px}
+
+  .header{border-bottom:1px solid var(--border);padding-bottom:40px;margin-bottom:48px}
+  .hl{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+  .header h1{font-size:38px;font-weight:800;line-height:1.1;background:linear-gradient(135deg,#e2e8f0,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:12px}
+  .header p{font-size:15px;color:var(--dim);max-width:780px;line-height:1.6}
+  .mr{display:flex;gap:28px;margin-top:20px;flex-wrap:wrap}
+  .mi{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim)}.mi b{color:var(--accent);font-weight:400}
+
+  .sec{margin-bottom:52px}
+  .st{font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:22px;display:flex;align-items:center;gap:12px}
+  .st::after{content:'';flex:1;height:1px;background:var(--border)}
+
+  .dg{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:36px 28px;position:relative;overflow:hidden}
+  .dg::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--accent2),var(--pink))}
+  .ly{margin-bottom:24px}.ly:last-child{margin-bottom:0}
+  .ll{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:12px;padding-left:4px}
+  .lc{display:flex;gap:12px;flex-wrap:wrap}
+
+  .nd{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:16px;min-width:160px;flex:1;transition:border-color .3s,transform .2s}
+  .nd:hover{border-color:var(--accent);transform:translateY(-2px)}
+  .ni{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;margin-bottom:8px}
+  .ni.bl{background:rgba(96,165,250,.15)}.ni.gn{background:rgba(52,211,153,.15)}.ni.or{background:rgba(251,146,60,.15)}.ni.pk{background:rgba(244,114,182,.15)}.ni.cy{background:rgba(34,211,238,.15)}.ni.pu{background:rgba(129,140,248,.15)}.ni.yl{background:rgba(251,191,36,.15)}
+  .nn{font-weight:700;font-size:13px;margin-bottom:3px}
+  .ndt{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);line-height:1.5}
+  .tg{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border-radius:4px;margin-top:7px}
+  .tg-r{background:rgba(52,211,153,.15);color:var(--green)}.tg-c{background:rgba(96,165,250,.15);color:var(--accent)}.tg-h{background:rgba(251,146,60,.15);color:var(--orange)}.tg-t{background:rgba(129,140,248,.15);color:var(--accent2)}.tg-a{background:rgba(244,114,182,.15);color:var(--pink)}
+
+  .nh{border-color:var(--green)}.nc{border-color:rgba(96,165,250,.4)}.ne{border-color:rgba(244,114,182,.3)}
+
+  .cn{display:flex;justify-content:center;padding:5px 0}
+  .cl{display:flex;flex-direction:column;align-items:center;gap:2px}
+  .cd{width:5px;height:5px;border-radius:50%;background:var(--border)}
+  .cs{width:2px;height:8px;background:var(--border)}
+  .clb{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);padding:2px 10px;background:var(--bg);border:1px solid var(--border);border-radius:20px;margin:2px 0}
+
+  .sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px}
+  .sc{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;text-align:center}
+  .sn{font-size:30px;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .sl{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-top:3px}
+
+  .rc{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:26px;margin-bottom:14px;position:relative;overflow:hidden}
+  .rc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+  .rc.r1::before{background:linear-gradient(90deg,var(--green),var(--cyan))}.rc.r2::before{background:linear-gradient(90deg,var(--accent),var(--accent2))}.rc.r3::before{background:linear-gradient(90deg,var(--orange),var(--yellow))}
+  .rh{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+  .rn{font-size:18px;font-weight:800}
+  .rs{display:flex;gap:14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}
+  .rs strong{color:var(--text)}
+  .rd{font-size:13px;color:var(--dim);line-height:1.6;margin-bottom:14px}
+  .rm{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px}
+  .rmod{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px}
+  .rmn{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;margin-bottom:3px}
+  .rmd{font-size:10px;color:var(--dim);line-height:1.4}
+
+  .fr{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .fr:last-child{margin-bottom:0}
+  .fl{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);min-width:100px}
+  .fs{font-family:'JetBrains Mono',monospace;font-size:11px;padding:6px 10px;border-radius:8px;border:1px solid var(--border);background:var(--bg3);white-space:nowrap}
+  .fa{color:var(--dim);font-size:13px}
+
+  .gg{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:12px}
+  .gc{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;transition:border-color .3s}
+  .gc:hover{border-color:var(--accent)}
+  .gc h3{font-size:14px;font-weight:700;margin-bottom:5px}
+  .gc p{font-size:12px;color:var(--dim);line-height:1.5}
+  .pr{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+  .pl{font-family:'JetBrains Mono',monospace;font-size:9px;padding:3px 7px;border-radius:6px;border:1px solid var(--border);color:var(--dim);background:var(--bg)}
+
+  .tw{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+  .ht{width:100%;border-collapse:collapse;background:var(--bg2);border-radius:12px;overflow:hidden;border:1px solid var(--border)}
+  .ht th{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);padding:11px 14px;text-align:left;background:var(--bg3);border-bottom:1px solid var(--border)}
+  .ht td{padding:11px 14px;font-size:13px;border-bottom:1px solid rgba(42,53,80,.5)}
+  .ht tr:last-child td{border-bottom:none}
+  .mn{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim)}
+
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;animation:pu 2s infinite;background:var(--green);margin-right:5px;vertical-align:middle}
+  @keyframes pu{0%,100%{opacity:1}50%{opacity:.4}}
+
+  .pg{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:10px}
+  .pt{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:9px 5px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:10px}
+  .pt .pn{font-weight:700;font-size:14px;margin-bottom:2px;color:var(--accent)}
+  .pt .plb{font-size:8px;color:var(--dim);line-height:1.3}
+  .pt.ac{border-color:var(--green)}.pt.ac .pn{color:var(--green)}
+  .pt.up{border-color:var(--orange)}.pt.up .pn{color:var(--orange)}
+
+  @media(max-width:900px){.header h1{font-size:26px}.lc,.rm{flex-direction:column}.tw{grid-template-columns:1fr}.pg{grid-template-columns:repeat(4,1fr)}.sg{grid-template-columns:repeat(2,1fr)}.fr{flex-direction:column;align-items:flex-start}}
+</style>
+</head>
+<body>
+<div class="page">
+
+<div class="header">
+  <div class="hl">WGU Software Engineering — Capstone Portfolio</div>
+  <h1>Production AI Content Platform<br>on Self-Hosted Infrastructure</h1>
+  <p>A 78,000+ line production system spanning 3 repositories, 3 Facebook pages, and 546+ weekly automated posts — self-hosted on home lab hardware with cloud orchestration on Railway and secure tunnel ingress via Ngrok.</p>
+  <div class="mr">
+    <div class="mi"><b>Author</b> Julius Moore</div>
+    <div class="mi"><b>Version</b> 2.0</div>
+    <div class="mi"><b>Date</b> April 2026</div>
+    <div class="mi"><b>Codebase</b> 78,295 lines</div>
+    <div class="mi"><b>Status</b> <span class="dot"></span>Production 24/7</div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="st">00 — Platform at a Glance</div>
+  <div class="sg">
+    <div class="sc"><div class="sn">78K+</div><div class="sl">Lines of Code</div></div>
+    <div class="sc"><div class="sn">3</div><div class="sl">Production Repos</div></div>
+    <div class="sc"><div class="sn">546</div><div class="sl">Posts / Week</div></div>
+    <div class="sc"><div class="sn">3</div><div class="sl">Facebook Pages</div></div>
+    <div class="sc"><div class="sn">8</div><div class="sl">External APIs</div></div>
+    <div class="sc"><div class="sn">24/7</div><div class="sl">Server Uptime</div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="st">01 — System Architecture</div>
+  <div class="dg">
+
+    <div class="ly">
+      <div class="ll">🌐 External APIs & Services</div>
+      <div class="lc">
+        <div class="nd ne"><div class="ni pk">📱</div><div class="nn">Meta Graph API</div><div class="ndt">Facebook Pages API<br>Webhooks (inbound)<br>Post / Comment / Reply</div><span class="tg tg-a">Platform API</span></div>
+        <div class="nd ne"><div class="ni yl">🤖</div><div class="nn">AI Services</div><div class="ndt">Anthropic Claude<br>xAI Grok · OpenAI<br>Content + scoring</div><span class="tg tg-a">AI Inference</span></div>
+        <div class="nd ne"><div class="ni cy">🎨</div><div class="nn">Media APIs</div><div class="ndt">Kie.ai (images)<br>ElevenLabs (TTS)<br>Suno (music)</div><span class="tg tg-a">Generation</span></div>
+      </div>
+    </div>
+
+    <div class="cn"><div class="cl"><div class="cd"></div><div class="cs"></div><div class="clb">HTTPS / Webhooks</div><div class="cs"></div><div class="cd"></div></div></div>
+
+    <div class="ly">
+      <div class="ll">☁️ Cloud — Railway</div>
+      <div class="lc">
+        <div class="nd nc" style="flex:2"><div class="ni bl">🚂</div><div class="nn">meta_engagement_pipeline</div><div class="ndt">36K lines · Express + Worker + PM2<br>Postgres · Cron automation<br>Greetings · Engagement scoring<br>Self-healing · Content analysis</div><span class="tg tg-c">Railway PaaS</span></div>
+        <div class="nd nc"><div class="ni pu">⚙️</div><div class="nn">PM2 Processes</div><div class="ndt">mlx-poster<br>feed-engager<br>worker (crons)</div><span class="tg tg-c">Process Mgmt</span></div>
+        <div class="nd nc"><div class="ni gn">📊</div><div class="nn">Postgres</div><div class="ndt">Users · Pages<br>ScheduledPosts<br>Interactions<br>FollowerGrowth</div><span class="tg tg-c">Database</span></div>
+      </div>
+    </div>
+
+    <div class="cn"><div class="cl"><div class="cd"></div><div class="cs"></div><div class="clb">Ngrok Tunnel (SSE + HTTPS)</div><div class="cs"></div><div class="cd"></div></div></div>
+
+    <div class="ly">
+      <div class="ll">🌐 ISP Gateway</div>
+      <div class="lc">
+        <div class="nd" style="flex:2"><div class="ni bl">📡</div><div class="nn">Xfinity xFi Gateway</div><div class="ndt">Modem + Router + WiFi · WAN: Coax<br>No port forwarding — Ngrok only</div><span class="tg tg-h">Gateway</span></div>
+        <div class="nd"><div class="ni gn">🏠</div><div class="nn">Somfy Hub</div><div class="ndt">Smart blinds<br>WiFi</div><span class="tg tg-h">IoT</span></div>
+      </div>
+    </div>
+
+    <div class="cn"><div class="cl"><div class="cd"></div><div class="cs"></div><div class="clb">Ethernet → Patch Panel → Switch</div><div class="cs"></div><div class="cd"></div></div></div>
+
+    <div class="ly">
+      <div class="ll">🔌 Switching & Distribution</div>
+      <div class="lc">
+        <div class="nd"><div class="ni or">⬛</div><div class="nn">Structured Wiring Panel</div><div class="ndt">8-port keystone patch panel<br>Coax splitter · Utility closet</div><span class="tg tg-h">Distribution</span></div>
+        <div class="nd"><div class="ni bl">🔵</div><div class="nn">TP-Link TL-SG108</div><div class="ndt">8-Port Gigabit Unmanaged<br>→ Upgrading to TL-SG108E</div><span class="tg tg-h">Switch</span></div>
+      </div>
+    </div>
+
+    <div class="cn"><div class="cl"><div class="cd"></div><div class="cs"></div><div class="clb">5+ Active Drops → Rooms</div><div class="cs"></div><div class="cd"></div></div></div>
+
+    <div class="ly">
+      <div class="ll">💻 Home Server — Acer Aspire 3 15 (24/7)</div>
+      <div class="lc">
+        <div class="nd nh" style="flex:2"><div class="ni gn">🖥️</div><div class="nn">social-media-mcp</div><div class="ndt">19,753 lines · TypeScript · MCP Protocol<br>Express SSE on :3000 · 22 lib modules<br>Kie, Suno, ElevenLabs, Remotion, FFmpeg<br>Puppeteer FB automation · 20+ video templates</div><span class="tg tg-r">● Always On</span></div>
+        <div class="nd nh"><div class="ni yl">📂</div><div class="nn">fb-content-system</div><div class="ndt">22,067 lines · JS/TS/Python<br>182 posts/wk × 3 pages<br>Claude copy · Playwright render<br>Remotion reels · Graph API post</div><span class="tg tg-r">● Production</span></div>
+        <div class="nd"><div class="ni pu">🔗</div><div class="nn">Ngrok Agent</div><div class="ndt">Tunnel to cloud<br>Public HTTPS<br>SSE transport</div><span class="tg tg-t">Tunnel</span></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="sec">
+  <div class="st">02 — Repository Architecture</div>
+
+  <div class="rc r1">
+    <div class="rh"><div><div class="rn">social-media-mcp</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);margin-top:3px">github.com/design1-software/social-media-mcp</div></div><div class="rs"><strong>19,753</strong> lines · <strong>TypeScript</strong> · <strong>Self-hosted</strong></div></div>
+    <div class="rd">MCP server running 24/7 on the home server. Exposes AI content creation tools via Model Context Protocol over SSE. Bridges cloud orchestration to local compute and browser automation. Integrates 8 external APIs into a unified tool interface.</div>
+    <div class="rm">
+      <div class="rmod"><div class="rmn">src/lib/kie.ts</div><div class="rmd">Kie.ai image generation</div></div>
+      <div class="rmod"><div class="rmn">src/lib/elevenlabs.ts</div><div class="rmd">Text-to-speech voiceover</div></div>
+      <div class="rmod"><div class="rmn">src/lib/suno.ts</div><div class="rmd">AI music for reels</div></div>
+      <div class="rmod"><div class="rmn">src/lib/remotion.ts</div><div class="rmd">Video rendering (20+ templates)</div></div>
+      <div class="rmod"><div class="rmn">src/lib/facebook.ts</div><div class="rmd">Puppeteer browser automation</div></div>
+      <div class="rmod"><div class="rmn">src/lib/ffmpeg.ts</div><div class="rmd">Media stitching & processing</div></div>
+      <div class="rmod"><div class="rmn">src/lib/grok.ts</div><div class="rmd">xAI Grok content + vision</div></div>
+      <div class="rmod"><div class="rmn">src/lib/storyArc.ts</div><div class="rmd">Multi-part story generation</div></div>
+      <div class="rmod"><div class="rmn">src/lib/commentBait.ts</div><div class="rmd">Engagement-optimized posts</div></div>
+      <div class="rmod"><div class="rmn">src/lib/identity.ts</div><div class="rmd">Brand profile management</div></div>
+      <div class="rmod"><div class="rmn">src/lib/perplexity.ts</div><div class="rmd">Web research & trend ID</div></div>
+      <div class="rmod"><div class="rmn">remotion/ (20+ files)</div><div class="rmd">PlaybookPromo, ViralShort, Quote, Comic, Lesson</div></div>
+    </div>
+  </div>
+
+  <div class="rc r2">
+    <div class="rh"><div><div class="rn">meta_engagement_pipeline</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);margin-top:3px">github.com/design1-software/meta_engagement_pipeline</div></div><div class="rs"><strong>36,475</strong> lines · <strong>JavaScript</strong> · <strong>Railway</strong></div></div>
+    <div class="rd">Cloud-hosted engagement orchestrator with dual-engine architecture: Graph API engine for official page actions, Sidecar engine bridging back to home server MCP for browser-automated profile actions. Manages 3 Facebook pages with automated greetings, strategic content drafts, follower tracking, quality scoring, and self-healing recovery.</div>
+    <div class="rm">
+      <div class="rmod"><div class="rmn">server.js</div><div class="rmd">Express API: webhooks, inbox, pages, viral, auth</div></div>
+      <div class="rmod"><div class="rmn">worker.js</div><div class="rmd">Cron engine: greetings 2×/day, drafts 5×/day</div></div>
+      <div class="rmod"><div class="rmn">lib/publisher.js</div><div class="rmd">Graph API posting w/ error recovery</div></div>
+      <div class="rmod"><div class="rmn">lib/mcpClient.js</div><div class="rmd">MCP client → home server via Ngrok</div></div>
+      <div class="rmod"><div class="rmn">lib/greetingService.js</div><div class="rmd">Zero-touch AM/PM greeting automation</div></div>
+      <div class="rmod"><div class="rmn">lib/viralContentService.js</div><div class="rmd">Viral content pipeline + media gen</div></div>
+      <div class="rmod"><div class="rmn">lib/contentAnalyzer.js</div><div class="rmd">LLM-based quality scoring</div></div>
+      <div class="rmod"><div class="rmn">lib/selfHealingService.js</div><div class="rmd">Auto-recovery from failures</div></div>
+      <div class="rmod"><div class="rmn">lib/cohortManager.js</div><div class="rmd">Cross-page engagement</div></div>
+      <div class="rmod"><div class="rmn">facebookAutomator.js</div><div class="rmd">Browser automation via Sidecar</div></div>
+      <div class="rmod"><div class="rmn">models/ (10+ models)</div><div class="rmd">Sequelize ORM → Postgres</div></div>
+      <div class="rmod"><div class="rmn">routes/ (12 files)</div><div class="rmd">webhooks, viral, inbox, lab, narrative</div></div>
+    </div>
+  </div>
+
+  <div class="rc r3">
+    <div class="rh"><div><div class="rn">fb-content-system</div><div style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);margin-top:3px">github.com/design1-software/fb-content-system</div></div><div class="rs"><strong>22,067</strong> lines · <strong>JS/TS/Python</strong> · <strong>Local</strong></div></div>
+    <div class="rd">Content factory producing 182 posts/week per page across 3 Facebook pages (MEA, Runnin From A2B, After The Uniform). Full 6-phase pipeline: page discovery → visual system → content production → posting → reels → engagement loop. 10 content pillars per page with branded HTML templates rendered to PNG via Playwright and video reels via Remotion.</div>
+    <div class="rm">
+      <div class="rmod"><div class="rmn">tools/generate_copy.js</div><div class="rmd">Claude API — voice-calibrated copy per post</div></div>
+      <div class="rmod"><div class="rmn">tools/fb_poster.js</div><div class="rmd">Graph API posting w/ SQLite ledger</div></div>
+      <div class="rmod"><div class="rmn">tools/render.py</div><div class="rmd">Playwright HTML→PNG 1080×1080</div></div>
+      <div class="rmod"><div class="rmn">tools/engagement_tracker.js</div><div class="rmd">Pull engagement, score per pillar</div></div>
+      <div class="rmod"><div class="rmn">tools/content_recycler.js</div><div class="rmd">Recycle top performers w/ variation</div></div>
+      <div class="rmod"><div class="rmn">tools/optimize_mix.js</div><div class="rmd">Adjust pillar mix from perf data</div></div>
+      <div class="rmod"><div class="rmn">reels/ (Remotion)</div><div class="rmd">FactReveal, QuoteZoom, StepSequence, DataBars</div></div>
+      <div class="rmod"><div class="rmn">templates/ (3 dirs)</div><div class="rmd">Branded HTML per pillar per page</div></div>
+      <div class="rmod"><div class="rmn">mea/ a2b/ atu/</div><div class="rmd">Brand identity, topic banks, performance</div></div>
+      <div class="rmod"><div class="rmn">tools/auto_reply.js</div><div class="rmd">Automated comment replies</div></div>
+      <div class="rmod"><div class="rmn">tools/cross_engage.js</div><div class="rmd">Cross-page engagement automation</div></div>
+      <div class="rmod"><div class="rmn">skills/ (6 phases)</div><div class="rmd">Discovery → Visual → Prod → Post → Reel → Recycle</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="st">03 — Data Flow: Content Lifecycle</div>
+  <div class="dg" style="padding:24px">
+    <div class="fr"><div class="fl" style="color:var(--orange)">1. Generate</div><div class="fs" style="border-color:var(--orange)">fb-content-system</div><span class="fa">→</span><div class="fs">Topic Banks</div><span class="fa">→</span><div class="fs" style="border-color:var(--yellow)">Claude API</div><span class="fa">→</span><div class="fs">generated_copy.json</div></div>
+    <div class="fr"><div class="fl" style="color:var(--pink)">2. Render</div><div class="fs">HTML Templates</div><span class="fa">→</span><div class="fs" style="border-color:var(--pink)">Playwright (PNG)</div><span class="fa">+</span><div class="fs" style="border-color:var(--pink)">Remotion (MP4)</div><span class="fa">→</span><div class="fs">182 assets/wk/page</div></div>
+    <div class="fr"><div class="fl" style="color:var(--green)">3. Publish</div><div class="fs" style="border-color:var(--green)">fb_poster.js</div><span class="fa">→</span><div class="fs" style="border-color:var(--pink)">Meta Graph API</div><span class="fa">→</span><div class="fs">3 Facebook Pages</div></div>
+    <div class="fr"><div class="fl" style="color:var(--accent)">4. Orchestrate</div><div class="fs" style="border-color:var(--accent)">Railway Worker</div><span class="fa">→</span><div class="fs">Webhooks</div><span class="fa">→</span><div class="fs" style="border-color:var(--accent2)">Sidecar (MCP)</div><span class="fa">→</span><div class="fs" style="border-color:var(--green)">Home Server</div></div>
+    <div class="fr"><div class="fl" style="color:var(--cyan)">5. Optimize</div><div class="fs" style="border-color:var(--cyan)">engagement_tracker</div><span class="fa">→</span><div class="fs">performance.json</div><span class="fa">→</span><div class="fs" style="border-color:var(--cyan)">optimize_mix</div><span class="fa">→</span><div class="fs">content_recycler</div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="st">04 — Dual-Engine Architecture (MEA)</div>
+  <div class="tw">
+    <div class="dg" style="padding:22px"><h3 style="font-size:14px;margin-bottom:10px">⚡ Graph API Engine (Cloud)</h3><div style="font-size:12px;color:var(--dim);line-height:1.7"><b style="color:var(--text)">Scope:</b> MEA + A2B page timeline posts, comment replies, webhook ingestion<br><b style="color:var(--text)">Runs on:</b> Railway<br><b style="color:var(--text)">Limits:</b> Cannot post to personal profiles or engage on newsfeeds</div></div>
+    <div class="dg" style="padding:22px"><h3 style="font-size:14px;margin-bottom:10px">🤖 Sidecar Engine (Home Server)</h3><div style="font-size:12px;color:var(--dim);line-height:1.7"><b style="color:var(--text)">Scope:</b> Profile posts, greetings, newsfeed scouting, follower checks<br><b style="color:var(--text)">Runs on:</b> Home server via MCP bridge<br><b style="color:var(--text)">Method:</b> Puppeteer automating local Chrome instance</div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="st">05 — Pages Under Management</div>
+  <div class="gg">
+    <div class="gc"><h3>📱 MEA</h3><p>Software company. Social media automation education for creators. Algorithm intel, playbooks, real talk.</p><div class="pr"><span class="pl">Algorithm Intel</span><span class="pl">Creator Playbook</span><span class="pl">Real Talk</span><span class="pl">182/wk</span></div></div>
+    <div class="gc"><h3>🏃 Runnin From A2B</h3><p>Running and fitness community. Training tips, race prep, community engagement.</p><div class="pr"><span class="pl">Fitness</span><span class="pl">Community</span><span class="pl">182/wk</span></div></div>
+    <div class="gc"><h3>🎖️ After The Uniform</h3><p>Veteran transition content. Military-to-civilian community support and resources.</p><div class="pr"><span class="pl">Veterans</span><span class="pl">Transition</span><span class="pl">182/wk</span></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="st">06 — Hardware Inventory</div>
+  <table class="ht">
+    <thead><tr><th>Device</th><th>Model</th><th>Role</th><th>Connection</th><th>Status</th></tr></thead>
+    <tbody>
+      <tr><td>ISP Gateway</td><td class="mn">Xfinity xFi Gateway</td><td>Modem + Router + WiFi</td><td class="mn">WAN: Coax</td><td><span class="dot"></span>Active</td></tr>
+      <tr><td>Switch</td><td class="mn">TP-Link TL-SG108</td><td>8-port Gigabit distribution</td><td class="mn">Ethernet ← Gateway</td><td><span class="dot"></span>Active</td></tr>
+      <tr><td>Home Server</td><td class="mn">Acer Aspire 3 15 (Ryzen)</td><td>MCP Server + Content (24/7)</td><td class="mn">Ethernet via wall jack</td><td><span class="dot"></span>Running</td></tr>
+      <tr><td>Display</td><td class="mn">Dell Monitor</td><td>Server management</td><td class="mn">HDMI</td><td><span class="dot"></span>Active</td></tr>
+      <tr><td>Smart Home</td><td class="mn">Somfy Hub</td><td>Blind/shade automation</td><td class="mn">WiFi</td><td><span class="dot"></span>Active</td></tr>
+      <tr><td>Wiring Panel</td><td class="mn">Structured Media Enclosure</td><td>Patch panel + coax</td><td class="mn">Cat5e/6</td><td><span class="dot"></span>Active</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="sec">
+  <div class="st">07 — Technology Stack</div>
+  <div class="gg">
+    <div class="gc"><h3>Languages</h3><div class="pr"><span class="pl">TypeScript</span><span class="pl">JavaScript</span><span class="pl">Python</span><span class="pl">HTML/CSS</span><span class="pl">SQL</span></div></div>
+    <div class="gc"><h3>Frameworks</h3><div class="pr"><span class="pl">Node.js</span><span class="pl">Express</span><span class="pl">Remotion</span><span class="pl">React</span><span class="pl">Playwright</span><span class="pl">Puppeteer</span></div></div>
+    <div class="gc"><h3>Protocols</h3><div class="pr"><span class="pl">MCP (SSE)</span><span class="pl">Meta Graph API</span><span class="pl">REST</span><span class="pl">Webhooks</span><span class="pl">OAuth 2.0</span></div></div>
+    <div class="gc"><h3>AI Services</h3><div class="pr"><span class="pl">Claude</span><span class="pl">Grok</span><span class="pl">OpenAI</span><span class="pl">ElevenLabs</span><span class="pl">Kie.ai</span><span class="pl">Suno</span></div></div>
+    <div class="gc"><h3>Data</h3><div class="pr"><span class="pl">PostgreSQL</span><span class="pl">SQLite</span><span class="pl">Sequelize</span><span class="pl">JSON stores</span></div></div>
+    <div class="gc"><h3>Infrastructure</h3><div class="pr"><span class="pl">Railway</span><span class="pl">Ngrok</span><span class="pl">PM2</span><span class="pl">FFmpeg</span><span class="pl">Docker (planned)</span></div></div>
+  </div>
+</div>
+
+<div class="sec">
+  <div class="st">08 — Security Posture</div>
+  <div class="gg">
+    <div class="gc"><h3>🔒 Zero Port Forwarding</h3><p>No ports open on gateway. All ingress via Ngrok encrypted tunnel only.</p></div>
+    <div class="gc"><h3>🔑 MCP Auth Tokens</h3><p>All Sidecar callbacks secured via x-mcp-token / x-internal-key verification.</p></div>
+    <div class="gc"><h3>🔐 Credential Mgmt</h3><p>Env vars in .env (gitignored). Railway encrypted store. Sequelize field encryption.</p></div>
+    <div class="gc"><h3>🛡️ Self-Healing</h3><p>Auto-recovery from failures. Health checks, stuck-post cleanup, email alerts.</p></div>
+  </div>
+</div>
+
+</div>
+</body>
+</html>
