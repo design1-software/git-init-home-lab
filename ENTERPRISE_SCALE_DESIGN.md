@@ -21,6 +21,15 @@ This document maps every component to its enterprise equivalent — not because 
 │  ├── fb-content-system   (Content Factory)  │
 │  └── Ngrok Agent         (Tunnel)           │
 └──────────────────┬──────────────────────────┘
+                   │ Ethernet (PoE)
+┌──────────────────┴──────────────────────────┐
+│  Netgear GS316EP (Primary, 180W PoE+)      │
+│  ├── Raspberry Pi 4B (Pi-hole, UniFi, Kuma) │
+│  ├── 2× UniFi U6+ APs (VLAN-tagged WiFi)   │
+│  └── Trunk → GS308EP (Secondary, 62W PoE+) │
+│  UPS: CyberPower CP1500PFCLCD              │
+│  VLANs: Server (10) / Trusted (20) / IoT (30) │
+└──────────────────┬──────────────────────────┘
                    │ Ngrok Tunnel
 ┌──────────────────┴──────────────────────────┐
 │  Railway                                     │
@@ -59,13 +68,16 @@ This document maps every component to its enterprise equivalent — not because 
 |---|---|---|
 | **Ingress** | Ngrok tunnel (single TCP connection) | Application Load Balancer + WAF + CloudFront CDN |
 | **Internal routing** | Direct HTTP between services | Service mesh (Istio) or internal ALB with service discovery |
-| **Network segmentation** | Flat LAN (VLAN upgrade in progress) | VPC with private subnets, security groups, NACLs |
+| **Network segmentation** | Dual-switch VLAN topology (GS316EP + GS308EP), 3 VLANs (Server/Trusted/IoT) | VPC with private subnets, security groups, NACLs |
+| **WiFi** | 2× UniFi U6+ APs with VLAN-tagged SSIDs, managed via UniFi Controller on Pi | Enterprise APs with RADIUS auth, 802.1X |
+| **DNS** | Pi-hole on Raspberry Pi 4B | Route 53 + internal DNS with split-horizon |
 | **DDoS protection** | None | CloudFlare or AWS Shield |
 | **TLS** | Ngrok provides TLS termination | ACM certificates, TLS 1.3, end-to-end encryption |
+| **Power** | CyberPower CP1500PFCLCD UPS | Redundant power feeds + generator |
 
 **What I'd change at scale:** Ngrok is a development convenience, not a production ingress. At enterprise scale, the MCP server would sit behind an ALB in a private subnet with no public IP. Meta webhooks would hit a public-facing API Gateway that validates signatures before forwarding to the private orchestrator. Rate limiting would be enforced at the WAF layer, not in application code.
 
-**What stays the same:** The zero-port-forwarding philosophy carries forward — enterprise deployments also avoid exposing services directly. The MCP auth token pattern (`x-mcp-token` header verification) maps directly to API Gateway authorization.
+**What stays the same:** The zero-port-forwarding philosophy carries forward — enterprise deployments also avoid exposing services directly. The MCP auth token pattern (`x-mcp-token` header verification) maps directly to API Gateway authorization. The VLAN segmentation (Server/Trusted/IoT) mirrors enterprise VPC subnet design — production workloads isolated from user devices and untrusted IoT. The UniFi AP deployment with VLAN-tagged SSIDs is the same pattern enterprises use with Cisco Meraki or Aruba. Pi-hole as a DNS sinkhole maps to enterprise DNS filtering (Cisco Umbrella, Zscaler).
 
 ---
 
@@ -92,7 +104,7 @@ This document maps every component to its enterprise equivalent — not because 
 | **Logging** | Winston logger → daily log files | Structured JSON → CloudWatch/ELK/Datadog |
 | **Alerting** | Email via `logger.error` + nodemailer | PagerDuty with escalation policies |
 | **Health checks** | PowerShell script every 5 min | Kubernetes liveness/readiness probes + ALB health checks |
-| **Metrics** | None (planned: Uptime Kuma) | Prometheus/Grafana or Datadog with custom dashboards |
+| **Metrics** | Uptime Kuma on dedicated Pi 4B (separate from production) | Prometheus/Grafana or Datadog with custom dashboards |
 | **Tracing** | None | OpenTelemetry distributed traces across services |
 
 **What I'd change at scale:** Every service would emit structured JSON logs with correlation IDs that trace a request from webhook ingestion through MCP tool execution to Graph API publish. The `selfHealingService.js` pattern would evolve into a circuit breaker (Hystrix/resilience4js pattern) with metrics. SLO dashboards would track: post publish success rate (target: 99.5%), MCP tool response time (p99 < 5s), greeting delivery on-time rate (target: 100%).
@@ -151,6 +163,12 @@ This document maps every component to its enterprise equivalent — not because 
 - **No CI/CD pipeline** → GitHub Actions workflow (planned Phase 6)
 - **No centralized logging** → Structured logs already emitted, need aggregation layer
 - **Manual deployment** → Ansible playbook (planned Phase 6)
+
+### Gaps Already Closed
+- ~~**No network segmentation**~~ → Dual managed switch topology with 3-VLAN scheme (Server/Trusted/IoT)
+- ~~**No power protection**~~ → CyberPower CP1500PFCLCD UPS protecting all infrastructure
+- ~~**No dedicated monitoring host**~~ → Raspberry Pi 4B running Uptime Kuma, Pi-hole, UniFi Controller
+- ~~**Consumer WiFi**~~ → UniFi U6+ enterprise APs with VLAN-tagged SSIDs (planned)
 
 ### The Key Insight
 
