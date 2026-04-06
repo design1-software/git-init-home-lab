@@ -38,10 +38,21 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 └─────────────────────────────────┘                │
                                                    │
 ┌──────────────────────────────────────────────────┴──────────────────┐
-│   XFINITY GATEWAY  →  PATCH PANEL  →  NETGEAR GS308EP (8-port PoE+)   │
-│   No port forwarding — all ingress via Ngrok tunnel                │
+│   NETWORK LAYER                                                     │
+│   Xfinity Gateway → Patch Panel → Two-Switch Topology               │
+│   No port forwarding — all ingress via Ngrok tunnel                 │
+│                                                                     │
+│   ┌─────────────────────────────┐  ┌──────────────────────────┐    │
+│   │  Netgear GS316EP (Primary)  │  │  Netgear GS308EP (Sec.)  │    │
+│   │  16-port · 15 PoE+ · 180W  │──│  8-port · 8 PoE+ · 62W   │    │
+│   │  + 1 SFP fiber port        │  │  Non-PoE / overflow       │    │
+│   │  Server, Pi, UniFi APs     │  │  Apple TV, iMac, etc.     │    │
+│   └─────────────────────────────┘  └──────────────────────────┘    │
+│                                                                     │
+│   WiFi: 2x UniFi U6+ APs (planned, replacing Xfinity mesh pods)   │
+│   UPS:  CyberPower CP1500PFCLCD (battery backup for all infra)     │
 └──────────────────────────────────┬──────────────────────────────────┘
-                                   │ Ethernet
+                                   │ Ethernet (PoE)
 ┌──────────────────────────────────┴──────────────────────────────────┐
 │   HOME SERVER — Acer Aspire 3 15 (AMD Ryzen) — 24/7                │
 │                                                                     │
@@ -53,6 +64,11 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 │   │  Remotion · Puppeteer   │  │  Remotion reels · Graph API  │     │
 │   │  Kie · Suno · ElevenLabs│  │  Engagement tracking/recycle │     │
 │   └─────────────────────────┘  └─────────────────────────────┘     │
+└─────────────────────────────────────────────────────────────────────┘
+                                                                       
+┌─────────────────────────────────────────────────────────────────────┐
+│   RASPBERRY PI 4B (PoE-powered via GS316EP)                         │
+│   Pi-hole (DNS) · UniFi Network Controller · Uptime Kuma            │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -139,14 +155,48 @@ Each page has: `page_brand.json` (identity), topic banks, performance data, bran
 
 ## Hardware Inventory
 
+### Network Infrastructure
+
 | Device | Model | Role | Connection |
 |---|---|---|---|
-| ISP Gateway | Xfinity xFi Gateway | Modem + Router + WiFi | WAN: Coax |
-| Network Switch | Netgear GS308EP | 8-port PoE+ Gigabit Managed (62W) | Ethernet ← Gateway |
-| Home Server | Acer Aspire 3 15 (AMD Ryzen) | MCP Server + Content System (24/7) | Ethernet via wall jack |
-| Display | Dell Monitor | Server management | HDMI ← Acer |
-| Smart Home | Somfy Hub | Blind/shade automation | WiFi |
+| ISP Gateway | Xfinity xFi Gateway | Modem + Router | WAN: Coax |
+| Primary Switch | Netgear GS316EP | 16-port PoE+ Gigabit Managed (180W) + 1 SFP | Ethernet ← Gateway |
+| Secondary Switch | Netgear GS308EP | 8-port PoE+ Gigabit Managed (62W) | Ethernet ← GS316EP |
+| UPS | CyberPower CP1500PFCLCD | Battery backup for all infrastructure | Power |
 | Wiring Panel | Structured Media Enclosure | Patch panel + coax distribution | Cat5e/6 runs |
+| WiFi (current) | 4× Xfinity XE1-S Mesh Pods | Whole-home WiFi coverage | WiFi mesh via Gateway |
+| WiFi (planned) | 2× Ubiquiti UniFi U6+ | VLAN-aware WiFi APs (replacing mesh pods) | PoE ← GS316EP |
+
+### Compute
+
+| Device | Model | Role | Connection |
+|---|---|---|---|
+| Home Server | Acer Aspire 3 15 (AMD Ryzen) | MCP Server + Content System (24/7) | Ethernet via wall jack |
+| Network Services | Raspberry Pi 4B + PoE+ HAT | Pi-hole, UniFi Controller, Uptime Kuma | PoE ← GS316EP |
+| Desktop | iMac | Development / personal | Ethernet or WiFi |
+| Laptop | MacBook Air | Development / personal | WiFi |
+| Laptop | MacBook Pro | Development / personal | WiFi |
+| Display | Dell Monitor | Server management | HDMI ← Acer |
+
+### Entertainment
+
+| Device | Model | Role | Connection |
+|---|---|---|---|
+| Streaming | 3× Apple TV | Media streaming (1 hardwired, 2 wireless) | 1 Ethernet, 2 WiFi |
+| TV | Samsung Smart TV | Display (all streaming via Apple TV) | HDMI ← Apple TV |
+
+### IoT / Smart Home
+
+| Device | Model | Role | Connection |
+|---|---|---|---|
+| Cameras | 2× Wyze Cam v3 (Wired) | Security / server closet monitoring | WiFi |
+| Smart Plugs | 4× Kasa Smart Plug EP10 | Remote power management (1800W max each) | WiFi |
+| Thermostat | Ecobee + Motion Sensor | Climate control | WiFi |
+| Voice Assistants | 3× Amazon Alexa | Voice control | WiFi |
+| Smart Home | Somfy Hub | Blind/shade automation | WiFi |
+| Labels | DYMO Label Maker | Physical infrastructure documentation | N/A |
+
+**Total devices on network: ~25+**
 
 ---
 
@@ -172,7 +222,8 @@ Each page has: `page_brand.json` (identity), topic banks, performance data, bran
 - **MCP auth tokens** — Sidecar callbacks secured via `x-mcp-token` / `x-internal-key` verification
 - **Credential management** — API keys in `.env` (gitignored), Railway encrypted env store, Sequelize field-level encryption
 - **Self-healing** — `selfHealingService.js` provides automatic recovery; email alerts on critical failures
-- **Network segmentation** — planned VLAN implementation with managed switch upgrade
+- **Network segmentation** — VLAN implementation in progress with dual managed switch topology (GS316EP + GS308EP), planned 3-VLAN scheme (Server, Trusted, IoT) with UniFi APs for VLAN-tagged WiFi
+- **UPS protection** — CyberPower CP1500PFCLCD battery backup for all critical infrastructure
 
 ---
 
@@ -182,27 +233,18 @@ Each page has: `page_brand.json` (identity), topic banks, performance data, bran
 home-lab/
 ├── README.md                    # This file
 ├── ROADMAP.md                   # Phased improvement plan
-├── CHANGELOG.md                 # What changed and when
+├── ENTERPRISE_SCALE_DESIGN.md   # Enterprise scaling analysis
 ├── docs/
 │   ├── architecture.html        # Interactive architecture diagram
-│   ├── network-diagram.md       # Network topology
-│   ├── vlan-design.md           # VLAN plan (Phase 2)
-│   ├── security-hardening.md    # Security checklist
-│   ├── server-setup.md          # Server provisioning guide
 │   └── runbooks/
 │       ├── ngrok-recovery.md    # Tunnel drop recovery
-│       ├── server-restart.md    # Full restart procedure
-│       └── backup-restore.md    # Backup & DR
-├── configs/
-│   ├── switch/                  # Switch configuration docs
-│   ├── ngrok/                   # Tunnel config (sanitized)
-│   ├── pm2/                     # Process management
-│   └── firewall/                # Firewall rules
+│       └── server-restart.md    # Full restart procedure
+├── configs/                     # Switch & network configuration docs
 ├── scripts/
-│   ├── health-check.sh          # Service health monitoring
-│   ├── backup.sh                # Automated backup
-│   ├── tunnel-monitor.sh        # Ngrok watchdog
-│   └── setup.sh                 # Fresh server setup
+│   ├── health-check.ps1         # Service health monitoring (PowerShell)
+│   ├── backup.ps1               # Automated backup
+│   ├── tunnel-monitor.ps1       # Ngrok watchdog
+│   └── setup-tasks.ps1          # Scheduled task setup
 ├── monitoring/                  # Uptime monitoring configs
 └── photos/                      # Hardware documentation photos
 ```
