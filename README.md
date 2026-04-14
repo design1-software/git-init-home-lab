@@ -38,21 +38,31 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 └─────────────────────────────────┘                │
                                                    │
 ┌──────────────────────────────────────────────────┴──────────────────┐
-│   NETWORK LAYER                                                     │
-│   Xfinity Gateway → Patch Panel → Two-Switch Topology               │
-│   No port forwarding — all ingress via Ngrok tunnel                 │
+│   NETWORK LAYER — Dual-Network Lab Topology                         │
 │                                                                     │
-│   ┌─────────────────────────────┐  ┌──────────────────────────┐    │
-│   │  Netgear GS316EP (Primary)  │  │  Netgear GS308EP (Sec.)  │    │
-│   │  16-port · 15 PoE+ · 180W  │──│  8-port · 8 PoE+ · 62W   │    │
-│   │  + 1 SFP fiber port        │  │  Non-PoE / overflow       │    │
-│   │  Server, Pi, UniFi APs     │  │  Apple TV, iMac, etc.     │    │
-│   └─────────────────────────────┘  └──────────────────────────┘    │
+│   Xfinity Gateway (10.0.0.0/24 · Household)                         │
+│     ├─ Household WiFi + wired devices                               │
+│     ├─ GS316EP (16-port PoE+ · still on household side)            │
+│     └─ Cisco C1111-4PWB WAN (DHCP client, 10.0.0.119)              │
+│            │                                                        │
+│            │  Edge router for the lab network                       │
+│            │  IOS XE · SSH · DHCP · NAT overload (PAT)              │
+│            ▼                                                        │
+│     Lab LAN (192.168.100.0/24)                                      │
+│            ├─ Acer Aspire 3 Server (192.168.100.12)                │
+│            └─ GS308EP (8-port PoE+ · Lab Switch)                   │
+│                 ├─ Raspberry Pi 4B (192.168.100.17)                │
+│                 │     · PoE-powered, services host                  │
+│                 │     · Pi-hole DNS filtering (87K-domain blocklist)│
+│                 │     · UniFi Network Application 10.1.89           │
+│                 ├─ UniFi U6+ AP #1 (192.168.100.26)                │
+│                 └─ UniFi U6+ AP #2 (192.168.100.27)                │
+│                       · Both adopted, broadcasting on 2.4 + 5 GHz   │
 │                                                                     │
-│   WiFi: 2x UniFi U6+ APs (planned, replacing Xfinity mesh pods)   │
-│   UPS:  CyberPower CP1500PFCLCD (battery backup for all infra)     │
+│   UPS: CyberPower CP1500PFCLCD protecting all critical infra       │
+│   No port forwarding — all ingress via Ngrok tunnel                │
 └──────────────────────────────────┬──────────────────────────────────┘
-                                   │ Ethernet (PoE)
+                                   │ Ethernet
 ┌──────────────────────────────────┴──────────────────────────────────┐
 │   HOME SERVER — Acer Aspire 3 15 (AMD Ryzen) — 24/7                │
 │                                                                     │
@@ -65,14 +75,26 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 │   │  Kie · Suno · ElevenLabs│  │  Engagement tracking/recycle │     │
 │   └─────────────────────────┘  └─────────────────────────────┘     │
 └─────────────────────────────────────────────────────────────────────┘
-                                                                       
-┌─────────────────────────────────────────────────────────────────────┐
-│   RASPBERRY PI 4B (PoE-powered via GS316EP)                         │
-│   Pi-hole (DNS) · UniFi Network Controller · Uptime Kuma            │
-└─────────────────────────────────────────────────────────────────────┘
 ```
 
 > 📄 See [docs/architecture.html](docs/architecture.html) for the full interactive diagram.
+
+---
+
+## Current Operational State
+
+| System | Status | Notes |
+|---|---|---|
+| Cisco C1111-4PWB | ✅ Online | IOS XE, SSH, DHCP + NAT, config backed up |
+| Pi 4B + Pi-hole | ✅ Serving DNS | 87K+ domain blocklist, serving all lab clients |
+| UniFi Controller | ✅ Active | v10.1.89 on Pi, 2 APs adopted |
+| UniFi U6+ APs | ✅ Broadcasting | SSID live on 2.4 + 5 GHz, pending ceiling mount |
+| GS308EP (Lab Switch) | ✅ In service | Uplinked to Cisco, powering Pi + APs via PoE |
+| GS316EP (Household) | ✅ In service | Still on Xfinity side; migration to Cisco planned |
+| CyberPower UPS | ✅ Protecting infra | Full charge, auto-shutdown pending USB cable |
+| Acer Server | ✅ 24/7 production | Auto-reboot blocked, manual update policy |
+| VLAN segmentation | 🔄 Design phase | Subnets planned, not yet configured |
+| Xfinity bridge mode | 🔲 Planned | Deferred until UniFi fully replaces household WiFi |
 
 ---
 
@@ -159,20 +181,21 @@ Each page has: `page_brand.json` (identity), topic banks, performance data, bran
 
 | Device | Model | Role | Connection |
 |---|---|---|---|
-| ISP Gateway | Xfinity xFi Gateway | Modem + Router | WAN: Coax |
-| Primary Switch | Netgear GS316EP | 16-port PoE+ Gigabit Managed (180W) + 1 SFP | Ethernet ← Gateway |
-| Secondary Switch | Netgear GS308EP | 8-port PoE+ Gigabit Managed (62W) | Ethernet ← GS316EP |
+| ISP Gateway | Xfinity xFi Gateway (XB8) | Modem + Household Router (10.0.0.0/24) | WAN: Coax |
+| Lab Edge Router | Cisco C1111-4PWB ISR | Enterprise router for the lab network (192.168.100.0/24); IOS XE; SSH, DHCP, NAT | WAN: Ethernet ← XB8 |
+| Primary Switch | Netgear GS316EP | 16-port PoE+ Gigabit Managed (180W) + 1 SFP — household | Ethernet ← XB8 |
+| Lab Switch | Netgear GS308EP | 8-port PoE+ Gigabit Managed (62W) — lab network | Ethernet ← Cisco LAN |
 | UPS | CyberPower CP1500PFCLCD | Battery backup for all infrastructure | Power |
 | Wiring Panel | Structured Media Enclosure | Patch panel + coax distribution | Cat5e/6 runs |
-| WiFi (current) | 4× Xfinity XE1-S Mesh Pods | Whole-home WiFi coverage | WiFi mesh via Gateway |
-| WiFi (planned) | 2× Ubiquiti UniFi U6+ | VLAN-aware WiFi APs (replacing mesh pods) | PoE ← GS316EP |
+| WiFi (legacy) | 4× Xfinity XE1-S Mesh Pods | Whole-home household WiFi (to be retired) | WiFi mesh via XB8 |
+| WiFi (lab) | 2× Ubiquiti UniFi U6+ | Enterprise APs, adopted by controller, desk-mounted | PoE ← GS308EP |
 
 ### Compute
 
 | Device | Model | Role | Connection |
 |---|---|---|---|
-| Home Server | Acer Aspire 3 15 (AMD Ryzen) | MCP Server + Content System (24/7) | Ethernet via wall jack |
-| Network Services | Raspberry Pi 4B + PoE+ HAT | Pi-hole, UniFi Controller, Uptime Kuma | PoE ← GS316EP |
+| Home Server | Acer Aspire 3 15 (AMD Ryzen) | MCP Server + Content System (24/7) | Ethernet ← Cisco LAN |
+| Network Services | Raspberry Pi 4B + PoE+ HAT | Pi-hole, UniFi Controller | PoE ← GS308EP |
 | Desktop | iMac | Development / personal | Ethernet or WiFi |
 | Laptop | MacBook Air | Development / personal | WiFi |
 | Laptop | MacBook Pro | Development / personal | WiFi |
@@ -206,11 +229,13 @@ Each page has: `page_brand.json` (identity), topic banks, performance data, bran
 
 **Frameworks:** Node.js, Express, Remotion, React, Playwright, Puppeteer
 
-**Protocols:** MCP (SSE transport), Meta Graph API, REST, Webhooks, OAuth 2.0
+**Protocols:** MCP (SSE transport), Meta Graph API, REST, Webhooks, OAuth 2.0, 802.1Q (planned), SSH, DHCP, NAT/PAT
 
 **AI Services:** Anthropic Claude, xAI Grok, OpenAI, ElevenLabs, Kie.ai, Suno
 
 **Data:** PostgreSQL (Railway), SQLite (local ledger), Sequelize ORM, JSON stores
+
+**Network:** Cisco IOS XE, Netgear managed switching, UniFi Network Application, Pi-hole DNS
 
 **Infrastructure:** Railway (PaaS), Ngrok (tunnel), PM2 (process management), FFmpeg
 
@@ -222,7 +247,9 @@ Each page has: `page_brand.json` (identity), topic banks, performance data, bran
 - **MCP auth tokens** — Sidecar callbacks secured via `x-mcp-token` / `x-internal-key` verification
 - **Credential management** — API keys in `.env` (gitignored), Railway encrypted env store, Sequelize field-level encryption
 - **Self-healing** — `selfHealingService.js` provides automatic recovery; email alerts on critical failures
-- **Network segmentation** — VLAN implementation in progress with dual managed switch topology (GS316EP + GS308EP), planned 3-VLAN scheme (Server, Trusted, IoT) with UniFi APs for VLAN-tagged WiFi
+- **Network segmentation** — Dual-network topology: Cisco C1111-4PWB isolates the lab LAN (192.168.100.0/24) from the household network (10.0.0.0/24). VLAN implementation planned as the next layer (Server / Trusted / IoT).
+- **Edge routing** — Cisco IOS XE with hardened baseline: enable secret, console password + timeout, service password-encryption, SSHv2 only, local user auth on VTY lines, RSA keys
+- **DNS filtering** — Pi-hole blocking 87K+ ad/tracker/telemetry domains for all lab clients
 - **UPS protection** — CyberPower CP1500PFCLCD battery backup for all critical infrastructure
 
 ---
@@ -236,10 +263,15 @@ home-lab/
 ├── ENTERPRISE_SCALE_DESIGN.md   # Enterprise scaling analysis
 ├── docs/
 │   ├── architecture.html        # Interactive architecture diagram
+│   ├── topology.md              # Current network topology (ASCII)
 │   └── runbooks/
 │       ├── ngrok-recovery.md    # Tunnel drop recovery
-│       └── server-restart.md    # Full restart procedure
-├── configs/                     # Switch & network configuration docs
+│       ├── server-restart.md    # Full restart procedure
+│       └── cisco-console.md     # Serial console access procedure
+├── configs/
+│   ├── cisco-c1111-running.txt  # Cisco running-config backup (sanitized)
+│   ├── gs316ep/                 # Netgear primary switch configs
+│   └── gs308ep/                 # Netgear lab switch configs
 ├── scripts/
 │   ├── health-check.ps1         # Service health monitoring (PowerShell)
 │   ├── backup.ps1               # Automated backup
@@ -256,10 +288,12 @@ home-lab/
 | Domain | Implementation |
 |---|---|
 | **Software Engineering** | 78K+ lines across 3 repos; MCP protocol server; multi-API orchestration |
-| **Networking** | Structured wiring; switch configuration; VLAN design; network segmentation |
+| **Enterprise Networking** | Cisco IOS XE configuration via serial console and SSH: DHCP client WAN, SVI + DHCP server + NAT overload on LAN, security baseline, RSA key generation, legacy crypto negotiation |
+| **Network Infrastructure** | Structured wiring; dual managed switch topology; enterprise PoE+ AP deployment; network segmentation |
+| **Linux Server Admin** | Headless Raspberry Pi OS provisioning; SSH hardening; service installation (Pi-hole, UniFi Controller); systemd service management |
 | **Cloud Architecture** | Hybrid self-hosted + Railway; dual-engine pattern; webhook event processing |
 | **DevOps** | PM2 process management; Docker (planned); automated health checks; CI/CD |
-| **Security** | Zero port forwarding; token auth; credential encryption; self-healing |
+| **Security** | Zero port forwarding; token auth; credential encryption; self-healing; IOS security baseline; DNS filtering |
 | **API Integration** | Meta Graph API, 3 AI providers, 3 media generation APIs, MCP protocol |
 | **Database Design** | PostgreSQL (cloud), SQLite (local), Sequelize ORM, 10+ data models |
 | **Server Administration** | 24/7 server management; Ngrok tunnel; process monitoring; backup |
@@ -270,7 +304,7 @@ home-lab/
 
 See [ROADMAP.md](ROADMAP.md) for the full phased plan covering:
 - **Phase 1** ✅ Documentation & baseline
-- **Phase 2** 🔄 Network hardening (managed switch, VLANs)
+- **Phase 2** 🔄 Network hardening (Cisco edge router ✅, Pi-hole ✅, UniFi APs ✅, VLANs in progress)
 - **Phase 3** Server hardening (Docker, process management)
 - **Phase 4** Monitoring & observability (Uptime Kuma, dashboards)
 - **Phase 5** Security audit (Nmap, Cloudflare Tunnel evaluation)
@@ -288,4 +322,4 @@ See [ROADMAP.md](ROADMAP.md) for the full phased plan covering:
 
 ---
 
-*Last updated: April 2026*
+*Last updated: April 14, 2026*
