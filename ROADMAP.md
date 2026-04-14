@@ -11,16 +11,17 @@ The platform is **already in production** — 3 repos, 546+ posts/week, 24/7 upt
 
 | Component | Current State | Target State |
 |---|---|---|
-| Network switches | Netgear GS316EP (16-port, 180W) + GS308EP (8-port, 62W) | VLAN-configured dual-switch topology |
-| WiFi | 4× Xfinity XE1-S mesh pods (no VLAN support) | 2× UniFi U6+ APs (VLAN-tagged SSIDs) |
-| Network services | None | Raspberry Pi 4B: Pi-hole, UniFi Controller, Uptime Kuma |
-| Power protection | None | CyberPower CP1500PFCLCD UPS |
+| Edge router (lab) | Cisco C1111-4PWB ISR — configured, SSH-managed | Same, plus VLANs, ACLs, upgraded IOS XE |
+| Network switches | GS316EP (household) + GS308EP (lab, uplinked to Cisco) | VLAN-configured dual-switch topology |
+| WiFi | 4× Xfinity mesh pods (household) + 2× UniFi U6+ APs (lab, adopted) | UniFi APs cover whole house; Xfinity mesh retired |
+| Network services | Pi 4B: Pi-hole (DNS), UniFi Network Application | Plus Uptime Kuma, centralized logging |
+| Power protection | CyberPower CP1500PFCLCD UPS — installed | Plus USB auto-shutdown to Acer |
 | Server process mgmt | Manual / scripts | Docker Compose + systemd |
 | Monitoring | Email alerts via logger.error | Uptime Kuma on Pi 4B + status dashboard |
 | Tunnel | Ngrok (free/paid tier) | Evaluate Cloudflare Tunnel |
-| Backups | Manual | Automated daily w/ retention |
-| Network segmentation | Flat network (all VLAN 1) | Server / Trusted / IoT VLANs |
-| Disaster recovery | Rebuild from git repos | One-command Ansible playbook |
+| Backups | Manual (Cisco config backed up) | Automated daily w/ retention |
+| Network segmentation | Dual-network via Cisco (192.168.100.0/24 isolated from 10.0.0.0/24) | Plus VLANs: Server / Trusted / IoT |
+| Disaster recovery | Rebuild from git repos + Cisco config backup | One-command Ansible playbook |
 
 ---
 
@@ -38,111 +39,161 @@ The platform is **already in production** — 3 repos, 546+ posts/week, 24/7 upt
 
 ---
 
-## Phase 2: Network Hardening 🔄 NEXT
+## Phase 2: Network Hardening 🔄 IN PROGRESS (~70% complete)
 
-**Goal:** Configure dual-switch VLAN topology, deploy UniFi APs, set up Raspberry Pi network services, and establish network segmentation across 25+ devices.
+**Goal:** Configure dual-switch VLAN topology, deploy UniFi APs, set up Raspberry Pi network services, deploy enterprise edge routing, and establish network segmentation across 25+ devices.
 
-**Hardware acquired:**
-- ✅ Netgear GS316EP (16-port, 15 PoE+, 180W, 1 SFP) — primary switch
-- ✅ Netgear GS308EP (8-port, 8 PoE+, 62W) — secondary switch
-- ✅ Raspberry Pi 4B + PoE+ HAT + case
-- ✅ CyberPower CP1500PFCLCD UPS
-- ✅ DYMO label maker
-- 🔄 MicroSD card (32GB) — needed for Pi
-- 🔲 2× UniFi U6+ APs — replacing 4× Xfinity XE1-S mesh pods
+**Hardware status:**
+- [x] Netgear GS316EP (16-port, 15 PoE+, 180W, 1 SFP) — primary switch, in service
+- [x] Netgear GS308EP (8-port, 8 PoE+, 62W) — lab switch, uplinked to Cisco
+- [x] **Cisco C1111-4PWB ISR — acquired, configured, in service as lab edge router**
+- [x] Raspberry Pi 4B + PoE+ HAT + case — deployed, PoE-powered from GS308EP
+- [x] CyberPower CP1500PFCLCD UPS — installed, charged, protecting infra
+- [x] DYMO label maker — acquired
+- [x] MicroSD card (32GB) — flashed with Raspberry Pi OS Lite 64-bit
+- [x] 2× UniFi U6+ APs — adopted by controller, broadcasting SSID
+- [ ] USB-A to USB-B cable (for UPS auto-shutdown to Acer) — pending
 
-**Est. hours:** 18-22
+**Est. hours remaining:** 6-8 (VLANs, AP ceiling mount, household WiFi migration)
 
-### Step 1: Physical Infrastructure
+---
 
-| Task | Hours | Skills Demonstrated |
-|---|---|---|
-| Install UPS, charge 4-6 hours, connect all infra to battery-backed outlets | 1 | Power protection, infrastructure planning |
-| Label all ports (patch panel, both switches, cable ends) with DYMO | 1 | Physical documentation, cable management |
-| Photograph before/after for repo | 0.5 | Change documentation |
-| Install GS316EP as primary switch in panel | 1 | Hardware installation |
-| Connect GS308EP as secondary switch via trunk link from GS316EP | 0.5 | Switch interconnect |
+### Step 0: Edge Router Deployment ✅ COMPLETE
 
-### Step 2: Raspberry Pi Setup
+> This sub-phase wasn't in the original plan. The acquisition of a Cisco C1111-4PWB changed the architecture — the Cisco now serves as the lab-side edge router, isolating the production lab network from the household Xfinity network.
 
 | Task | Hours | Skills Demonstrated |
 |---|---|---|
-| Flash microSD with Raspberry Pi OS Lite (headless, SSH enabled) | 0.5 | OS provisioning |
-| Boot Pi via PoE from GS316EP, verify connectivity | 0.5 | PoE-powered device deployment |
-| Install Docker on Pi | 0.5 | Containerization |
-| Deploy Pi-hole (DNS-level ad blocking + network visibility) | 1 | DNS management |
-| Deploy UniFi Network Controller | 1 | WiFi management platform |
-| Deploy Uptime Kuma (monitoring — see Phase 4) | 0.5 | Service monitoring |
+| Acquire Cisco C1111-4PWB ISR from reputable reseller | — | Enterprise hardware sourcing |
+| Out-of-band management: USB-to-DB9 serial adapter + Cisco rollover cable to RJ-45 console | 1 | Serial console, out-of-band admin |
+| Console session via PuTTY at 9600 8N1 | 0.5 | Terminal emulation, serial protocols |
+| Decline setup wizard, terminate autoinstall, enter privileged mode | 0.25 | IOS XE boot handling |
+| Configure WAN (GE0/0/0) as DHCP client to Xfinity XB8 | 0.5 | IOS XE interface config, DHCP client |
+| Configure LAN (Vlan1 SVI): 192.168.100.1/24 | 0.5 | Layer 3 SVI, subnet planning |
+| Create DHCP pool `LAN` with excluded-address range, DNS servers, 7-day lease | 0.5 | DHCP server configuration |
+| Configure NAT overload (PAT): access-list + inside/outside interface marking | 1 | NAT/PAT, access control lists |
+| Verified end-to-end: Acer pulls lease, loads websites through Cisco | 0.5 | Network validation |
+| Security baseline: hostname, enable secret, service password-encryption | 0.5 | IOS security hardening |
+| Console line hardening: password, login, exec-timeout 15, logging synchronous | 0.5 | Console access control |
+| Enable SSH: ip domain name, RSA 2048 keys, local admin user with privilege 15 | 1 | SSH server setup, PKI |
+| VTY configuration: transport input ssh, login local, timeout | 0.5 | Remote access hardening |
+| Force SSHv2, troubleshoot legacy crypto (older IOS only supports group14-sha1 kex + ssh-rsa hostkey vs. modern Windows OpenSSH defaults) | 1.5 | Cross-vendor SSH compatibility |
+| Create Windows SSH config with KexAlgorithms/HostKeyAlgorithms overrides (`ssh cisco` alias) | 0.5 | Operator ergonomics |
+| DHCP reservation for Pi 4B via Client-Identifier (stable 192.168.100.17) | 0.5 | Static DHCP binding |
+| Full running-config backup to timestamped text file | 0.5 | Configuration management |
 
-### Step 3: WiFi Migration
+**Milestones proven:**
+- Cisco IOS XE CLI operated end-to-end (console + SSH)
+- Enterprise-grade router isolating lab traffic from household traffic
+- Full DHCP/NAT/routing path from LAN clients to internet
+- SSH access with password hygiene (rotated after a captured-in-screenshot incident; credentials never committed)
+
+---
+
+### Step 1: Physical Infrastructure ✅ COMPLETE
+
+| Task | Status | Skills Demonstrated |
+|---|---|---|
+| Install UPS, charge, connect all critical infrastructure to battery-backed outlets | ✅ | Power protection, infrastructure planning |
+| Mount Cisco C1111, GS316EP, GS308EP in structured media enclosure | ✅ | Hardware installation |
+| Connect GS308EP to Cisco LAN port (lab network extension) | ✅ | Switch interconnect |
+| Photograph before/after for repo | 🔲 | Change documentation |
+| Label all ports (patch panel, both switches, cable ends) with DYMO | 🔲 | Physical documentation |
+
+---
+
+### Step 2: Raspberry Pi Setup ✅ COMPLETE
+
+| Task | Status | Skills Demonstrated |
+|---|---|---|
+| Flash microSD with Raspberry Pi OS Lite 64-bit (headless, SSH pre-enabled via Pi Imager customization) | ✅ | OS provisioning, headless setup |
+| Boot Pi via PoE from GS308EP, verify DHCP lease from Cisco | ✅ | PoE-powered device deployment |
+| Full system update (`apt update && apt upgrade`) | ✅ | Linux package management |
+| Install Pi-hole (Glennr script, interactive installer, Cloudflare upstream, Show-everything privacy) | ✅ | DNS filtering, recursive resolvers |
+| Configure Cisco DHCP to hand out Pi as DNS server for all LAN clients | ✅ | DHCP option 6 / DNS injection |
+| Install UniFi Network Application (Glennr installer, v10.1.89, HTTPS on :8443) | ✅ | WiFi management platform |
+| Deploy Uptime Kuma for monitoring | 🔲 | See Phase 4 |
+
+---
+
+### Step 3: WiFi Migration 🔄 IN PROGRESS
+
+| Task | Status | Skills Demonstrated |
+|---|---|---|
+| Power 2× UniFi U6+ APs via PoE+ from GS308EP | ✅ | Enterprise AP deployment |
+| Controller auto-discovery of APs (same L2 segment as controller via GS308EP + Cisco) | ✅ | UniFi adoption workflow |
+| Firmware upgrade during adoption | ✅ | UniFi Controller operations |
+| Run UniFi setup wizard, create Ubiquiti cloud account, configure server name | ✅ | UniFi site configuration |
+| Configure first SSID (`Gorgeous1` for testing to avoid household conflict) | ✅ | SSID configuration |
+| Test client connectivity (iPhone, Apple TV streaming validation) | ✅ | Real-world validation |
+| Measure signal strength across house from APs in closet (floor case for performance) | ✅ | WiFi site survey, RSSI analysis |
+| Rename SSID back to `Gorgeous` | 🔲 | Pending household migration |
+| Migrate all household WiFi devices to UniFi APs | 🔲 | Network migration |
+| Remove Xfinity mesh pods, put XB8 in bridge mode | 🔲 | Gateway configuration |
+| Physical ceiling-mount APs (purchased mounting kits already) | 🔲 | Physical installation |
+
+---
+
+### Step 4: VLAN Configuration 🔲 NEXT
 
 | Task | Hours | Skills Demonstrated |
 |---|---|---|
-| Install 2× UniFi U6+ APs (PoE from GS316EP, ceiling-mounted) | 1 | Enterprise AP deployment |
-| Configure UniFi Controller: create SSIDs per VLAN | 1.5 | VLAN-tagged WiFi |
-| Migrate all WiFi devices to new APs | 1 | Network migration |
-| Remove Xfinity mesh pods, put gateway in bridge mode | 0.5 | Gateway configuration |
-| Verify coverage across 2,800 sq ft single-story home | 0.5 | WiFi site survey |
-
-### Step 4: VLAN Configuration
-
-| Task | Hours | Skills Demonstrated |
-|---|---|---|
-| Design VLAN scheme across both switches | 1 | Network architecture |
-| Configure VLANs on GS316EP (primary) | 1.5 | 802.1Q VLAN configuration |
-| Configure matching VLANs on GS308EP (secondary) | 1 | Multi-switch VLAN consistency |
-| Configure trunk port between switches | 0.5 | 802.1Q trunking |
-| Assign UniFi SSIDs to VLANs (Server, Trusted, IoT) | 1 | WiFi + VLAN integration |
-| Set up QoS — prioritize server traffic | 0.5 | Traffic management |
+| Design VLAN scheme on paper (subnets, device map, ACL rules) | 1 | Network architecture |
+| Configure VLANs on Cisco (subinterfaces on Vlan1 replaced with per-VLAN SVIs) | 2 | IOS 802.1Q, SVI per VLAN |
+| Configure matching VLANs + trunk on GS308EP | 1 | Multi-switch VLAN consistency |
+| Configure trunk between Cisco and GS308EP (allowed VLANs: 10, 20, 30) | 0.5 | 802.1Q trunking |
+| Per-VLAN DHCP pools on Cisco (one per subnet) | 1 | DHCP scope management |
+| Assign UniFi SSIDs to VLANs (Trusted → VLAN 20, IoT → VLAN 30) | 1 | WiFi + VLAN integration |
+| Write extended ACLs for inter-VLAN firewalling (IoT cannot reach Server/Trusted) | 1.5 | Access control lists |
 | Test: MCP server reachable from Railway via Ngrok | 0.5 | End-to-end validation |
 | Test: IoT devices cannot reach server VLAN | 0.5 | Security verification |
 | Document all configs with screenshots | 1.5 | Technical writing |
 
-### VLAN Design (Dual-Switch)
+### VLAN Design (Target)
 
 ```
-VLAN 1  — Management
-          GS316EP mgmt: 192.168.1.2
-          GS308EP mgmt: 192.168.1.3
-          Pi-hole: 192.168.1.4
-          Gateway: 192.168.1.1
-          Admin access only
+VLAN 1  — Management (default)
+          GS308EP mgmt, GS316EP mgmt (when migrated)
+          Cisco L3 gateway: 192.168.1.1 (reassign)
 
 VLAN 10 — Servers (Production)
           Subnet: 192.168.10.0/24
-          GS316EP port: Acer Aspire 3 (MCP server + fb-content + Ngrok)
-          GS316EP port: Raspberry Pi 4B (Pi-hole, UniFi Controller, Uptime Kuma)
+          Cisco SVI: 192.168.10.1
+          Ports: Acer Aspire 3 (MCP server + fb-content + Ngrok)
+                 Raspberry Pi 4B (Pi-hole, UniFi Controller)
           Full internet access for API calls
           Isolated from IoT VLAN
 
 VLAN 20 — Trusted (Personal Devices)
           Subnet: 192.168.20.0/24
-          GS308EP ports: iMac, hardwired Apple TV
-          UniFi SSID: "Home-Trusted" (MacBooks, phones, tablets)
+          Cisco SVI: 192.168.20.1
+          Ports: iMac, hardwired Apple TV
+          UniFi SSID: "Gorgeous" (MacBooks, phones, tablets)
           Can reach Server VLAN (for management)
           Full internet access
 
 VLAN 30 — IoT (Untrusted Smart Devices)
           Subnet: 192.168.30.0/24
-          UniFi SSID: "Home-IoT"
-          2× Wyze Cam v3, 4× Kasa Smart Plugs, Ecobee thermostat,
+          Cisco SVI: 192.168.30.1
+          UniFi SSID: "Gorgeous-IoT"
+          2× Wyze Cam v3, 4× Kasa Smart Plugs, Ecobee,
           3× Alexa, Somfy hub, Samsung TV, 2× wireless Apple TVs
           Internet only — NO access to Server or Trusted VLANs
 
 Trunk Links:
-          Gateway ↔ GS316EP (port 1): tagged VLAN 1, 10, 20, 30
-          GS316EP ↔ GS308EP: tagged VLAN 1, 20, 30
-          GS316EP ↔ UniFi APs: tagged VLAN 20, 30
+          Cisco ↔ GS308EP: tagged VLAN 1, 10, 20, 30
+          Cisco ↔ GS316EP (after migration): tagged VLAN 1, 10, 20, 30
+          GS308EP ↔ UniFi APs: tagged VLAN 20, 30
 
-PoE Power Budget (GS316EP — 180W):
+PoE Power Budget (GS308EP — 62W):
           2× UniFi U6+ APs:     ~24W
           1× Raspberry Pi 4B:   ~5W
-          Headroom:              ~151W
+          Headroom:              ~33W
 ```
 
-> ⚠️ **Xfinity Gateway Limitation:** The xFi gateway may not support inter-VLAN routing natively. If it can't, Phase 2 focuses on port-level isolation via the managed switches, and a future phase adds a dedicated firewall (pfSense/OPNsense) for full VLAN routing.
+> Note: With the Cisco C1111 as lab edge router, full inter-VLAN routing is handled natively — no need for a separate pfSense/OPNsense firewall.
 
-**Deliverable:** Documented dual-switch VLAN configuration with UniFi AP deployment, before/after diagrams, PoE power audit, and security verification screenshots.
+**Deliverable:** Documented VLAN configuration across Cisco and both Netgear switches, UniFi AP VLAN-tagged SSIDs, before/after diagrams, PoE power audit, and security verification screenshots.
 
 ---
 
@@ -220,7 +271,7 @@ services:
 
 | Task | Hours | Skills Demonstrated |
 |---|---|---|
-| Configure Uptime Kuma on Pi (deployed in Phase 2) | 1 | Monitoring tools |
+| Install Uptime Kuma on Pi | 1 | Monitoring tools |
 | Configure monitors: MCP server, Ngrok endpoint, Railway app | 1.5 | Service monitoring |
 | Monitor Meta Graph API token expiration | 1 | API lifecycle management |
 | Create public status page | 0.5 | Public-facing operations |
@@ -238,6 +289,7 @@ services:
 | Ngrok tunnel (public URL) | HTTP GET /health | Down > 120s | Pi (Uptime Kuma) |
 | meta_engagement_pipeline | Railway health check | Down > 300s | Pi (Uptime Kuma) |
 | Meta Graph API token | Expiry check | < 7 days remaining | Pi (Uptime Kuma) |
+| Cisco C1111 | SSH reachability + `show ip interface brief` | Down > 60s | Pi (Uptime Kuma) |
 | Pi-hole DNS | Service check | Down > 30s | Pi (self-check) |
 | UniFi APs | Controller check | AP offline > 60s | Pi (UniFi Controller) |
 | Server disk usage | df check | > 85% | Acer (health-check.ps1) |
@@ -257,12 +309,13 @@ services:
 
 | Task | Hours | Skills Demonstrated |
 |---|---|---|
-| Run Nmap scan of home network (all ports, all devices) | 1 | Network reconnaissance |
+| Run Nmap scan of both networks (household 10.0.0.0/24 + lab 192.168.100.0/24) | 1.5 | Network reconnaissance |
 | Document all open ports and services per device | 1.5 | Attack surface analysis |
 | Verify IoT VLAN isolation (scan from IoT → Server) | 1 | Segmentation validation |
 | Audit Ngrok configuration (auth, IP allowlist, TLS) | 1 | Tunnel security |
 | Evaluate Cloudflare Tunnel as Ngrok replacement | 2 | Zero-trust networking |
 | Audit MCP auth token flow (x-mcp-token verification) | 1 | Application security |
+| Cisco IOS XE upgrade path (needed for modern SSH crypto) | 2 | Network device lifecycle |
 | Install & configure fail2ban on server | 1 | Intrusion prevention |
 | Rotate all API keys (Meta, Anthropic, Grok, ElevenLabs, Kie, Suno) | 1 | Credential hygiene |
 | Implement .env encryption (SOPS or age) | 1.5 | Secrets management |
@@ -285,10 +338,14 @@ services:
 6. Credential Audit
    - Key rotation dates
    - Storage method verification
-7. Findings & Risk Ratings
+7. Cisco IOS Security
+   - SSH algorithm negotiation
+   - Line/VTY access controls
+   - Privilege-level verification
+8. Findings & Risk Ratings
    - Critical / High / Medium / Low
-8. Remediation Actions Taken
-9. Residual Risk & Recommendations
+9. Remediation Actions Taken
+10. Residual Risk & Recommendations
 ```
 
 **Deliverable:** Professional security audit report with findings, mitigations, and incident response plan.
@@ -306,6 +363,8 @@ services:
 | Create Ansible playbook: base server setup (packages, Docker, users) | 3 | Configuration management |
 | Create Ansible role: MCP server deployment | 2 | IaC patterns |
 | Create Ansible role: Ngrok tunnel setup | 1 | Service provisioning |
+| Create Ansible role: Pi deployment (Pi-hole + UniFi Controller) | 2 | Declarative config |
+| Template Cisco config for pushing via Netmiko/Ansible | 2 | Network automation |
 | Template all config files (.env, docker-compose, ngrok.yml) | 2 | Configuration templating |
 | Create `setup.sh` bootstrap (for systems without Ansible) | 1.5 | Shell automation |
 | Test: wipe server, run playbook, verify production state | 2 | DR validation |
@@ -321,6 +380,7 @@ services:
 | Full server reboot | ~15-20 min (manual) | ~5 min (Docker auto-start) |
 | Bare metal rebuild | ~4-6 hours (manual) | ~30 min (Ansible playbook) |
 | Config corruption | Unknown | ~10 min (git + Ansible) |
+| Cisco config loss | ~1 hour (manual re-keying) | ~5 min (paste saved config via console) |
 
 **Deliverable:** One-command server rebuild with Ansible playbook and documented IaC approach.
 
@@ -328,14 +388,14 @@ services:
 
 ## Timeline Summary
 
-| Phase | Hours | Difficulty | Prereq |
+| Phase | Hours | Difficulty | Status |
 |---|---|---|---|
-| Phase 1: Documentation ✅ | 6 | ⭐ | None |
-| Phase 2: Network Hardening | 20 | ⭐⭐⭐ | GS316EP, GS308EP, Pi 4B, UPS, UniFi APs, microSD |
-| Phase 3: Server Hardening | 16 | ⭐⭐ | Phase 2 |
-| Phase 4: Monitoring | 12 | ⭐⭐ | Phase 2 (Uptime Kuma on Pi) |
-| Phase 5: Security Audit | 16 | ⭐⭐⭐ | Phase 2 + 3 |
-| Phase 6: IaC | 15 | ⭐⭐⭐ | Phase 3 |
+| Phase 1: Documentation ✅ | 6 | ⭐ | Complete |
+| Phase 2: Network Hardening | 20 | ⭐⭐⭐ | ~70% complete |
+| Phase 3: Server Hardening | 16 | ⭐⭐ | Not started |
+| Phase 4: Monitoring | 12 | ⭐⭐ | Not started |
+| Phase 5: Security Audit | 16 | ⭐⭐⭐ | Not started |
+| Phase 6: IaC | 15 | ⭐⭐⭐ | Not started |
 | **Total** | **~85 hrs** | | |
 
 > Each phase is a standalone portfolio milestone. Complete one fully before starting the next. Commit documentation as you go.
@@ -347,7 +407,7 @@ services:
 | Phase | Proves You Can... |
 |---|---|
 | Phase 1 | Document complex systems clearly — a skill most engineers lack |
-| Phase 2 | Design and implement network segmentation with dual-switch VLAN topology, enterprise WiFi APs, and dedicated network services host |
+| Phase 2 | Deploy enterprise network infrastructure: Cisco IOS XE edge routing, dual-switch PoE topology, Raspberry Pi services host, UniFi controller-managed APs, and VLAN segmentation |
 | Phase 3 | Containerize production services and write operational runbooks |
 | Phase 4 | Build monitoring and alerting for production infrastructure |
 | Phase 5 | Conduct a professional security audit and write findings |
@@ -357,3 +417,5 @@ services:
 ---
 
 *Phases can be completed in any order after Phase 1, but the sequence above builds skills progressively and each phase makes the next easier.*
+
+*Last updated: April 14, 2026*
