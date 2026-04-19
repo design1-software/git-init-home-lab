@@ -241,11 +241,10 @@ See [ROADMAP.md](ROADMAP.md) for the full phased plan covering:
 | [social-media-mcp](https://github.com/design1-software/social-media-mcp) | 19,753 | TypeScript | Self-hosted (Home Server) |
 | [meta_engagement_pipeline](https://github.com/design1-software/meta_engagement_pipeline) | 36,475 | JavaScript | Railway (Cloud) |
 | [fb-content-system](https://github.com/design1-software/fb-content-system) | 22,067 | JS/TS/Python | Self-hosted (Home Server) |
+| closet-monitor | — | Python/C++ | Self-hosted (ESP32 + Pi) |
 
 ---
 
-Related Infrastructure
-This sensor is one node in a broader home lab network documented at git-init-home-lab.
-The ESP32 currently connects via the Gorgeous SSID (VLAN 20, TRUSTED) and publishes MQTT to a Mosquitto broker on the MacBook Pro. When Mosquitto migrates to the Raspberry Pi 4B (192.168.10.16, VLAN 10, SERVER), the ESP32 will move to the Gorgeous-Auto SSID (VLAN 31, IOT-AUTO) — a dedicated automation VLAN that permits only MQTT and DNS traffic to the Pi via Cisco ACLs.
+
 
 *Last updated: April 19, 2026*
