@@ -1,6 +1,6 @@
 # VLAN Design — JLM Home Lab
 
-> Network segmentation scheme for the home lab. This document captures the final design decisions. Implementation details (Cisco commands, switch config, UniFi settings) will be documented separately during the implementation session.
+> Network segmentation scheme for the home lab. This document reflects the implemented and verified state as of April 19, 2026.
 
 ---
 
@@ -11,6 +11,7 @@
 3. **Enable controlled cross-VLAN access** for the garage automation system (MQTT + relay control)
 4. **Separate management plane** so switch/AP/router admin interfaces aren't on the same broadcast domain as user traffic
 5. **Support VLAN-tagged WiFi** via UniFi APs — one AP broadcasts multiple SSIDs, each mapped to a different VLAN
+6. **Household isolation** — family devices get internet but cannot reach lab infrastructure
 
 ---
 
@@ -18,13 +19,13 @@
 
 | VLAN ID | Name | Subnet | Gateway (Cisco SVI) | DHCP Range | Purpose |
 |---|---|---|---|---|---|
+| 1 | DEFAULT | 192.168.100.0/24 | 192.168.100.1 | .11–.254 | Legacy flat network (being phased out) |
 | 10 | SERVER | 192.168.10.0/24 | 192.168.10.1 | .11–.254 | Production servers and network services |
-| 20 | TRUSTED | 192.168.20.0/24 | 192.168.20.1 | .11–.254 | Personal devices + household devices |
+| 20 | TRUSTED | 192.168.20.0/24 | 192.168.20.1 | .11–.254 | Personal devices |
 | 30 | IOT | 192.168.30.0/24 | 192.168.30.1 | .11–.254 | General smart home devices (cloud-dependent, untrusted) |
 | 31 | IOT-AUTO | 192.168.31.0/24 | 192.168.31.1 | .11–.254 | Home automation sensors/actuators (local MQTT, no cloud) |
+| 40 | HOUSEHOLD | 192.168.40.0/24 | 192.168.40.1 | .11–.254 | Family devices (internet + AirPlay only) |
 | 99 | MGMT | 192.168.99.0/24 | 192.168.99.1 | .11–.50 | Network infrastructure management interfaces |
-
-All VLANs use /24 subnets. Addresses .1–.10 reserved per VLAN for static assignments (gateways, critical infrastructure).
 
 ---
 
@@ -32,220 +33,172 @@ All VLANs use /24 subnets. Addresses .1–.10 reserved per VLAN for static assig
 
 ### VLAN 10 — SERVER
 
-| Device | IP (static/reserved) | Connection | Notes |
+| Device | IP | Connection | Notes |
 |---|---|---|---|
-| Acer Aspire 3 (MCP server) | 192.168.10.12 | Wired → Cisco or GS308EP | Production 24/7, runs social-media-mcp + fb-content-system + Ngrok |
-| Raspberry Pi 4B | 192.168.10.17 | PoE → GS308EP | Pi-hole, UniFi Controller, future Mosquitto + Node-RED |
-| Future NAS | TBD | Wired → GS308EP or GS316EP | Backup storage, media |
-| Future Pi 5 + AI HAT+ | TBD | PoE → GS308EP | Only if camera-based detection is added later |
+| Acer Aspire 3 (MCP server) | 192.168.10.17 | Cisco GE0/1/0 (access VLAN 10) | Production 24/7 |
+| Raspberry Pi 4B | 192.168.10.16 | Cisco GE0/1/2 (access VLAN 10) | Pi-hole + UniFi Controller. Pending move to GS308EP port 3 |
+| Future NAS | TBD | GS308EP or GS316EP | Backup storage |
 
 ### VLAN 20 — TRUSTED
 
 | Device | IP | Connection | Notes |
 |---|---|---|---|
-| iMac | DHCP | Wired or WiFi (`Gorgeous`) | Development / personal |
-| MacBook Air | DHCP | WiFi (`Gorgeous`) | Development / personal |
-| MacBook Pro | DHCP | WiFi (`Gorgeous`) | Development / personal |
-| iPhones | DHCP | WiFi (`Gorgeous`) | Personal |
-| iPads / tablets | DHCP | WiFi (`Gorgeous`) | Personal |
-| Apple TV ×3 | DHCP | Wired or WiFi (`Gorgeous`) | Streaming; needs AirPlay/HomeKit to phones |
-| Dell Monitor | N/A | HDMI to Acer | Display only, no network |
+| iMac | DHCP | WiFi (Gorgeous) | Development |
+| MacBook Air | DHCP | WiFi (Gorgeous) | Development |
+| MacBook Pro | DHCP | WiFi (Gorgeous) | Development |
+| iPhones | DHCP | WiFi (Gorgeous) | Personal |
+| Apple TV ×3 | Static .101-.103 (planned) | Wired or WiFi (Gorgeous) | AirPlay ACL targets |
+| ESP32 closet sensor | DHCP | WiFi (Gorgeous) | Temporary — moves to IOT-AUTO when Mosquitto migrates to Pi |
 
 ### VLAN 30 — IOT
 
 | Device | IP | Connection | Notes |
 |---|---|---|---|
-| Kasa Smart Plug EP10 ×4 | DHCP | WiFi (`Gorgeous-IoT`) | Remote power management |
-| Ecobee thermostat | DHCP | WiFi (`Gorgeous-IoT`) | Climate control |
-| Amazon Alexa ×3 | DHCP | WiFi (`Gorgeous-IoT`) | Voice control |
-| Somfy Hub | DHCP | WiFi (`Gorgeous-IoT`) | Blind/shade automation |
-| Samsung Smart TV | DHCP | WiFi (`Gorgeous-IoT`) | Display (streaming via Apple TV, not direct) |
-| Wyze Cam v3 ×2 | DHCP | WiFi (`Gorgeous-IoT`) | Stock firmware, Wyze cloud, general security |
+| Ring cameras + doorbell | DHCP | WiFi (Gorgeous-IoT) | Pending migration from Gorgeous |
+| Kasa Smart Plugs | DHCP | WiFi (Gorgeous-IoT) | Pending migration |
+| Ecobee thermostat | DHCP | WiFi (Gorgeous-IoT) | Pending migration |
+| Amazon Alexa devices | DHCP | WiFi (Gorgeous-IoT) | Pending migration |
+| Somfy Hub | DHCP | WiFi (Gorgeous-IoT) | Pending migration |
+| Samsung Smart TV | DHCP | WiFi (Gorgeous-IoT) | Pending migration |
+| Wyze Cam v3 ×2 | DHCP | WiFi (Gorgeous-IoT) | Stock firmware, Wyze cloud |
 
 ### VLAN 31 — IOT-AUTO
 
 | Device | IP | Connection | Notes |
 |---|---|---|---|
-| ESP32 (garage reed switch + relay) | DHCP or static | WiFi (`Gorgeous-Auto`) | Door state sensor + closer actuator; MQTT only |
-| Future automation actuators | DHCP | WiFi (`Gorgeous-Auto`) | Additional ESP32 sensors/relays as needed |
+| ESP32 garage (reed switch + relay) | DHCP | WiFi (Gorgeous-Auto) | Future — door state sensor + closer |
+| ESP32 closet sensor | DHCP | WiFi (Gorgeous-Auto) | Future — after Mosquitto migrates to Pi |
+
+### VLAN 40 — HOUSEHOLD
+
+| Device | IP | Connection | Notes |
+|---|---|---|---|
+| Family phones/tablets/laptops | DHCP | WiFi (Gorgeous-Home) | Internet + AirPlay only |
 
 ### VLAN 99 — MGMT
 
-| Device | IP (static) | Connection | Notes |
+| Device | IP | Connection | Notes |
 |---|---|---|---|
-| Cisco C1111-4PWB | 192.168.99.1 | SVI (gateway) | Also reachable via console for recovery |
-| Netgear GS308EP | 192.168.99.2 | Wired (native VLAN 99) | Switch management UI |
-| Netgear GS316EP | 192.168.99.3 | Wired (native VLAN 99) | Switch management UI (after migration to Cisco) |
-| UniFi U6+ AP #1 | 192.168.99.11 | PoE → GS308EP (mgmt on VLAN 99) | AP management interface |
-| UniFi U6+ AP #2 | 192.168.99.12 | PoE → GS308EP (mgmt on VLAN 99) | AP management interface |
+| Cisco C1111-4PWB | 192.168.99.1 | SVI (gateway) | Also reachable via console |
+| Netgear GS308EP | Floats (no configurable mgmt VLAN) | GS308EP Port 1 trunk, native VLAN 99 | Switch management accessible from any VLAN (hardware limitation) |
+| UniFi U6+ AP #1 | DHCP on VLAN 99 | GS308EP Port 4, untagged VLAN 99 | AP management interface |
+| UniFi U6+ AP #2 | DHCP on VLAN 99 | GS308EP Port 5, untagged VLAN 99 | AP management interface |
 
 ---
 
 ## WiFi SSID-to-VLAN Mapping
 
-| SSID | VLAN | Security | Devices |
+| SSID | VLAN | Security | Status |
 |---|---|---|---|
-| `Gorgeous` | 20 (TRUSTED) | WPA3/WPA2 Transition | Phones, laptops, tablets, Apple TVs |
-| `Gorgeous-IoT` | 30 (IOT) | WPA2-PSK | Smart home devices (older IoT often can't do WPA3) |
-| `Gorgeous-Auto` | 31 (IOT-AUTO) | WPA2-PSK | ESP32 automation devices |
+| `Gorgeous` | 20 (TRUSTED) | WPA2/WPA3 | ✅ Live, tested |
+| `Gorgeous-IoT` | 30 (IOT) | WPA2-PSK | ✅ Live, tested |
+| `Gorgeous-Auto` | 31 (IOT-AUTO) | WPA2-PSK | ✅ Live, tested |
+| `Gorgeous-Home` | 40 (HOUSEHOLD) | WPA2/WPA3 | ✅ Live, tested |
 
-Three SSIDs is the target. Both UniFi U6+ APs broadcast all three simultaneously on both 2.4 GHz and 5 GHz bands. The VLAN tag is applied at the AP based on which SSID the client joins.
+All four SSIDs broadcast on both 2.4 GHz and 5 GHz from both UniFi U6+ APs.
 
 ---
 
 ## Inter-VLAN Access Control (ACL Matrix)
 
-| From ↓ / To → | SERVER (10) | TRUSTED (20) | IOT (30) | IOT-AUTO (31) | MGMT (99) | INTERNET |
-|---|---|---|---|---|---|---|
-| **SERVER (10)** | — | ✅ Allow | ❌ Deny | ✅ Specific (RTSP pull, MQTT response) | ❌ Deny | ✅ Allow |
-| **TRUSTED (20)** | ✅ Allow | — | ✅ Allow | ✅ Allow | ✅ Allow | ✅ Allow |
-| **IOT (30)** | ❌ Deny | ❌ Deny | — | ❌ Deny | ❌ Deny | ✅ Allow |
-| **IOT-AUTO (31)** | ✅ Specific (MQTT publish only) | ❌ Deny | ❌ Deny | — | ❌ Deny | ⚠️ Limited / Deny |
-| **MGMT (99)** | ✅ Allow | ✅ Allow | ✅ Allow | ✅ Allow | — | ✅ Allow |
+| From ↓ / To → | SERVER (10) | TRUSTED (20) | IOT (30) | IOT-AUTO (31) | HOUSEHOLD (40) | MGMT (99) | INTERNET |
+|---|---|---|---|---|---|---|---|
+| **SERVER (10)** | — | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **TRUSTED (20)** | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **IOT (30)** | DNS only | ❌ | — | ❌ | ❌ | ❌ | ✅ |
+| **IOT-AUTO (31)** | DNS + MQTT only | ❌ | ❌ | — | ❌ | ❌ | ❌ |
+| **HOUSEHOLD (40)** | DNS only | AirPlay to Apple TV IPs only | ❌ | ❌ | — | ❌ | ✅ |
+| **MGMT (99)** | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ |
 
-### Specific ACL rules for SERVER ↔ IOT-AUTO
+### Implemented ACLs (applied to Cisco SVIs)
 
-**IOT-AUTO (31) → SERVER (10):**
-- PERMIT TCP to 192.168.10.17 port 1883 (MQTT plaintext) — ESP32 publishes door state, subscribes for commands
-- PERMIT TCP to 192.168.10.17 port 8883 (MQTT/TLS) — if TLS is configured on Mosquitto
-- DENY all other traffic to SERVER subnet
+**IOT-ACL** (applied inbound on Vlan30):
+- Permit DNS (UDP/TCP 53) to Pi-hole (192.168.10.16)
+- Deny all private subnets (192.168.x.x)
+- Permit all other (internet)
 
-**SERVER (10) → IOT-AUTO (31):**
-- PERMIT TCP port 554 (RTSP) — future camera stream pull by Frigate
-- PERMIT TCP port 80/443 (HTTP/HTTPS) — admin access to devices if needed
-- PERMIT ICMP — monitoring/ping
-- DENY all other traffic
+**IOT-AUTO-ACL** (applied inbound on Vlan31):
+- Permit DNS (UDP/TCP 53) to Pi-hole (192.168.10.16)
+- Permit MQTT (TCP 1883, 8883) to Pi (192.168.10.16)
+- Deny all other traffic
 
-**IOT (30) → INTERNET:**
-- PERMIT — general internet access (cloud-dependent devices need it)
-- DNS queries go to Pi-hole (192.168.10.17) via DHCP option
+**HOUSEHOLD-ACL** (applied inbound on Vlan40):
+- Permit DNS to Pi-hole
+- Permit AirPlay (mDNS 5353, TCP 7000-7100, TCP 49152-65535) to Apple TV IPs (.101, .102, .103)
+- Deny all private subnets
+- Permit all other (internet)
 
-**IOT-AUTO (31) → INTERNET:**
-- DENY by default — ESP32 firmware is flashed locally, no cloud dependency
-- If a device temporarily needs internet (OTA firmware update), manually permit and then re-deny
+SERVER, TRUSTED, and MGMT have no restrictive ACLs — full access by design.
+
+---
+
+## GS308EP Switch Configuration (Advanced 802.1Q)
+
+**Firmware:** V2.0.0.5
+**MAC:** 28:94:01:84:2D:8A
+**Serial:** 6V665C53A4801
+
+### VLAN Membership Table
+
+| VLAN | P1 | P2 | P3 | P4 | P5 | P6 | P7 | P8 |
+|------|----|----|----|----|----|----|----|----|
+| 1    | T  | U  | E  | E  | E  | U  | U  | U  |
+| 10   | T  | E  | U  | E  | E  | E  | E  | E  |
+| 20   | T  | E  | E  | T  | T  | E  | E  | E  |
+| 30   | T  | E  | E  | T  | T  | E  | E  | E  |
+| 31   | T  | E  | E  | T  | T  | E  | E  | E  |
+| 40   | T  | E  | E  | T  | T  | E  | E  | E  |
+| 99   | U  | E  | E  | U  | U  | E  | E  | E  |
+
+### Port PVIDs
+
+| Port | PVID | Role |
+|---|---|---|
+| 1 | 99 | Trunk to Cisco GE0/1/1 |
+| 2 | 1 | Spare access port |
+| 3 | 10 | Pi 4B (SERVER) — pending Pi move from Cisco GE0/1/2 |
+| 4 | 99 | UniFi U6+ AP #1 (trunk + MGMT native) |
+| 5 | 99 | UniFi U6+ AP #2 (trunk + MGMT native) |
+| 6 | 1 | Spare access port |
+| 7 | 1 | Spare access port |
+| 8 | 1 | Spare access port |
+
+### Critical Configuration Notes
+
+1. **VLAN 1 MUST be Tagged (T) on Port 1 (trunk).** Excluding VLAN 1 from the trunk breaks the switch's internal MAC forwarding table. This is per official Netgear documentation — every Netgear example shows the trunk port Tagged in VLAN 1.
+2. **The GS308EP has no configurable management VLAN.** Its management interface floats across all VLANs. This is a documented hardware limitation of the Netgear Plus series.
+3. **The Cisco trunk must include VLAN 1 in the allowed list** to match: `switchport trunk allowed vlan 1,10,20,30,31,40,99`
+
+---
+
+## Cisco Trunk Configuration
+
+```
+interface GigabitEthernet0/1/1
+ switchport mode trunk
+ switchport trunk allowed vlan 1,10,20,30,31,40,99
+ switchport trunk native vlan 99
+```
 
 ---
 
 ## DNS Strategy
 
-All VLANs receive **Pi-hole (192.168.10.17)** as their primary DNS server via DHCP, with **1.1.1.1 (Cloudflare)** as fallback.
+All VLANs receive **Pi-hole (192.168.10.16)** as primary DNS via DHCP, with **1.1.1.1 (Cloudflare)** as fallback.
 
-This means:
-- All DNS queries from every VLAN flow through Pi-hole for filtering and logging
-- Pi-hole sees which devices are making which queries (useful for identifying rogue IoT traffic)
-- If Pi-hole is down, clients fall back to Cloudflare directly (no outage, just no filtering)
-
-> **Note:** IOT-AUTO VLAN needs a cross-VLAN ACL to reach Pi-hole on the SERVER VLAN. This is intentional and covered by the "PERMIT TCP to 192.168.10.17 port 53 (DNS)" rule that should be added to the IOT-AUTO → SERVER ACL.
+IOT and IOT-AUTO ACLs explicitly permit DNS traffic to the Pi across VLAN boundaries.
 
 ---
 
-## Trunk Port Configuration
+## Lessons Learned During Implementation
 
-### Cisco C1111-4PWB ↔ GS308EP
-
-| Setting | Value |
-|---|---|
-| Cisco port | GE0/1/1 (or whichever LAN port is used for the uplink) |
-| GS308EP port | Port 8 (or designated uplink port) |
-| Trunk type | 802.1Q tagged |
-| Allowed VLANs | 10, 20, 30, 31, 99 |
-| Native VLAN | 99 (management) |
-
-### Cisco C1111-4PWB ↔ GS316EP (after household migration)
-
-| Setting | Value |
-|---|---|
-| Cisco port | GE0/1/2 |
-| GS316EP port | Port 16 (or designated uplink port) |
-| Trunk type | 802.1Q tagged |
-| Allowed VLANs | 10, 20, 30, 31, 99 |
-| Native VLAN | 99 (management) |
-
-### GS308EP → UniFi APs
-
-| Setting | Value |
-|---|---|
-| GS308EP ports | Ports 4, 5 (currently used by APs) |
-| Trunk type | 802.1Q tagged |
-| Allowed VLANs | 20, 30, 31 (the SSIDs they broadcast) |
-| Native VLAN | 99 (AP management traffic) |
+1. **Netgear Basic 802.1Q "Trunk" ≠ Cisco trunk.** Basic mode only forwards switch management frames, not device traffic. Must use Advanced 802.1Q with manual T/U/E assignments.
+2. **VLAN 1 must be Tagged on the trunk port** in Netgear Advanced 802.1Q. Excluding it breaks internal MAC learning/forwarding.
+3. **Cisco trunk must allow VLAN 1** even if no devices use it, because the Netgear tags VLAN 1 on the trunk.
+4. **Pi-hole sets a static IP during installation.** Never override from the network side (DHCP reservation) without changing the Pi's own config first. This caused a multi-hour debugging session.
+5. **Always verify cables.** A bad Ethernet cable caused the Pi's MAC to never appear in the Cisco's MAC table, mimicking a switch forwarding failure.
+6. **Always follow official documentation.** Community shortcuts and assumptions cost more time than reading the manual.
 
 ---
 
-## DHCP Pools (Cisco)
-
-One pool per VLAN, configured on the Cisco as the L3 gateway.
-
-| Pool Name | Network | Gateway | DNS | Lease |
-|---|---|---|---|---|
-| SERVER | 192.168.10.0/24 | 192.168.10.1 | 192.168.10.17, 1.1.1.1 | 7 days |
-| TRUSTED | 192.168.20.0/24 | 192.168.20.1 | 192.168.10.17, 1.1.1.1 | 7 days |
-| IOT | 192.168.30.0/24 | 192.168.30.1 | 192.168.10.17, 1.1.1.1 | 1 day |
-| IOT-AUTO | 192.168.31.0/24 | 192.168.31.1 | 192.168.10.17, 1.1.1.1 | 1 day |
-| MGMT | 192.168.99.0/24 | 192.168.99.1 | 192.168.10.17, 1.1.1.1 | 7 days |
-
-Shorter lease on IOT and IOT-AUTO because devices come and go. SERVER and TRUSTED get longer leases for stability.
-
-Static reservations will be configured for:
-- Acer server (SERVER VLAN)
-- Pi 4B (SERVER VLAN)
-- Both switches (MGMT VLAN)
-- Both APs (MGMT VLAN)
-
----
-
-## PoE Power Budget
-
-### GS308EP (62W total)
-
-| Device | Port | Est. Power | VLAN |
-|---|---|---|---|
-| UniFi U6+ AP #1 | 4 | ~12W | Trunk (20, 30, 31 + native 99) |
-| UniFi U6+ AP #2 | 5 | ~12W | Trunk (20, 30, 31 + native 99) |
-| Raspberry Pi 4B | 3 (or similar) | ~5W | 10 (SERVER) |
-| **Total used** | | **~29W** | |
-| **Headroom** | | **~33W** | |
-
-Headroom is sufficient for 1-2 more PoE devices (future cameras, additional Pi, etc.)
-
-### GS316EP (180W total, after migration to Cisco)
-
-Future allocation — will be planned during household migration phase.
-
----
-
-## Implementation Order
-
-When ready to implement, execute in this order to minimize disruption:
-
-1. **Create VLANs on Cisco** (SVIs with IP addresses, no shutdown)
-2. **Create per-VLAN DHCP pools on Cisco** (excluded addresses, DNS, lease)
-3. **Configure trunk port on Cisco side** (GE0/1/1 → GS308EP)
-4. **Configure matching VLANs on GS308EP** (via switch web UI)
-5. **Configure trunk port on GS308EP side** (port 8 → Cisco)
-6. **Configure AP ports as trunks** on GS308EP (ports 4, 5)
-7. **Configure access ports** on GS308EP for Pi (SERVER) and Acer (SERVER)
-8. **Create additional SSIDs in UniFi Controller** (`Gorgeous-IoT`, `Gorgeous-Auto`) with VLAN tags
-9. **Rename `Gorgeous1` to `Gorgeous`** and tag it VLAN 20
-10. **Write ACLs on Cisco** (extended ACLs applied to SVIs)
-11. **Test each VLAN**: client gets correct IP, can reach internet, cross-VLAN rules enforced
-12. **Migrate household devices** — connect GS316EP to Cisco, move XB8 to bridge mode
-
-> Steps 1–10 can be done without disrupting any currently-working device. Step 12 is the "big bang" migration that takes the household off the XB8 and onto the Cisco.
-
----
-
-## Future Expansion
-
-| Addition | VLAN | Notes |
-|---|---|---|
-| Guest WiFi (`Gorgeous-Guest`) | 40 (192.168.40.0/24) | Internet-only, client isolation enabled, bandwidth-limited |
-| NAS (Synology/TrueNAS) | 10 (SERVER) | Backup target for Acer, media storage |
-| Pi 5 + AI HAT+ | 10 (SERVER) | Frigate NVR if camera-based detection is added |
-| Additional security cameras | 31 (IOT-AUTO) | RTSP to Frigate, no cloud |
-| Dedicated NVR | 10 (SERVER) | If camera count exceeds Pi 5 capacity |
-
----
-
-*Design finalized: April 15, 2026*
-*Implementation: pending dedicated session (est. 2-3 hours)*
+*Implemented and verified: April 19, 2026*
