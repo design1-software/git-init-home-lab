@@ -26,75 +26,82 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 │                        EXTERNAL SERVICES                                │
 │  Meta Graph API  ·  Anthropic Claude  ·  xAI Grok  ·  OpenAI          │
 │  ElevenLabs TTS  ·  Kie.ai Images    ·  Suno Music ·  Perplexity     │
-└──────────────┬───────────────────────────────────┬──────────────────────┘
-               │ Webhooks                          │ HTTPS
-┌──────────────┴──────────────────┐    ┌───────────┴──────────────┐
-│   RAILWAY (Cloud)               │    │   NGROK TUNNEL           │
-│   meta_engagement_pipeline      │    │   Public HTTPS → :3000   │
-│   36,475 lines · Express+Worker │    │   SSE transport for MCP  │
-│   PM2: mlx-poster, feed-engager │◄──►│   Secure, encrypted      │
-│   Postgres · Cron automation    │    └───────────┬──────────────┘
-│   Greetings · Scoring · Healing │                │
-└─────────────────────────────────┘                │
-                                                   │
-┌──────────────────────────────────────────────────┴──────────────────┐
-│   NETWORK LAYER — Dual-Network Lab Topology                         │
-│                                                                     │
-│   Xfinity Gateway (10.0.0.0/24 · Household)                         │
-│     ├─ Household WiFi + wired devices                               │
-│     ├─ GS316EP (16-port PoE+ · still on household side)            │
-│     └─ Cisco C1111-4PWB WAN (DHCP client, 10.0.0.119)              │
-│            │                                                        │
-│            │  Edge router for the lab network                       │
-│            │  IOS XE · SSH · DHCP · NAT overload (PAT)              │
-│            ▼                                                        │
-│     Lab LAN (192.168.100.0/24)                                      │
-│            ├─ Acer Aspire 3 Server (192.168.100.12)                │
-│            └─ GS308EP (8-port PoE+ · Lab Switch)                   │
-│                 ├─ Raspberry Pi 4B (192.168.100.17)                │
-│                 │     · PoE-powered, services host                  │
-│                 │     · Pi-hole DNS filtering (87K-domain blocklist)│
-│                 │     · UniFi Network Application 10.1.89           │
-│                 ├─ UniFi U6+ AP #1 (192.168.100.26)                │
-│                 └─ UniFi U6+ AP #2 (192.168.100.27)                │
-│                       · Both adopted, broadcasting on 2.4 + 5 GHz   │
-│                                                                     │
-│   UPS: CyberPower CP1500PFCLCD protecting all critical infra       │
-│   No port forwarding — all ingress via Ngrok tunnel                │
-└──────────────────────────────────┬──────────────────────────────────┘
+└──────────────┬───────────────────────────────────────┬──────────────────┘
+               │ Webhooks                              │ HTTPS
+┌──────────────┴──────────────────┐    ┌───────────────┴──────────────┐
+│   RAILWAY (Cloud)               │    │   NGROK TUNNEL               │
+│   meta_engagement_pipeline      │    │   Public HTTPS → :3000       │
+│   36,475 lines · Express+Worker │    │   SSE transport for MCP      │
+│   PM2: mlx-poster, feed-engager │◄──►│   Secure, encrypted          │
+│   Postgres · Cron automation    │    └───────────────┬──────────────┘
+│   Greetings · Scoring · Healing │                    │
+└─────────────────────────────────┘                    │
+                                                       │
+┌──────────────────────────────────────────────────────┴──────────────────┐
+│   NETWORK LAYER — VLAN-Segmented Lab Topology                           │
+│                                                                         │
+│   Xfinity XB8 (10.0.0.0/24)                                            │
+│     ├─ Household WiFi (renamed, being phased out)                       │
+│     ├─ GS316EP (16-port PoE+ · household wired devices)                │
+│     └─ Cisco C1111-4PWB WAN (DHCP client)                               │
+│            │                                                            │
+│   Cisco C1111-4PWB (JLM-LAB-R1)                                        │
+│   IOS XE · 6 VLANs · Inter-VLAN routing · NAT · ACLs · SSH             │
+│            │                                                            │
+│     ┌──────┴───────────────────────────────────────────────┐            │
+│     │                                                       │            │
+│     │  GE0/1/0: Acer Server (VLAN 10, 192.168.10.17)       │            │
+│     │  GE0/1/1: TRUNK → GS308EP (VLANs 1,10,20,30,31,40,99)│           │
+│     │  GE0/1/2: Pi 4B (VLAN 10, 192.168.10.16)             │            │
+│     │                                                       │            │
+│     │  GS308EP (8-port PoE+, Advanced 802.1Q, FW V2.0.0.5) │            │
+│     │    Port 3: Pi 4B access (VLAN 10) — pending move      │            │
+│     │    Port 4: UniFi U6+ AP #1 (trunk: 20,30,31,40)      │            │
+│     │    Port 5: UniFi U6+ AP #2 (trunk: 20,30,31,40)      │            │
+│     └───────────────────────────────────────────────────────┘            │
+│                                                                         │
+│   WiFi SSIDs (4 active):                                                │
+│     Gorgeous      → VLAN 20 (TRUSTED)                                   │
+│     Gorgeous-IoT  → VLAN 30 (IOT)                                       │
+│     Gorgeous-Auto → VLAN 31 (IOT-AUTO)                                  │
+│     Gorgeous-Home → VLAN 40 (HOUSEHOLD)                                 │
+│                                                                         │
+│   DNS: Pi-hole (192.168.10.16) serving all VLANs                        │
+│   UPS: CyberPower CP1500PFCLCD protecting all critical infra            │
+│   No port forwarding — all ingress via Ngrok tunnel                     │
+└─────────────────────────────────────────────────────────────────────────┘
                                    │ Ethernet
-┌──────────────────────────────────┴──────────────────────────────────┐
-│   HOME SERVER — Acer Aspire 3 15 (AMD Ryzen) — 24/7                │
-│                                                                     │
-│   ┌─────────────────────────┐  ┌─────────────────────────────┐     │
-│   │  social-media-mcp       │  │  fb-content-system           │     │
-│   │  19,753 lines · TS      │  │  22,067 lines · JS/TS/Py    │     │
-│   │  MCP Server on :3000    │  │  182 posts/wk × 3 pages     │     │
-│   │  22 lib modules         │  │  Claude copy · Playwright    │     │
-│   │  Remotion · Puppeteer   │  │  Remotion reels · Graph API  │     │
-│   │  Kie · Suno · ElevenLabs│  │  Engagement tracking/recycle │     │
-│   └─────────────────────────┘  └─────────────────────────────┘     │
-└─────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────┴──────────────────────────────────────┐
+│   HOME SERVER — Acer Aspire 3 15 (AMD Ryzen) — 24/7                    │
+│                                                                         │
+│   ┌─────────────────────────┐  ┌─────────────────────────────┐         │
+│   │  social-media-mcp       │  │  fb-content-system           │         │
+│   │  19,753 lines · TS      │  │  22,067 lines · JS/TS/Py    │         │
+│   │  MCP Server on :3000    │  │  182 posts/wk × 3 pages     │         │
+│   │  22 lib modules         │  │  Claude copy · Playwright    │         │
+│   │  Remotion · Puppeteer   │  │  Remotion reels · Graph API  │         │
+│   │  Kie · Suno · ElevenLabs│  │  Engagement tracking/recycle │         │
+│   └─────────────────────────┘  └─────────────────────────────┘         │
+└─────────────────────────────────────────────────────────────────────────┘
 ```
-
-> 📄 See [docs/architecture.html](docs/architecture.html) for the full interactive diagram.
 
 ---
 
 ## Current Operational State
 
-| System | Status | Notes |
+| System | Status | Details |
 |---|---|---|
-| Cisco C1111-4PWB | ✅ Online | IOS XE, SSH, DHCP + NAT, config backed up |
-| Pi 4B + Pi-hole | ✅ Serving DNS | 87K+ domain blocklist, serving all lab clients |
+| Cisco C1111-4PWB | ✅ Online | 6 VLANs, inter-VLAN routing, 3 ACLs, NAT, SSH |
+| GS308EP (Lab Switch) | ✅ Trunking | Advanced 802.1Q, 7 VLANs, trunk to Cisco verified |
+| Pi 4B + Pi-hole | ✅ Serving DNS | 192.168.10.16, DNS for all VLANs |
 | UniFi Controller | ✅ Active | v10.1.89 on Pi, 2 APs adopted |
-| UniFi U6+ APs | ✅ Broadcasting | SSID live on 2.4 + 5 GHz, pending ceiling mount |
-| GS308EP (Lab Switch) | ✅ In service | Uplinked to Cisco, powering Pi + APs via PoE |
-| GS316EP (Household) | ✅ In service | Still on Xfinity side; migration to Cisco planned |
-| CyberPower UPS | ✅ Protecting infra | Full charge, auto-shutdown pending USB cable |
-| Acer Server | ✅ 24/7 production | Auto-reboot blocked, manual update policy |
-| VLAN segmentation | 🔄 Design phase | Subnets planned, not yet configured |
-| Xfinity bridge mode | 🔲 Planned | Deferred until UniFi fully replaces household WiFi |
+| UniFi U6+ APs (×2) | ✅ Broadcasting | 4 SSIDs on 4 VLANs, desk-mounted |
+| VLAN segmentation | ✅ Implemented | 6 VLANs active, ACLs enforcing isolation |
+| CyberPower UPS | ✅ Protecting infra | Auto-shutdown pending USB cable |
+| Acer Server | ✅ 24/7 production | VLAN 10 (SERVER) |
+| GS316EP (Household) | ✅ In service | Still on Xfinity side; migration planned |
+| Xfinity bridge mode | 🔲 Planned | After household device migration |
+| IoT device migration | 🔄 Pending | Ring, Alexa, Ecobee need to move to Gorgeous-IoT |
 
 ---
 
@@ -129,49 +136,11 @@ Engagement engine with a dual-engine architecture:
 - **Graph API Engine**: Official page posts, comment replies, webhook processing
 - **Sidecar Engine**: Browser-automated profile actions via MCP bridge to home server
 
-Runs 3 PM2 processes: `mlx-poster`, `feed-engager`, `worker` with cron jobs for:
-- Automated greetings (6:30 AM / 9:30 PM)
-- Strategic content drafts (5×/day)
-- Engagement scoring & content analysis
-- Follower tracking & cross-page engagement
-- Self-healing recovery from failures
-
-| Module | Purpose |
-|---|---|
-| `server.js` | Express API: 12 route files (webhooks, viral, inbox, lab, etc.) |
-| `worker.js` | Cron engine with greeting, draft, and maintenance automation |
-| `lib/publisher.js` | Meta Graph API posting with error recovery |
-| `lib/mcpClient.js` | MCP client calling home server via Ngrok |
-| `lib/greetingService.js` | Zero-touch morning/night greeting automation |
-| `lib/viralContentService.js` | Viral content pipeline with async media gen |
-| `lib/contentAnalyzer.js` | LLM-based quality scoring (threshold: 8.0) |
-| `lib/selfHealingService.js` | Auto-recovery without manual intervention |
-| `lib/cohortManager.js` | Cross-page engagement strategies |
-| `models/index.js` | Sequelize ORM: 10+ models → Postgres |
-
 ### [`fb-content-system`](https://github.com/design1-software/fb-content-system) — The Content Factory
 
 **22,067 lines · JS/TS/Python · Local**
 
-Produces **182 posts per week per page** across 3 Facebook pages through a 6-phase pipeline:
-
-```
-Phase 1          Phase 2           Phase 3              Phase 4         Phase 5          Phase 6
-PAGE DISCOVERY → VISUAL SYSTEM →  CONTENT PRODUCTION → POSTING       → REELS          → ENGAGEMENT
-Scan page        Build HTML        Claude API copy      Graph API       Remotion video    Track performance
-Extract identity templates         Playwright PNG       SQLite ledger   7 reels/week      Recycle top posts
-Define pillars   (per pillar)      (175 static/wk)      crash-safe     ElevenLabs TTS    Optimize mix
-```
-
-**Pages under management:**
-
-| Page | Niche | Weekly Output |
-|---|---|---|
-| MEA (My Engagement Assistant) | Social media automation education | 182 posts |
-| Runnin From A2B | Running & fitness community | 182 posts |
-| After The Uniform (ATU) | Veteran transition content | 182 posts |
-
-Each page has: `page_brand.json` (identity), topic banks, performance data, branded HTML templates, and pillar-specific content strategies.
+Produces **182 posts per week per page** across 3 Facebook pages.
 
 ---
 
@@ -181,105 +150,61 @@ Each page has: `page_brand.json` (identity), topic banks, performance data, bran
 
 | Device | Model | Role | Connection |
 |---|---|---|---|
-| ISP Gateway | Xfinity xFi Gateway (XB8) | Modem + Household Router (10.0.0.0/24) | WAN: Coax |
-| Lab Edge Router | Cisco C1111-4PWB ISR | Enterprise router for the lab network (192.168.100.0/24); IOS XE; SSH, DHCP, NAT | WAN: Ethernet ← XB8 |
-| Primary Switch | Netgear GS316EP | 16-port PoE+ Gigabit Managed (180W) + 1 SFP — household | Ethernet ← XB8 |
-| Lab Switch | Netgear GS308EP | 8-port PoE+ Gigabit Managed (62W) — lab network | Ethernet ← Cisco LAN |
+| ISP Gateway | Xfinity XB8 | Modem + Household Router (10.0.0.0/24) | WAN: Coax |
+| Lab Edge Router | Cisco C1111-4PWB ISR | Enterprise router: 6 VLANs, ACLs, DHCP, NAT, SSH | WAN: Ethernet ← XB8 |
+| Household Switch | Netgear GS316EP | 16-port PoE+ Managed (180W) + 1 SFP | Ethernet ← XB8 |
+| Lab Switch | Netgear GS308EP | 8-port PoE+ Managed (62W), Advanced 802.1Q, FW V2.0.0.5 | Trunk ← Cisco GE0/1/1 |
 | UPS | CyberPower CP1500PFCLCD | Battery backup for all infrastructure | Power |
-| Wiring Panel | Structured Media Enclosure | Patch panel + coax distribution | Cat5e/6 runs |
-| WiFi (legacy) | 4× Xfinity XE1-S Mesh Pods | Whole-home household WiFi (to be retired) | WiFi mesh via XB8 |
-| WiFi (lab) | 2× Ubiquiti UniFi U6+ | Enterprise APs, adopted by controller, desk-mounted | PoE ← GS308EP |
+| WiFi (lab) | 2× Ubiquiti UniFi U6+ | Enterprise APs, 4 VLAN-tagged SSIDs | PoE ← GS308EP |
 
 ### Compute
 
 | Device | Model | Role | Connection |
 |---|---|---|---|
-| Home Server | Acer Aspire 3 15 (AMD Ryzen) | MCP Server + Content System (24/7) | Ethernet ← Cisco LAN |
-| Network Services | Raspberry Pi 4B + PoE+ HAT | Pi-hole, UniFi Controller | PoE ← GS308EP |
-| Desktop | iMac | Development / personal | Ethernet or WiFi |
-| Laptop | MacBook Air | Development / personal | WiFi |
-| Laptop | MacBook Pro | Development / personal | WiFi |
-| Display | Dell Monitor | Server management | HDMI ← Acer |
-
-### Entertainment
-
-| Device | Model | Role | Connection |
-|---|---|---|---|
-| Streaming | 3× Apple TV | Media streaming (1 hardwired, 2 wireless) | 1 Ethernet, 2 WiFi |
-| TV | Samsung Smart TV | Display (all streaming via Apple TV) | HDMI ← Apple TV |
+| Home Server | Acer Aspire 3 15 (AMD Ryzen) | MCP Server + Content System (24/7) | Cisco GE0/1/0, VLAN 10 |
+| Network Services | Raspberry Pi 4B | Pi-hole, UniFi Controller | Cisco GE0/1/2, VLAN 10 |
+| Laptop | MacBook Pro | Development / personal | WiFi (Gorgeous, VLAN 20) |
 
 ### IoT / Smart Home
 
-| Device | Model | Role | Connection |
+| Device | Model | Current SSID | Target SSID |
 |---|---|---|---|
-| Cameras | 2× Wyze Cam v3 (Wired) | Security / server closet monitoring | WiFi |
-| Smart Plugs | 4× Kasa Smart Plug EP10 | Remote power management (1800W max each) | WiFi |
-| Thermostat | Ecobee + Motion Sensor | Climate control | WiFi |
-| Voice Assistants | 3× Amazon Alexa | Voice control | WiFi |
-| Smart Home | Somfy Hub | Blind/shade automation | WiFi |
-| Labels | DYMO Label Maker | Physical infrastructure documentation | N/A |
+| Ring cameras + doorbell | Ring LLC | Gorgeous | Gorgeous-IoT |
+| Kasa Smart Plugs ×4 | EP10 | Gorgeous | Gorgeous-IoT |
+| Ecobee thermostat | Ecobee | Gorgeous | Gorgeous-IoT |
+| Amazon Alexa ×3 | Amazon | Gorgeous | Gorgeous-IoT |
+| Somfy Hub | Somfy | Gorgeous | Gorgeous-IoT |
+| ESP32 closet sensor | ESP32 + BME280 | Gorgeous | Gorgeous-Auto (pending) |
 
 **Total devices on network: ~25+**
 
 ---
 
-## Technology Stack
+## VLAN Scheme
 
-**Languages:** TypeScript, JavaScript, Python, HTML/CSS, SQL
+| VLAN | Name | Subnet | SSID | ACL |
+|---|---|---|---|---|
+| 10 | SERVER | 192.168.10.0/24 | (wired only) | No restrictions |
+| 20 | TRUSTED | 192.168.20.0/24 | Gorgeous | No restrictions |
+| 30 | IOT | 192.168.30.0/24 | Gorgeous-IoT | Internet only + DNS to Pi-hole |
+| 31 | IOT-AUTO | 192.168.31.0/24 | Gorgeous-Auto | MQTT + DNS to Pi only |
+| 40 | HOUSEHOLD | 192.168.40.0/24 | Gorgeous-Home | Internet + AirPlay to Apple TVs |
+| 99 | MGMT | 192.168.99.0/24 | (none) | No restrictions |
 
-**Frameworks:** Node.js, Express, Remotion, React, Playwright, Puppeteer
-
-**Protocols:** MCP (SSE transport), Meta Graph API, REST, Webhooks, OAuth 2.0, 802.1Q (planned), SSH, DHCP, NAT/PAT
-
-**AI Services:** Anthropic Claude, xAI Grok, OpenAI, ElevenLabs, Kie.ai, Suno
-
-**Data:** PostgreSQL (Railway), SQLite (local ledger), Sequelize ORM, JSON stores
-
-**Network:** Cisco IOS XE, Netgear managed switching, UniFi Network Application, Pi-hole DNS
-
-**Infrastructure:** Railway (PaaS), Ngrok (tunnel), PM2 (process management), FFmpeg
+> 📄 See [docs/vlan-design.md](docs/vlan-design.md) for the full VLAN design with ACL rules, switch config, and lessons learned.
 
 ---
 
 ## Security
 
-- **Zero port forwarding** — no ports open on the Xfinity gateway; all ingress via Ngrok tunnel
-- **MCP auth tokens** — Sidecar callbacks secured via `x-mcp-token` / `x-internal-key` verification
-- **Credential management** — API keys in `.env` (gitignored), Railway encrypted env store, Sequelize field-level encryption
-- **Self-healing** — `selfHealingService.js` provides automatic recovery; email alerts on critical failures
-- **Network segmentation** — Dual-network topology: Cisco C1111-4PWB isolates the lab LAN (192.168.100.0/24) from the household network (10.0.0.0/24). VLAN implementation planned as the next layer (Server / Trusted / IoT).
-- **Edge routing** — Cisco IOS XE with hardened baseline: enable secret, console password + timeout, service password-encryption, SSHv2 only, local user auth on VTY lines, RSA keys
-- **DNS filtering** — Pi-hole blocking 87K+ ad/tracker/telemetry domains for all lab clients
-- **UPS protection** — CyberPower CP1500PFCLCD battery backup for all critical infrastructure
-
----
-
-## Repository Structure
-
-```
-home-lab/
-├── README.md                    # This file
-├── ROADMAP.md                   # Phased improvement plan
-├── ENTERPRISE_SCALE_DESIGN.md   # Enterprise scaling analysis
-├── docs/
-│   ├── architecture.html        # Interactive architecture diagram
-│   ├── topology.md              # Current network topology (ASCII)
-│   └── runbooks/
-│       ├── ngrok-recovery.md    # Tunnel drop recovery
-│       ├── server-restart.md    # Full restart procedure
-│       └── cisco-console.md     # Serial console access procedure
-├── configs/
-│   ├── cisco-c1111-running.txt  # Cisco running-config backup (sanitized)
-│   ├── gs316ep/                 # Netgear primary switch configs
-│   └── gs308ep/                 # Netgear lab switch configs
-├── scripts/
-│   ├── health-check.ps1         # Service health monitoring (PowerShell)
-│   ├── backup.ps1               # Automated backup
-│   ├── tunnel-monitor.ps1       # Ngrok watchdog
-│   └── setup-tasks.ps1          # Scheduled task setup
-├── monitoring/                  # Uptime monitoring configs
-└── photos/                      # Hardware documentation photos
-```
+- **Zero port forwarding** — all ingress via Ngrok tunnel
+- **VLAN segmentation** — 6 VLANs with inter-VLAN ACLs enforcing isolation
+- **ACLs** — IOT: internet-only; IOT-AUTO: MQTT-only to Pi; HOUSEHOLD: internet + AirPlay exceptions
+- **Cisco IOS hardening** — enable secret, console password + timeout, service password-encryption, SSHv2, local user auth
+- **DNS filtering** — Pi-hole blocking 87K+ domains, serving all VLANs
+- **MCP auth tokens** — Sidecar callbacks secured via `x-mcp-token` / `x-internal-key`
+- **Credential management** — API keys in `.env` (gitignored), Railway encrypted env store
+- **UPS protection** — CyberPower CP1500PFCLCD battery backup
 
 ---
 
@@ -287,16 +212,13 @@ home-lab/
 
 | Domain | Implementation |
 |---|---|
+| **Enterprise Networking** | Cisco IOS XE: 6 VLANs, SVIs, inter-VLAN routing, extended ACLs, NAT/PAT, DHCP (7 pools + static reservation), 802.1Q trunking, SSH |
+| **Network Infrastructure** | Dual managed switch topology, Netgear Advanced 802.1Q configuration, enterprise PoE+ AP deployment, VLAN-tagged WiFi (4 SSIDs) |
+| **Linux Server Admin** | Headless Raspberry Pi OS, SSH, Pi-hole DNS, UniFi Controller |
 | **Software Engineering** | 78K+ lines across 3 repos; MCP protocol server; multi-API orchestration |
-| **Enterprise Networking** | Cisco IOS XE configuration via serial console and SSH: DHCP client WAN, SVI + DHCP server + NAT overload on LAN, security baseline, RSA key generation, legacy crypto negotiation |
-| **Network Infrastructure** | Structured wiring; dual managed switch topology; enterprise PoE+ AP deployment; network segmentation |
-| **Linux Server Admin** | Headless Raspberry Pi OS provisioning; SSH hardening; service installation (Pi-hole, UniFi Controller); systemd service management |
+| **IoT / Automation** | ESP32 sensor pipeline (BME280 → MQTT → SQLite → Streamlit), VLAN-isolated IoT network |
 | **Cloud Architecture** | Hybrid self-hosted + Railway; dual-engine pattern; webhook event processing |
-| **DevOps** | PM2 process management; Docker (planned); automated health checks; CI/CD |
-| **Security** | Zero port forwarding; token auth; credential encryption; self-healing; IOS security baseline; DNS filtering |
-| **API Integration** | Meta Graph API, 3 AI providers, 3 media generation APIs, MCP protocol |
-| **Database Design** | PostgreSQL (cloud), SQLite (local), Sequelize ORM, 10+ data models |
-| **Server Administration** | 24/7 server management; Ngrok tunnel; process monitoring; backup |
+| **Security** | Zero port forwarding; VLAN isolation with ACLs; credential encryption; DNS filtering |
 
 ---
 
@@ -304,11 +226,11 @@ home-lab/
 
 See [ROADMAP.md](ROADMAP.md) for the full phased plan covering:
 - **Phase 1** ✅ Documentation & baseline
-- **Phase 2** 🔄 Network hardening (Cisco edge router ✅, Pi-hole ✅, UniFi APs ✅, VLANs in progress)
+- **Phase 2** ✅ Network hardening (Cisco, VLANs, ACLs, Pi-hole, UniFi APs — complete)
 - **Phase 3** Server hardening (Docker, process management)
-- **Phase 4** Monitoring & observability (Uptime Kuma, dashboards)
-- **Phase 5** Security audit (Nmap, Cloudflare Tunnel evaluation)
-- **Phase 6** Infrastructure as Code (Ansible, one-command rebuild)
+- **Phase 4** Monitoring & observability
+- **Phase 5** Security audit
+- **Phase 6** Infrastructure as Code
 
 ---
 
@@ -322,4 +244,4 @@ See [ROADMAP.md](ROADMAP.md) for the full phased plan covering:
 
 ---
 
-*Last updated: April 14, 2026*
+*Last updated: April 19, 2026*
