@@ -244,4 +244,8 @@ See [ROADMAP.md](ROADMAP.md) for the full phased plan covering:
 
 ---
 
+Related Infrastructure
+This sensor is one node in a broader home lab network documented at git-init-home-lab.
+The ESP32 currently connects via the Gorgeous SSID (VLAN 20, TRUSTED) and publishes MQTT to a Mosquitto broker on the MacBook Pro. When Mosquitto migrates to the Raspberry Pi 4B (192.168.10.16, VLAN 10, SERVER), the ESP32 will move to the Gorgeous-Auto SSID (VLAN 31, IOT-AUTO) — a dedicated automation VLAN that permits only MQTT and DNS traffic to the Pi via Cisco ACLs.
+
 *Last updated: April 19, 2026*
