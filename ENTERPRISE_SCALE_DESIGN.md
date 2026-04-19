@@ -98,6 +98,6 @@
 
 ---
 
-*This document demonstrates that the current system was built with enterprise patterns from day one. The infrastructure is home lab scale. The engineering is not.*
+*I built a network that uses the same patterns as enterprise infrastructure — not because I needed to at this scale, but because I'm learning to think at that scale.*
 
 *Last updated: April 19, 2026*
