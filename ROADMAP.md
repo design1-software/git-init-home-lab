@@ -95,11 +95,14 @@
 Phase 4: Monitoring & Observability 🔄 IN PROGRESS
 Already underway: The closet-monitor project is a production IoT monitoring pipeline running on the lab network — an ESP32 with a BME280 sensor publishing temperature, humidity, and pressure data via MQTT, with a Python subscriber persisting to SQLite, anomaly detection via rolling z-scores, and a Streamlit dashboard. This represents Phase 4 work already in production, validating the IOT-AUTO VLAN design and the MQTT cross-VLAN ACL path.
 
- - [ ]ESP32 closet sensor deployed and publishing MQTT (currently on VLAN 20, pending move to VLAN 31)
- - [ ]Mosquitto broker running (currently on MacBook Pro, pending migration to Pi)
+ - [x]ESP32 closet sensor deployed and publishing MQTT (currently on VLAN 20, pending move to VLAN 31)
+ - [x]Mosquitto broker running (currently on MacBook Pro, pending migration to Pi)
  - [ ]SQLite persistence + Streamlit dashboard operational
  - [ ]Anomaly detection with rolling z-scores identifying real-world events
  - [ ]5,600+ readings logged with zero packet loss
+ - [x]Pi migrated to GS308EP port 3 (PoE powered, trunk verified)
+ - [x]PoE HAT reinstalled, GPIO fan configured (55°C threshold)
+ - [x]IoT devices migrated to Gorgeous-IoT (Ring, Alexa, Ecobee, Somfy, Samsung TV)
  - [ ]Uptime Kuma on Pi
  - [ ]Monitors: MCP server, Ngrok endpoint, Railway app, Cisco, Pi-hole, APs
  - [ ]Health check scripts (PowerShell)
