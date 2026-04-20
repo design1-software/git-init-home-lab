@@ -36,7 +36,7 @@
 | Device | IP | Connection | Notes |
 |---|---|---|---|
 | Acer Aspire 3 (MCP server) | 192.168.10.17 | Cisco GE0/1/0 (access VLAN 10) | Production 24/7 |
-| Raspberry Pi 4B | 192.168.10.16 | Cisco GE0/1/2 (access VLAN 10) | Pi-hole + UniFi Controller. Pending move to GS308EP port 3 |
+| Raspberry Pi 4B | 192.168.10.16 | GS308EP Port 3 (PoE, access VLAN 10) | Pi-hole + UniFi Controller |
 | Future NAS | TBD | GS308EP or GS316EP | Backup storage |
 
 ### VLAN 20 — TRUSTED
@@ -56,7 +56,7 @@
 |---|---|---|---|
 | Ring cameras + doorbell | DHCP | WiFi (Gorgeous-IoT) | Pending migration from Gorgeous |
 | Kasa Smart Plugs | DHCP | WiFi (Gorgeous-IoT) | Pending migration |
-| Ecobee thermostat | DHCP | WiFi (Gorgeous-IoT) | Pending migration |
+| Ecobee thermostat | DHCP | WiFi (Gorgeous-IoT) | ✅ Migrated |
 | Amazon Alexa devices | DHCP | WiFi (Gorgeous-IoT) | Pending migration |
 | Somfy Hub | DHCP | WiFi (Gorgeous-IoT) | Pending migration |
 | Samsung Smart TV | DHCP | WiFi (Gorgeous-IoT) | Pending migration |
@@ -156,7 +156,7 @@ SERVER, TRUSTED, and MGMT have no restrictive ACLs — full access by design.
 |---|---|---|
 | 1 | 99 | Trunk to Cisco GE0/1/1 |
 | 2 | 1 | Spare access port |
-| 3 | 10 | Pi 4B (SERVER) — pending Pi move from Cisco GE0/1/2 |
+| 3 | 10 | Pi 4B (SERVER) — PoE powered, active |
 | 4 | 99 | UniFi U6+ AP #1 (trunk + MGMT native) |
 | 5 | 99 | UniFi U6+ AP #2 (trunk + MGMT native) |
 | 6 | 1 | Spare access port |
