@@ -51,11 +51,11 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 │     ┌──────┴───────────────────────────────────────────────┐            │
 │     │                                                       │            │
 │     │  GE0/1/0: Acer Server (VLAN 10, 192.168.10.17)       │            │
-│     │  GE0/1/1: TRUNK → GS308EP (VLANs 1,10,20,30,31,40,99)│           │
-│     │  GE0/1/2: Pi 4B (VLAN 10, 192.168.10.16)             │            │
+│     │  GE0/1/1: TRUNK → GS308EP (VLANs 1,10,20,30,31,40,99)│            │
+│     │  GE0/1/2: Pi 4B (available)                           │            │
 │     │                                                       │            │
 │     │  GS308EP (8-port PoE+, Advanced 802.1Q, FW V2.0.0.5) │            │
-│     │    Port 3: Pi 4B access (VLAN 10) — pending move      │            │
+│     │    Port 3: Pi 4B (VLAN 10, PoE, 192.168.10.16)       │            │
 │     │    Port 4: UniFi U6+ AP #1 (trunk: 20,30,31,40)      │            │
 │     │    Port 5: UniFi U6+ AP #2 (trunk: 20,30,31,40)      │            │
 │     └───────────────────────────────────────────────────────┘            │
@@ -101,8 +101,7 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 | Acer Server | ✅ 24/7 production | VLAN 10 (SERVER) |
 | GS316EP (Household) | ✅ In service | Still on Xfinity side; migration planned |
 | Xfinity bridge mode | 🔲 Planned | After household device migration |
-| IoT device migration | 🔄 Pending | Ring, Alexa, Ecobee need to move to Gorgeous-IoT |
-
+| IoT device migration | ✅ Mostly done | Ring, Alexa, Ecobee, Somfy, Samsung TV migrated. Kasa plugs pending (app issue) |
 ---
 
 ## The Three Repositories
@@ -162,18 +161,18 @@ Produces **182 posts per week per page** across 3 Facebook pages.
 | Device | Model | Role | Connection |
 |---|---|---|---|
 | Home Server | Acer Aspire 3 15 (AMD Ryzen) | MCP Server + Content System (24/7) | Cisco GE0/1/0, VLAN 10 |
-| Network Services | Raspberry Pi 4B | Pi-hole, UniFi Controller | Cisco GE0/1/2, VLAN 10 |
+| Network Services | Raspberry Pi 4B + PoE HAT | Pi-hole, UniFi Controller | GS308EP Port 3 (PoE), VLAN 10 |
 | Laptop | MacBook Pro | Development / personal | WiFi (Gorgeous, VLAN 20) |
 
 ### IoT / Smart Home
 
 | Device | Model | Current SSID | Target SSID |
 |---|---|---|---|
-| Ring cameras + doorbell | Ring LLC | Gorgeous | Gorgeous-IoT |
+| Ring cameras + doorbell | Ring LLC | Gorgeous-IoT | ✅ Migrated |
 | Kasa Smart Plugs ×4 | EP10 | Gorgeous | Gorgeous-IoT |
-| Ecobee thermostat | Ecobee | Gorgeous | Gorgeous-IoT |
-| Amazon Alexa ×3 | Amazon | Gorgeous | Gorgeous-IoT |
-| Somfy Hub | Somfy | Gorgeous | Gorgeous-IoT |
+| Ecobee thermostat | Ecobee | Gorgeous-IoT | ✅ Migrated |
+| Amazon Alexa ×3 | Amazon | Gorgeous-IoT | ✅ Migrated |
+| Somfy Hub | Somfy | Gorgeous-IoT | ✅ Migrated |
 | ESP32 closet sensor | ESP32 + BME280 | Gorgeous | Gorgeous-Auto (pending) |
 
 **Total devices on network: ~25+**
