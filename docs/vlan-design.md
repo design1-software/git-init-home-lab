@@ -25,6 +25,7 @@
 | 30 | IOT | 192.168.30.0/24 | 192.168.30.1 | .11–.254 | General smart home devices (cloud-dependent, untrusted) |
 | 31 | IOT-AUTO | 192.168.31.0/24 | 192.168.31.1 | .11–.254 | Home automation sensors/actuators (local MQTT, no cloud) |
 | 40 | HOUSEHOLD | 192.168.40.0/24 | 192.168.40.1 | .11–.254 | Family devices (internet + AirPlay only) |
+| 50 | GUEST | 192.168.50.0/24 | 192.168.50.1 | .11–.254 | Guest internet access, client isolation |
 | 99 | MGMT | 192.168.99.0/24 | 192.168.99.1 | .11–.50 | Network infrastructure management interfaces |
 
 ---
@@ -94,6 +95,7 @@
 | `Gorgeous-IoT` | 30 (IOT) | WPA2-PSK | ✅ Live, tested |
 | `Gorgeous-Auto` | 31 (IOT-AUTO) | WPA2-PSK | ✅ Live, tested |
 | `Gorgeous-Home` | 40 (HOUSEHOLD) | WPA2/WPA3 | ✅ Live, tested |
+| `JM&G-GUEST` | 50 (GUEST) | WPA2/WPA3, client isolation | ✅ Live, tested |
 
 All four SSIDs broadcast on both 2.4 GHz and 5 GHz from both UniFi U6+ APs.
 
@@ -107,7 +109,8 @@ All four SSIDs broadcast on both 2.4 GHz and 5 GHz from both UniFi U6+ APs.
 | **TRUSTED (20)** | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ |
 | **IOT (30)** | DNS only | ❌ | — | ❌ | ❌ | ❌ | ✅ |
 | **IOT-AUTO (31)** | DNS + MQTT only | ❌ | ❌ | — | ❌ | ❌ | ❌ |
-| **HOUSEHOLD (40)** | DNS only | AirPlay to Apple TV IPs only | ❌ | ❌ | — | ❌ | ✅ |
+| **HOUSEHOLD (40)** | DNS only | ❌ | ❌ | ❌ | — | ❌ | ✅ |
+| **GUEST (50)** | DNS only | ❌ | ❌ | ❌ | ❌ | — | ✅ |
 | **MGMT (99)** | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ |
 
 ### Implemented ACLs (applied to Cisco SVIs)
@@ -123,10 +126,17 @@ All four SSIDs broadcast on both 2.4 GHz and 5 GHz from both UniFi U6+ APs.
 - Deny all other traffic
 
 **HOUSEHOLD-ACL** (applied inbound on Vlan40):
-- Permit DNS to Pi-hole
-- Permit AirPlay (mDNS 5353, TCP 7000-7100, TCP 49152-65535) to Apple TV IPs (.101, .102, .103)
-- Deny all private subnets
+- Permit DNS (UDP/TCP 53) to Pi-hole (192.168.10.16)
+- Deny all private subnets (192.168.x.x)
 - Permit all other (internet)
+
+**GUEST-ACL** (applied inbound on Vlan50):
+- Permit DNS (UDP/TCP 53) to Pi-hole (192.168.10.16)
+- Deny all private subnets (192.168.x.x)
+- Permit all other (internet)
+- Client isolation enabled in UniFi (guests cannot see each other)
+
+Note: AirPlay cross-VLAN rules were removed from HOUSEHOLD-ACL. Apple TVs use DHCP on VLAN 20 (TRUSTED). AirPlay works natively within the same VLAN — family devices join Gorgeous (VLAN 20) to cast.
 
 SERVER, TRUSTED, and MGMT have no restrictive ACLs — full access by design.
 
@@ -198,6 +208,9 @@ IOT and IOT-AUTO ACLs explicitly permit DNS traffic to the Pi across VLAN bounda
 4. **Pi-hole sets a static IP during installation.** Never override from the network side (DHCP reservation) without changing the Pi's own config first. This caused a multi-hour debugging session.
 5. **Always verify cables.** A bad Ethernet cable caused the Pi's MAC to never appear in the Cisco's MAC table, mimicking a switch forwarding failure.
 6. **Always follow official documentation.** Community shortcuts and assumptions cost more time than reading the manual.
+7. **Apple TVs require DHCP, not static IPs.** Static IP configuration causes app connectivity failures even when Layer 3 is working. Apple TV devices depend on DHCP-provided parameters beyond IP/gateway/DNS.
+8. **Pi-hole blocks Apple service domains by default.** Whitelist required: gsa.apple.com, configuration.apple.com, apps.apple.com, and others.
+9. **TCP MSS clamping (`ip tcp adjust-mss 1452`) is needed after bridge mode cutover.** The changed WAN path can silently drop large TCP segments without this.
 
 ---
 

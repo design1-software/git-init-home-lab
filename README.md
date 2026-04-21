@@ -99,8 +99,8 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 | VLAN segmentation | ✅ Implemented | 6 VLANs active, ACLs enforcing isolation |
 | CyberPower UPS | ✅ Protecting infra | Auto-shutdown pending USB cable |
 | Acer Server | ✅ 24/7 production | VLAN 10 (SERVER) |
-| GS316EP (Household) | ✅ In service | Still on Xfinity side; migration planned |
-| Xfinity bridge mode | 🔲 Planned | After household device migration |
+| GS316EP (Household) | ✅ Trunked to Cisco | Advanced 802.1Q, trunk port 15 → Cisco GE0/1/2 |
+| Xfinity bridge mode | ✅ Active | Cisco sole router, public IP 174.53.28.46 from Comcast |
 | IoT device migration | ✅ Mostly done | Ring, Alexa, Ecobee, Somfy, Samsung TV migrated. Kasa plugs pending (app issue) |
 ---
 
@@ -187,7 +187,8 @@ Produces **182 posts per week per page** across 3 Facebook pages.
 | 20 | TRUSTED | 192.168.20.0/24 | Gorgeous | No restrictions |
 | 30 | IOT | 192.168.30.0/24 | Gorgeous-IoT | Internet only + DNS to Pi-hole |
 | 31 | IOT-AUTO | 192.168.31.0/24 | Gorgeous-Auto | MQTT + DNS to Pi only |
-| 40 | HOUSEHOLD | 192.168.40.0/24 | Gorgeous-Home | Internet + AirPlay to Apple TVs |
+| 40 | HOUSEHOLD | 192.168.40.0/24 | Gorgeous-Home | Internet only + DNS to Pi-hole |
+| 50 | GUEST | 192.168.50.0/24 | JM&G-GUEST | Internet only + DNS to Pi-hole, client isolation |
 | 99 | MGMT | 192.168.99.0/24 | (none) | No restrictions |
 
 > 📄 See [docs/vlan-design.md](docs/vlan-design.md) for the full VLAN design with ACL rules, switch config, and lessons learned.
@@ -198,7 +199,10 @@ Produces **182 posts per week per page** across 3 Facebook pages.
 
 - **Zero port forwarding** — all ingress via Ngrok tunnel
 - **VLAN segmentation** — 6 VLANs with inter-VLAN ACLs enforcing isolation
-- **ACLs** — IOT: internet-only; IOT-AUTO: MQTT-only to Pi; HOUSEHOLD: internet + AirPlay exceptions
+- **ACLs** — IOT: internet-only; IOT-AUTO: MQTT-only to Pi; HOUSEHOLD: internet-only; GUEST: internet-only with client isolation
+- **Remote access** — Tailscale mesh VPN for cross-VLAN and remote management
+- **UPS auto-shutdown** — CyberPower CP1500PFCLCD with PowerPanel Personal, graceful shutdown at 20% battery
+- **TCP MSS clamping** — `ip tcp adjust-mss 1452` on WAN interface for bridge mode compatibility
 - **Cisco IOS hardening** — enable secret, console password + timeout, service password-encryption, SSHv2, local user auth
 - **DNS filtering** — Pi-hole blocking 87K+ domains, serving all VLANs
 - **MCP auth tokens** — Sidecar callbacks secured via `x-mcp-token` / `x-internal-key`

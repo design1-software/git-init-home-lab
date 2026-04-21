@@ -61,9 +61,17 @@
 
 - [ ] Migrate IoT devices to correct SSIDs (Ring, Alexa, Ecobee → Gorgeous-IoT)
 - [ ] Move Pi from Cisco GE0/1/2 to GS308EP port 3
-- [ ] Reinstall PoE HAT on Pi
-- [ ] Apple TV static IPs (.101, .102, .103) for AirPlay ACL
-- [ ] Migrate household to Cisco (move GS316EP, flip XB8 to bridge mode)
+- [x] Reinstall PoE HAT on Pi (GPIO fan at 55°C, pins 4/6 reserved for PoE HAT)
+- [x] Apple TVs on DHCP (static IPs caused app failures; AirPlay works same-VLAN without ACL rules)
+- [x] Migrate household to Cisco — GS316EP trunked to GE0/1/2, XB8 bridge mode, Cisco sole router (174.53.28.46)
+- [x] UPS auto-shutdown via PowerPanel Personal (USB-B to Acer, shutdown at 20%)
+- [x] Console cable removed — SSH is primary management method
+- [x] HOUSEHOLD-ACL simplified to internet-only (AirPlay works same-VLAN, no cross-VLAN ACL needed)
+- [x] VLAN 50 (GUEST) created — JM&G-GUEST SSID with client isolation, GUEST-ACL internet-only
+- [x] TCP MSS clamping on WAN (`ip tcp adjust-mss 1452`) for bridge mode
+- [x] Apple domains whitelisted in Pi-hole (gsa.apple.com, configuration.apple.com, etc.)
+- [x] Tailscale installed on MacBook Pro and Acer for remote management
+- [x] Troubleshooting lab completed — Apple TV connectivity, 11 CCNA topics across 4 OSI layers
 - [ ] Ceiling-mount APs
 
 ### Key lessons learned

@@ -79,6 +79,14 @@ ip dhcp pool HOUSEHOLD
  dns-server 192.168.10.16 1.1.1.1
  lease 7
 !
+ip dhcp excluded-address 192.168.50.1 192.168.50.10
+!
+ip dhcp pool GUEST
+ network 192.168.50.0 255.255.255.0
+ default-router 192.168.50.1
+ dns-server 192.168.10.16 1.1.1.1
+ lease 1
+!
 ip dhcp pool MGMT
  network 192.168.99.0 255.255.255.0
  default-router 192.168.99.1
@@ -136,6 +144,8 @@ vlan 31
  name IOT-AUTO
 vlan 40
  name HOUSEHOLD
+vlan 50
+ name GUEST
 vlan 99
  name MGMT
 !
@@ -145,6 +155,7 @@ vlan 99
 interface GigabitEthernet0/0/0
  ip address dhcp
  ip nat outside
+ ip tcp adjust-mss 1452
  negotiation auto
 !
 interface GigabitEthernet0/0/1
@@ -163,13 +174,14 @@ interface GigabitEthernet0/1/0
 ! Port 1: Trunk to GS308EP
 interface GigabitEthernet0/1/1
  switchport mode trunk
- switchport trunk allowed vlan 1,10,20,30,31,40,99
+ switchport trunk allowed vlan 1,10,20,30,31,40,50,99
  switchport trunk native vlan 99
 !
-! Port 2: Pi 4B (access VLAN 10) — temporary direct connection
+! Port 2: Trunk to GS316EP (household switch)
 interface GigabitEthernet0/1/2
- switchport mode access
- switchport access vlan 10
+ switchport mode trunk
+ switchport trunk allowed vlan 1,10,20,30,31,40,50,99
+ switchport trunk native vlan 99
 !
 ! Port 3: unused
 interface GigabitEthernet0/1/3
@@ -211,6 +223,12 @@ interface Vlan40
  ip access-group HOUSEHOLD-ACL in
  no shutdown
 !
+interface Vlan50
+ ip address 192.168.50.1 255.255.255.0
+ ip nat inside
+ ip access-group GUEST-ACL in
+ no shutdown
+!
 interface Vlan99
  ip address 192.168.99.1 255.255.255.0
  ip nat inside
@@ -238,6 +256,7 @@ ip access-list standard NAT-INSIDE
  permit 192.168.30.0 0.0.0.255
  permit 192.168.31.0 0.0.0.255
  permit 192.168.40.0 0.0.0.255
+ permit 192.168.50.0 0.0.0.255
  permit 192.168.99.0 0.0.0.255
  permit 192.168.100.0 0.0.0.255
 !
@@ -262,24 +281,30 @@ ip access-list extended IOT-AUTO-ACL
  permit tcp any host 192.168.10.16 eq 8883
  deny ip any any
 !
-! HOUSEHOLD ACL — internet + AirPlay to Apple TV IPs + DNS
+! HOUSEHOLD ACL — internet only + DNS to Pi-hole
 ip access-list extended HOUSEHOLD-ACL
  permit udp any host 192.168.10.16 eq 53
  permit tcp any host 192.168.10.16 eq 53
- permit udp any host 192.168.20.101 eq 5353
- permit udp any host 192.168.20.102 eq 5353
- permit udp any host 192.168.20.103 eq 5353
- permit tcp any host 192.168.20.101 range 7000 7100
- permit tcp any host 192.168.20.102 range 7000 7100
- permit tcp any host 192.168.20.103 range 7000 7100
- permit tcp any host 192.168.20.101 range 49152 65535
- permit tcp any host 192.168.20.102 range 49152 65535
- permit tcp any host 192.168.20.103 range 49152 65535
  deny ip any 192.168.10.0 0.0.0.255
  deny ip any 192.168.20.0 0.0.0.255
  deny ip any 192.168.30.0 0.0.0.255
  deny ip any 192.168.31.0 0.0.0.255
  deny ip any 192.168.40.0 0.0.0.255
+ deny ip any 192.168.50.0 0.0.0.255
+ deny ip any 192.168.99.0 0.0.0.255
+ deny ip any 192.168.100.0 0.0.0.255
+ permit ip any any
+!
+! GUEST ACL — internet only + DNS to Pi-hole, client isolation in UniFi
+ip access-list extended GUEST-ACL
+ permit udp any host 192.168.10.16 eq 53
+ permit tcp any host 192.168.10.16 eq 53
+ deny ip any 192.168.10.0 0.0.0.255
+ deny ip any 192.168.20.0 0.0.0.255
+ deny ip any 192.168.30.0 0.0.0.255
+ deny ip any 192.168.31.0 0.0.0.255
+ deny ip any 192.168.40.0 0.0.0.255
+ deny ip any 192.168.50.0 0.0.0.255
  deny ip any 192.168.99.0 0.0.0.255
  deny ip any 192.168.100.0 0.0.0.255
  permit ip any any
