@@ -40,34 +40,37 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 ┌──────────────────────────────────────────────────────┴──────────────────┐
 │   NETWORK LAYER — VLAN-Segmented Lab Topology                           │
 │                                                                         │
-│   Xfinity XB8 (10.0.0.0/24)                                            │
-│     ├─ Household WiFi (renamed, being phased out)                       │
-│     ├─ GS316EP (16-port PoE+ · household wired devices)                │
-│     └─ Cisco C1111-4PWB WAN (DHCP client)                               │
+│   ISP Gateway (bridge mode)                                             │
+│     └─ Cisco branch router (WAN: DHCP from ISP)                         │
 │            │                                                            │
-│   Cisco C1111-4PWB (JLM-LAB-R1)                                        │
-│   IOS XE · 6 VLANs · Inter-VLAN routing · NAT · ACLs · SSH             │
+│   Cisco branch router                                                   │
+│   IOS XE · 7 VLANs · Inter-VLAN routing · NAT · ACLs · SSH             │
 │            │                                                            │
 │     ┌──────┴───────────────────────────────────────────────┐            │
 │     │                                                       │            │
-│     │  GE0/1/0: Acer Server (VLAN 10, 192.168.10.17)       │            │
-│     │  GE0/1/1: TRUNK → GS308EP (VLANs 1,10,20,30,31,40,99)│            │
-│     │  GE0/1/2: Pi 4B (available)                           │            │
+│     │  Access   → Home Server          (SERVER VLAN)       │            │
+│     │  Trunk    → 8-port managed PoE+ switch (all VLANs)   │            │
+│     │  Trunk    → 16-port managed PoE+ switch              │            │
 │     │                                                       │            │
-│     │  GS308EP (8-port PoE+, Advanced 802.1Q, FW V2.0.0.5) │            │
-│     │    Port 3: Pi 4B (VLAN 10, PoE, 192.168.10.16)       │            │
-│     │    Port 4: UniFi U6+ AP #1 (trunk: 20,30,31,40)      │            │
-│     │    Port 5: UniFi U6+ AP #2 (trunk: 20,30,31,40)      │            │
+│     │  Lab Switch (managed PoE+, 802.1Q)                    │            │
+│     │    ├─ Pi (SERVER VLAN, PoE)                           │            │
+│     │    │    ├─ Pi-hole DNS (:53)                          │            │
+│     │    │    ├─ UniFi Controller (:8443)                   │            │
+│     │    │    ├─ Mosquitto MQTT (:1883)                     │            │
+│     │    │    └─ CUPS Print Server (:631)                   │            │
+│     │    │         └─ USB → HP All-in-One (print path)      │            │
+│     │    └─ 2× UniFi APs (trunk: TRUSTED/IOT/AUTO/HOME)     │            │
 │     └───────────────────────────────────────────────────────┘            │
 │                                                                         │
-│   WiFi SSIDs (4 active):                                                │
-│     Gorgeous      → VLAN 20 (TRUSTED)                                   │
-│     Gorgeous-IoT  → VLAN 30 (IOT)                                       │
-│     Gorgeous-Auto → VLAN 31 (IOT-AUTO)                                  │
-│     Gorgeous-Home → VLAN 40 (HOUSEHOLD)                                 │
+│   WiFi SSIDs (5 active):                                                │
+│     Personal     → TRUSTED   VLAN                                       │
+│     Smart-Home   → IOT       VLAN                                       │
+│     Automation   → IOT-AUTO  VLAN                                       │
+│     Family       → HOUSEHOLD VLAN                                       │
+│     Guest        → GUEST     VLAN (client isolation)                    │
 │                                                                         │
-│   DNS: Pi-hole (192.168.10.16) serving all VLANs                        │
-│   UPS: CyberPower CP1500PFCLCD protecting all critical infra            │
+│   DNS: Pi-hole serving all VLANs (~87K-domain blocklist)                │
+│   UPS: CyberPower battery backup protecting critical infra             │
 │   No port forwarding — all ingress via Ngrok tunnel                     │
 └─────────────────────────────────────────────────────────────────────────┘
                                    │ Ethernet
@@ -91,17 +94,18 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 
 | System | Status | Details |
 |---|---|---|
-| Cisco C1111-4PWB | ✅ Online | 6 VLANs, inter-VLAN routing, 3 ACLs, NAT, SSH |
-| GS308EP (Lab Switch) | ✅ Trunking | Advanced 802.1Q, 7 VLANs, trunk to Cisco verified |
-| Pi 4B + Pi-hole | ✅ Serving DNS | 192.168.10.16, DNS for all VLANs |
-| UniFi Controller | ✅ Active | v10.1.89 on Pi, 2 APs adopted |
-| UniFi U6+ APs (×2) | ✅ Broadcasting | 4 SSIDs on 4 VLANs, desk-mounted |
-| VLAN segmentation | ✅ Implemented | 6 VLANs active, ACLs enforcing isolation |
-| CyberPower UPS | ✅ Protecting infra | Auto-shutdown pending USB cable |
-| Acer Server | ✅ 24/7 production | VLAN 10 (SERVER) |
-| GS316EP (Household) | ✅ Trunked to Cisco | Advanced 802.1Q, trunk port 15 → Cisco GE0/1/2 |
-| Xfinity bridge mode | ✅ Active | Cisco sole router, public IP 174.53.28.46 from Comcast |
-| IoT device migration | ✅ Mostly done | Ring, Alexa, Ecobee, Somfy, Samsung TV migrated. Kasa plugs pending (app issue) |
+| Cisco branch router | ✅ Online | 7 VLANs, inter-VLAN routing, 4 ACLs, NAT, SSH |
+| Lab Switch | ✅ Trunking | Managed PoE+, 802.1Q, 7 VLANs, trunk to Cisco verified |
+| Pi + Pi-hole | ✅ Serving DNS | Pi-hole resolver for all VLANs |
+| UniFi Controller | ✅ Active | Running on Pi, 2 APs adopted |
+| UniFi U6+ APs (×2) | ✅ Broadcasting | 5 SSIDs on 5 VLANs |
+| VLAN segmentation | ✅ Implemented | 7 VLANs active, ACLs enforcing isolation |
+| CyberPower UPS | ✅ Protecting infra | Auto-shutdown via PowerPanel Personal |
+| Home Server | ✅ 24/7 production | SERVER VLAN |
+| Household Switch | ✅ Trunked to Cisco | Managed 802.1Q, trunk uplink |
+| ISP bridge mode | ✅ Active | Cisco sole router with public ISP-assigned IP |
+| IoT device migration | ✅ Mostly done | Cameras, voice assistants, thermostat, blinds, smart TV migrated. A couple of plugs pending (app issue) |
+| Print server | ✅ Operational | CUPS on Pi, USB-attached HP All-in-One, IPP Everywhere |
 ---
 
 ## The Three Repositories
@@ -147,33 +151,39 @@ Produces **182 posts per week per page** across 3 Facebook pages.
 
 ### Network Infrastructure
 
-| Device | Model | Role | Connection |
-|---|---|---|---|
-| ISP Gateway | Xfinity XB8 | Modem + Household Router (10.0.0.0/24) | WAN: Coax |
-| Lab Edge Router | Cisco C1111-4PWB ISR | Enterprise router: 6 VLANs, ACLs, DHCP, NAT, SSH | WAN: Ethernet ← XB8 |
-| Household Switch | Netgear GS316EP | 16-port PoE+ Managed (180W) + 1 SFP | Ethernet ← XB8 |
-| Lab Switch | Netgear GS308EP | 8-port PoE+ Managed (62W), Advanced 802.1Q, FW V2.0.0.5 | Trunk ← Cisco GE0/1/1 |
-| UPS | CyberPower CP1500PFCLCD | Battery backup for all infrastructure | Power |
-| WiFi (lab) | 2× Ubiquiti UniFi U6+ | Enterprise APs, 4 VLAN-tagged SSIDs | PoE ← GS308EP |
+| Device | Role | Connection |
+|---|---|---|
+| ISP Gateway | Modem + bridge mode | WAN: ISP circuit |
+| Lab Edge Router | Cisco branch router: 7 VLANs, ACLs, DHCP, NAT, SSH | WAN: Ethernet ← ISP gateway |
+| Household Switch | 16-port managed PoE+ (SFP uplink) | Trunked ← Cisco |
+| Lab Switch | 8-port managed PoE+ (802.1Q) | Trunked ← Cisco |
+| UPS | Battery backup for all infrastructure | Power |
+| WiFi (lab) | 2× Enterprise APs, 5 VLAN-tagged SSIDs | PoE ← Lab Switch |
 
 ### Compute
 
-| Device | Model | Role | Connection |
-|---|---|---|---|
-| Home Server | Acer Aspire 3 15 (AMD Ryzen) | MCP Server + Content System (24/7) | Cisco GE0/1/0, VLAN 10 |
-| Network Services | Raspberry Pi 4B + PoE HAT | Pi-hole, UniFi Controller | GS308EP Port 3 (PoE), VLAN 10 |
-| Laptop | MacBook Pro | Development / personal | WiFi (Gorgeous, VLAN 20) |
+| Device | Role | Connection |
+|---|---|---|
+| Home Server | MCP Server + Content System (24/7) | Cisco access port, SERVER VLAN |
+| Network Services (Pi) | Pi-hole, UniFi Controller, Mosquitto MQTT, CUPS | Lab Switch (PoE), SERVER VLAN |
+| Laptop | Development / personal | WiFi on TRUSTED VLAN |
+
+### Peripherals
+
+| Device | Role | Connection |
+|---|---|---|
+| HP All-in-One | Print/scan for the lab | USB → Pi (CUPS); WiFi on IOT VLAN for vendor cloud features |
 
 ### IoT / Smart Home
 
-| Device | Model | Current SSID | Target SSID |
-|---|---|---|---|
-| Ring cameras + doorbell | Ring LLC | Gorgeous-IoT | ✅ Migrated |
-| Kasa Smart Plugs ×4 | EP10 | Gorgeous | Gorgeous-IoT |
-| Ecobee thermostat | Ecobee | Gorgeous-IoT | ✅ Migrated |
-| Amazon Alexa ×3 | Amazon | Gorgeous-IoT | ✅ Migrated |
-| Somfy Hub | Somfy | Gorgeous-IoT | ✅ Migrated |
-| ESP32 closet sensor | ESP32 + BME280 | Gorgeous | Gorgeous-Auto (pending) |
+| Device Class | Network |
+|---|---|
+| Cameras + doorbell | IOT VLAN |
+| Smart plugs | IOT VLAN |
+| Thermostat | IOT VLAN |
+| Voice assistants | IOT VLAN |
+| Smart blinds hub | IOT VLAN |
+| ESP32 sensors | IOT-AUTO VLAN (MQTT-only policy) |
 
 **Total devices on network: ~25+**
 
@@ -181,15 +191,17 @@ Produces **182 posts per week per page** across 3 Facebook pages.
 
 ## VLAN Scheme
 
-| VLAN | Name | Subnet | SSID | ACL |
+> Subnets shown below are illustrative examples — the production lab uses a different RFC1918 range, and the VLAN IDs and SSID names have been abstracted for public documentation.
+
+| VLAN | Name | Example Subnet | SSID Role | ACL Policy |
 |---|---|---|---|---|
-| 10 | SERVER | 192.168.10.0/24 | (wired only) | No restrictions |
-| 20 | TRUSTED | 192.168.20.0/24 | Gorgeous | No restrictions |
-| 30 | IOT | 192.168.30.0/24 | Gorgeous-IoT | Internet only + DNS to Pi-hole |
-| 31 | IOT-AUTO | 192.168.31.0/24 | Gorgeous-Auto | MQTT + DNS to Pi only |
-| 40 | HOUSEHOLD | 192.168.40.0/24 | Gorgeous-Home | Internet only + DNS to Pi-hole |
-| 50 | GUEST | 192.168.50.0/24 | JM&G-GUEST | Internet only + DNS to Pi-hole, client isolation |
-| 99 | MGMT | 192.168.99.0/24 | (none) | No restrictions |
+| 10 | SERVER | 10.0.10.0/24 | (wired only) | No restrictions |
+| 20 | TRUSTED | 10.0.20.0/24 | Personal | No restrictions |
+| 30 | IOT | 10.0.30.0/24 | Smart-Home | Internet only + DNS to Pi-hole |
+| 31 | IOT-AUTO | 10.0.31.0/24 | Automation | MQTT + DNS to Pi only |
+| 40 | HOUSEHOLD | 10.0.40.0/24 | Family | Internet only + DNS to Pi-hole |
+| 50 | GUEST | 10.0.50.0/24 | Guest | Internet only + DNS to Pi-hole, client isolation |
+| 99 | MGMT | 10.0.99.0/24 | (none) | No restrictions |
 
 > 📄 See [docs/vlan-design.md](docs/vlan-design.md) for the full VLAN design with ACL rules, switch config, and lessons learned.
 
@@ -198,16 +210,16 @@ Produces **182 posts per week per page** across 3 Facebook pages.
 ## Security
 
 - **Zero port forwarding** — all ingress via Ngrok tunnel
-- **VLAN segmentation** — 6 VLANs with inter-VLAN ACLs enforcing isolation
+- **VLAN segmentation** — 7 VLANs with inter-VLAN ACLs enforcing isolation
 - **ACLs** — IOT: internet-only; IOT-AUTO: MQTT-only to Pi; HOUSEHOLD: internet-only; GUEST: internet-only with client isolation
 - **Remote access** — Tailscale mesh VPN for cross-VLAN and remote management
-- **UPS auto-shutdown** — CyberPower CP1500PFCLCD with PowerPanel Personal, graceful shutdown at 20% battery
-- **TCP MSS clamping** — `ip tcp adjust-mss 1452` on WAN interface for bridge mode compatibility
+- **UPS auto-shutdown** — battery-backed graceful shutdown at low-battery threshold
+- **TCP MSS clamping** — `ip tcp adjust-mss` on WAN interface for bridge-mode compatibility
 - **Cisco IOS hardening** — enable secret, console password + timeout, service password-encryption, SSHv2, local user auth
 - **DNS filtering** — Pi-hole blocking 87K+ domains, serving all VLANs
+- **Print server hardening** — CUPS admin restricted to TRUSTED VLAN; print submission restricted to SERVER/TRUSTED/HOUSEHOLD; printer Wi-Fi Direct and vendor telemetry disabled
 - **MCP auth tokens** — Sidecar callbacks secured via `x-mcp-token` / `x-internal-key`
 - **Credential management** — API keys in `.env` (gitignored), Railway encrypted env store
-- **UPS protection** — CyberPower CP1500PFCLCD battery backup
 
 ---
 
@@ -215,9 +227,9 @@ Produces **182 posts per week per page** across 3 Facebook pages.
 
 | Domain | Implementation |
 |---|---|
-| **Enterprise Networking** | Cisco IOS XE: 6 VLANs, SVIs, inter-VLAN routing, extended ACLs, NAT/PAT, DHCP (7 pools + static reservation), 802.1Q trunking, SSH |
-| **Network Infrastructure** | Dual managed switch topology, Netgear Advanced 802.1Q configuration, enterprise PoE+ AP deployment, VLAN-tagged WiFi (4 SSIDs) |
-| **Linux Server Admin** | Headless Raspberry Pi OS, SSH, Pi-hole DNS, UniFi Controller |
+| **Enterprise Networking** | Cisco IOS XE: 7 VLANs, SVIs, inter-VLAN routing, 4 extended ACLs, NAT/PAT, DHCP, 802.1Q trunking, SSH |
+| **Network Infrastructure** | Dual managed-switch topology, Advanced 802.1Q configuration, enterprise PoE+ AP deployment, VLAN-tagged WiFi (5 SSIDs) |
+| **Linux Server Admin** | Headless Raspberry Pi OS, SSH, Pi-hole DNS, UniFi Controller, CUPS print server (IPP Everywhere) |
 | **Software Engineering** | 78K+ lines across 3 repos; MCP protocol server; multi-API orchestration |
 | **IoT / Automation** | ESP32 sensor pipeline (BME280 → MQTT → SQLite → Streamlit), VLAN-isolated IoT network |
 | **Cloud Architecture** | Hybrid self-hosted + Railway; dual-engine pattern; webhook event processing |
@@ -229,11 +241,12 @@ Produces **182 posts per week per page** across 3 Facebook pages.
 
 See [ROADMAP.md](ROADMAP.md) for the full phased plan covering:
 - **Phase 1** ✅ Documentation & baseline
-- **Phase 2** ✅ Network hardening (Cisco, VLANs, ACLs, Pi-hole, UniFi APs — complete)
-- **Phase 3** Server hardening (Docker, process management)
+- **Phase 2** ✅ Network hardening (Cisco, VLANs, ACLs, Pi-hole, UniFi APs)
+- **Phase 3** Server hardening (Docker, auth, runbooks) — CUPS print server complete
 - **Phase 4** Monitoring & observability
-- **Phase 5** Security audit
+- **Phase 5** Security audit & SIEM
 - **Phase 6** Infrastructure as Code
+- **Phase 7** Portfolio & documentation
 
 ---
 
@@ -250,4 +263,4 @@ See [ROADMAP.md](ROADMAP.md) for the full phased plan covering:
 
 
 
-*Last updated: April 19, 2026*
+*Last updated: April 24, 2026*
