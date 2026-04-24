@@ -11,12 +11,18 @@
 | Cisco C1111 | 192.168.10.1 (SSH) | All (SVIs) | 44:AE:25:99:9D:80 | `ssh cisco` from Acer, `ssh -oKexAlgorithms=+diffie-hellman-group14-sha1 -oHostKeyAlgorithms=+ssh-rsa admin@192.168.10.1` from Mac |
 | GS308EP | 192.168.100.100 (web) | 1 (floats) | 28:94:01:84:2D:8A | `http://192.168.100.100` from any browser |
 | GS316EP | Floats on VLAN 1 (no stable IP) | 1 (floats) | 28:94:01:7F:A7:F7 | Check `show arp` or scan VLAN 1. May need physical access to find IP. |
-| Pi 4B (Pi-hole) | 192.168.10.16 | 10 (SERVER) | 88:A2:9E:A8:33:C6 | `ssh admin@192.168.10.16` or `http://192.168.10.16/admin` |
+| Pi 4B | 192.168.10.16 | 10 (SERVER) | 88:A2:9E:A8:33:C6 | `ssh admin@192.168.10.16` |
+| Pi-hole | 192.168.10.16/admin | 10 (SERVER) | (same as Pi) | `http://192.168.10.16/admin` |
 | UniFi Controller | 192.168.10.16:8443 | 10 (SERVER) | (same as Pi) | `https://192.168.10.16:8443` |
-| Acer Server | 192.168.10.17 | 10 (SERVER) | 40:C2:BA:E9:23:07 | Physical or RDP |
+| Mosquitto MQTT | 192.168.10.16:1883 | 10 (SERVER) | (same as Pi) | `mosquitto_sub -h 192.168.10.16 -t '#'` |
+| CUPS Print Server | 192.168.10.16:631 | 10 (SERVER) | (same as Pi) | `http://192.168.10.16:631` (admin from VLAN 20 only) |
+| HP ENVY Inspire 7200e | DHCP on VLAN 30 (192.168.30.x) | 30 (IOT) | 7C:4D:8F:BE:B1:EC | Print via CUPS: `ipp://192.168.10.16:631/printers/HP_Envy_Lab` |
+| Acer Server | 192.168.10.17 | 10 (SERVER) | 40:C2:BA:E9:23:07 | Physical, RDP, or Tailscale (100.113.164.125) |
 | UniFi AP #1 | DHCP on VLAN 99 | 99 (MGMT) | 6C:63:F8:A5:7C:1D | Via UniFi Controller |
 | UniFi AP #2 | DHCP on VLAN 99 | 99 (MGMT) | 6C:63:F8:A5:73:AD | Via UniFi Controller |
 | XB8 (bridge mode) | Not routable (modem only) | — | — | Physical access only. Factory reset: hold reset 30 sec |
+| Tailscale (MacBook) | 100.111.203.45 | Overlay | — | Mesh VPN, MagicDNS disabled |
+| Tailscale (Acer) | 100.113.164.125 | Overlay | — | Mesh VPN, MagicDNS disabled |
 
 ---
 
@@ -95,6 +101,7 @@
 | SSH to Pi | `ssh admin@192.168.10.16` |
 | Pi-hole admin | `http://192.168.10.16/admin` |
 | UniFi Controller | `https://192.168.10.16:8443` |
+| CUPS admin | `http://192.168.10.16:631` |
 | GS308EP admin | `http://192.168.100.100` |
 | Show all DHCP leases | `show ip dhcp binding` |
 | Show MAC table | `show mac address-table` |
@@ -103,6 +110,12 @@
 | Save Cisco config | `write memory` |
 | Find a device by MAC | `show mac address-table \| include <last4>` |
 | Find a device IP by MAC | `show arp \| include <mac>` |
+| Docker: start MCP stack | `cd C:\Users\jbm06\social-media-mcp && docker compose up -d` |
+| Docker: check status | `docker compose ps` |
+| Docker: view logs | `docker compose logs --tail=100 -f` |
+| Docker: restart | `docker compose restart` |
+| Docker: rebuild after code change | `docker compose down && docker compose build && docker compose up -d` |
+| Print test page | `lp -d HP_Envy_Lab /usr/share/cups/data/default-testpage.pdf` (from Pi) |
 
 ---
 

@@ -1,145 +1,149 @@
 # CUPS Print Server Setup
 
-**Role:** Network print server for the home lab — allows any authorized client to print to a USB-attached HP All-in-One via IPP.
-**Host:** Raspberry Pi on the SERVER VLAN
-**CUPS Version:** 2.4.x
-**Status:** Operational — verified from Linux, macOS, and Windows clients
+**Date:** April 23, 2026
+**Host:** jlm-lab-pi (Raspberry Pi 4B, 192.168.10.16)
+**Printer:** HP ENVY Inspire 7200e All-in-One
+**CUPS Version:** 2.4.10
+**Status:** Functional — verified via Debian, Windows, and macOS test pages
 
 ---
 
 ## Architecture
 
-The printer operates as a **dual-path device**:
+The printer operates as a dual-path device:
 
-- **Print path** — all local print jobs route through CUPS on the Pi via USB. Clients connect to the queue over IPP on the SERVER VLAN.
-- **Vendor cloud path** — the printer's own WiFi radio lives on the **IOT VLAN** with dynamic DHCP. This segment only permits outbound internet + DNS to Pi-hole, so the cloud features work (Instant-Ink tracking, Print Anywhere, firmware updates) without the printer being reachable from trusted VLANs on its own.
+- **Print path:** All local printing goes through CUPS on the Pi via USB.
+  Clients connect to `ipp://192.168.10.16:631/printers/HP_Envy_Lab`
+- **HP cloud path:** Printer's WiFi radio connects to Gorgeous-IOT (VLAN 30)
+  for Instant Ink monitoring, Print Anywhere, and firmware updates.
 
 ```
-CUPS client (TRUSTED / SERVER / HOUSEHOLD)
-         │ IPP :631
-         ▼
-   Pi  ───USB───► HP All-in-One ───WiFi (IOT VLAN)───► Vendor cloud
-  (CUPS)                                                (outbound only)
+Mac/iPhone (VLAN 20) ──► Pi CUPS (VLAN 10, :631) ──► USB ──► HP ENVY
+Family (VLAN 40)    ──►                                         │
+                                                                 │ WiFi
+                                                     Gorgeous-IOT (VLAN 30)
+                                                                 │
+                                                          HP Cloud (Instant Ink)
 ```
-
-Trusted clients never talk directly to the printer — only through the CUPS queue.
 
 ---
 
-## Why not just use the printer's built-in network stack?
+## The Problem
 
-- Attack surface: consumer printers commonly ship IPP, mDNS, SNMP, HTTP admin, FTP, and raw :9100 all listening on the LAN. Putting the raw device on TRUSTED exposes all of that.
-- Vendor telemetry: even with Wi-Fi Direct disabled, the cloud features require outbound internet — best handled on the IOT VLAN.
-- Auth and access control: CUPS gives us per-operation, per-VLAN access rules that the printer firmware doesn't.
-- Uniformity: every client uses one IPP URI regardless of OS (no per-driver binaries).
+Initial setup encountered a "stat=12" error loop caused by the Linux kernel's
+`usblp` module and HPLIP fighting for control of the same USB port. This also
+prevented the CUPS Web UI from being reachable across the network.
 
 ---
-
-## The Problem Encountered During Install
-
-Initial setup failed with a `stat=12` error loop. Root cause: the kernel's `usblp` module and HPLIP (the HP driver stack) were both binding to the same USB endpoint and fighting for control. This also prevented the CUPS web UI from being reachable across the network.
 
 ## Resolution
 
-1. **Kernel conflict** — blacklisted the `usblp` module:
-
-   ```
+1. **Kernel conflict:** Blacklisted `usblp` module
+   ```bash
    echo "blacklist usblp" | sudo tee /etc/modprobe.d/blacklist-usblp.conf
-   sudo reboot
    ```
 
-2. **Permissions** — added the admin user to the `lp` and `lpadmin` groups.
-
-3. **Network access** — enabled remote admin/sharing:
-
+2. **Permissions:** Added admin user to `lp` and `lpadmin` groups
+   ```bash
+   sudo usermod -aG lp,lpadmin admin
    ```
+
+3. **Network access:** Opened CUPS to the local network
+   ```bash
    sudo cupsctl --remote-admin --remote-any --share-printers
    ```
-
    Then hardened access in `/etc/cups/cupsd.conf`:
+   - Print submission (`/`): localhost + VLAN 10 + VLAN 20 + VLAN 40
+   - Admin access (`/admin`, `/admin/conf`, `/admin/log`): localhost + VLAN 20 only
 
-   - Print submission: allowed from SERVER, TRUSTED, and HOUSEHOLD VLAN subnets + localhost
-   - Admin access (add/remove queues, config changes): TRUSTED VLAN + localhost only
-
-4. **Driver** — switched from the flaky `hp://` backend to the native `usb://` backend using **IPP Everywhere** (driverless). More reliable and no per-client driver install required.
+4. **Driver:** Switched from buggy `hp://` backend to native `usb://` backend
+   using IPP Everywhere (driverless) protocol
 
 ---
 
-## Configuration Summary
+## Configuration Details
 
 | Setting | Value |
 |---|---|
-| Protocol | IPP Everywhere (driverless) |
-| Backend | `usb://` |
-| Queue name | `HP_Envy_Lab` |
-| CUPS port | 631 |
-| Print ACL | SERVER + TRUSTED + HOUSEHOLD VLANs + localhost |
-| Admin ACL | TRUSTED VLAN + localhost |
+| Connection URI | `usb://HP/ENVY%20Inspire%207200%20series?serial=TH35VJX0GB&interface=1` |
+| Protocol | IPP Everywhere / Driverless |
+| CUPS Queue Name | `HP_Envy_Lab` |
+| Access URL | `http://192.168.10.16:631/printers/HP_Envy_Lab` |
+| Config file | `/etc/cups/cupsd.conf` |
+| Config backup | `/etc/cups/cupsd.conf.bak.YYYYMMDD` |
 
-The Pi's LAN address is resolved via Pi-hole / DNS; clients are set up with the Pi's hostname rather than a raw IP so the queue remains portable if the address ever changes.
+---
+
+## CUPS Access Policy
+
+```
+<Location />              → Allow 127.0.0.1, 192.168.10.16, 192.168.20.0/24, 192.168.40.0/24
+<Location /admin>         → Allow 127.0.0.1, 192.168.10.16, 192.168.20.0/24
+<Location /admin/conf>    → Allow 127.0.0.1, 192.168.10.16, 192.168.20.0/24
+<Location /admin/log>     → Allow 127.0.0.1, 192.168.10.16, 192.168.20.0/24
+```
+
+All other VLANs (IOT, IOT-AUTO, GUEST) are denied by `Order allow,deny`.
 
 ---
 
 ## Client Setup
 
-**macOS:**
-System Settings → Printers & Scanners → Add Printer → IP tab:
+**macOS (all Macs):**
 
-- Address: `<pi-hostname>`
+System Settings → Printers & Scanners → Add Printer → IP tab:
+- Address: `192.168.10.16`
 - Protocol: IPP
 - Queue: `/printers/HP_Envy_Lab`
 
-Command line equivalent:
-
-```
-lpadmin -p HP_Envy_Lab -E \
-  -v ipp://<pi-hostname>:631/printers/HP_Envy_Lab \
-  -m everywhere
+Or via command line:
+```bash
+lpadmin -p HP_Envy_Lab -E -v ipp://192.168.10.16:631/printers/HP_Envy_Lab -m everywhere
 ```
 
 **Windows:**
-Add printer via URL `http://<pi-hostname>:631/printers/HP_Envy_Lab`
-Requires the "Internet Printing Client" feature enabled.
-If jobs stall on a resource-constrained print server, toggle *Printer Properties → Advanced → "Start printing after last page is spooled"*.
 
-**iOS / Android:**
-Auto-detected via AirPrint/IPP from TRUSTED and HOUSEHOLD VLANs.
+Add printer via URL: `http://192.168.10.16:631/printers/HP_Envy_Lab`
+
+Requires "Internet Printing Client" enabled in Windows Features.
+
+If print jobs stall, change to "Start printing after last page is spooled"
+in Printer Properties → Advanced tab.
+
+**iOS/Android:**
+
+Auto-detect via AirPrint/IPP on VLAN 20 and VLAN 40.
 
 ---
 
 ## Printer Hardening
 
-- [x] Wi-Fi Direct disabled (was using vendor-default password)
-- [x] Vendor marketing / telemetry sharing disabled
-- [x] Admin password changed from default
-- [x] Printer WiFi kept on IOT VLAN for cloud features only
-- [x] CUPS admin restricted to TRUSTED VLAN
-- [x] Printer reachable from TRUSTED/HOUSEHOLD only via the CUPS queue — never directly
+- [x] Wi-Fi Direct: Disabled (was using default password `12345678`)
+- [x] HP marketing data sharing: Disabled
+- [x] Admin password: Changed from default
+- [x] WiFi kept on Gorgeous-IOT (VLAN 30) for Instant Ink only
+- [x] CUPS admin restricted to VLAN 20 (Trusted)
 
 ---
 
 ## Disaster Recovery
 
 If the Pi goes down:
-
-1. Plug the printer's USB cable into any other machine and print locally, or
-2. Temporarily re-enable the printer's own IPP listener on the IOT VLAN (access from TRUSTED via explicit allow rule), or
-3. Restore the CUPS config on a fresh Pi from the backup at `/etc/cups/cupsd.conf.bak.YYYYMMDD`.
-
-The queue definition is pure config — re-adding the USB device and restoring `cupsd.conf` is a 2-minute restore.
+1. Plug the printer's USB cable directly into any computer
+2. Or: re-enable the printer's WiFi-based printing as a temporary fallback
+3. CUPS config is backed up at `/etc/cups/cupsd.conf.bak.YYYYMMDD`
 
 ---
 
 ## Lessons Learned
 
-1. Consumer printers with cloud subscriptions need internet — they cannot be fully air-gapped without breaking the subscription. Segment them on the IOT VLAN instead.
-2. Consumer printers do not always honor DHCP reservations from every router. When reservations are unreliable, static-IP the printer's WiFi interface inside the IOT subnet *or* use USB + CUPS and skip the printer's own network stack entirely.
-3. Cisco `hardware-address` in DHCP host pools is BOOTP-only; DHCP devices need `client-identifier` with the correct per-vendor format. Packet capture is often required to find it.
-4. `show running-config | section dhcp` does not always show all pools — verify with `show ip dhcp pool` (no arguments) for the authoritative list.
-5. The `usblp` kernel module **must** be blacklisted for CUPS to get exclusive USB access when using HPLIP.
-6. IPP Everywhere via `usb://` is more reliable than HPLIP's `hp://` for newer HP all-in-ones.
-7. Windows IPP clients may appear to "stall" on resource-constrained print servers — the fix is spool-then-print, not a server-side change.
+1. HP Envy 7200e does not reliably accept DHCP reservations from Cisco IOS — use USB/CUPS instead
+2. Cisco IOS `hardware-address` in DHCP host pools is BOOTP-only; DHCP devices need `client-identifier`
+3. HP Instant Ink requires internet — printer WiFi must stay enabled on an internet-capable VLAN
+4. `usblp` kernel module must be blacklisted for CUPS to have exclusive USB access
+5. IPP Everywhere (driverless) via `usb://` is more reliable than HPLIP `hp://` for this printer
+6. Windows print jobs may stall on resource-constrained print servers — spool fully before printing
 
 ---
 
-*Last updated: April 24, 2026*
+*Deployed and verified: April 23, 2026*

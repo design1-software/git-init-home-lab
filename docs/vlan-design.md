@@ -36,8 +36,9 @@
 
 | Device | IP | Connection | Notes |
 |---|---|---|---|
-| Acer Aspire 3 (MCP server) | 192.168.10.17 | Cisco GE0/1/0 (access VLAN 10) | Production 24/7 |
-| Raspberry Pi 4B | 192.168.10.16 | GS308EP Port 3 (PoE, access VLAN 10) | Pi-hole + UniFi Controller |
+| Acer Aspire 3 (MCP server) | 192.168.10.17 | Cisco GE0/1/0 (access VLAN 10) | Docker: social-media-mcp + Ngrok sidecar, closet-monitor subscriber, Streamlit (:8501) |
+| Raspberry Pi 4B | 192.168.10.16 | GS308EP Port 3 (PoE, access VLAN 10) | Pi-hole, UniFi Controller, Mosquitto MQTT, CUPS print server |
+| HP ENVY Inspire 7200e | — | USB to Pi 4B | Print queue: `HP_Envy_Lab` via CUPS (USB path only; WiFi on VLAN 30) |
 | Future NAS | TBD | GS308EP or GS316EP | Backup storage |
 
 ### VLAN 20 — TRUSTED
@@ -46,29 +47,29 @@
 |---|---|---|---|
 | iMac | DHCP | WiFi (Gorgeous) | Development |
 | MacBook Air | DHCP | WiFi (Gorgeous) | Development |
-| MacBook Pro | DHCP | WiFi (Gorgeous) | Development |
+| MacBook Pro | DHCP | WiFi (Gorgeous) | Development + fb-content-system (always-on) |
 | iPhones | DHCP | WiFi (Gorgeous) | Personal |
-| Apple TV ×3 | Static .101-.103 (planned) | Wired or WiFi (Gorgeous) | AirPlay ACL targets |
-| ESP32 closet sensor | DHCP | WiFi (Gorgeous) | Temporary — moves to IOT-AUTO when Mosquitto migrates to Pi |
+| Apple TV ×3 | DHCP | GS316EP Ports 2-4 (wired, VLAN 20) | DHCP required — static IPs cause app failures |
 
 ### VLAN 30 — IOT
 
 | Device | IP | Connection | Notes |
 |---|---|---|---|
-| Ring cameras + doorbell | DHCP | WiFi (Gorgeous-IoT) | Pending migration from Gorgeous |
-| Kasa Smart Plugs | DHCP | WiFi (Gorgeous-IoT) | Pending migration |
+| HP ENVY Inspire 7200e | DHCP (192.168.30.x) | WiFi (Gorgeous-IoT) | WiFi for HP Instant Ink / Print Anywhere only; printing via USB/CUPS on VLAN 10 |
+| Ring cameras + doorbell | DHCP | WiFi (Gorgeous-IoT) | ✅ Migrated |
+| Kasa Smart Plugs | DHCP | WiFi (Gorgeous-IoT) | Pending (app issue) |
 | Ecobee thermostat | DHCP | WiFi (Gorgeous-IoT) | ✅ Migrated |
-| Amazon Alexa devices | DHCP | WiFi (Gorgeous-IoT) | Pending migration |
-| Somfy Hub | DHCP | WiFi (Gorgeous-IoT) | Pending migration |
-| Samsung Smart TV | DHCP | WiFi (Gorgeous-IoT) | Pending migration |
+| Amazon Alexa devices | DHCP | WiFi (Gorgeous-IoT) | ✅ Migrated |
+| Somfy Hub | DHCP | WiFi (Gorgeous-IoT) | ✅ Migrated |
+| Samsung Smart TV | DHCP | WiFi (Gorgeous-IoT) | ✅ Migrated |
 | Wyze Cam v3 ×2 | DHCP | WiFi (Gorgeous-IoT) | Stock firmware, Wyze cloud |
 
 ### VLAN 31 — IOT-AUTO
 
 | Device | IP | Connection | Notes |
 |---|---|---|---|
+| ESP32 closet sensor | DHCP | WiFi (Gorgeous-Auto) | ✅ Active — BME280, publishing MQTT to Pi (192.168.10.16:1883) |
 | ESP32 garage (reed switch + relay) | DHCP | WiFi (Gorgeous-Auto) | Future — door state sensor + closer |
-| ESP32 closet sensor | DHCP | WiFi (Gorgeous-Auto) | Future — after Mosquitto migrates to Pi |
 
 ### VLAN 40 — HOUSEHOLD
 
@@ -97,7 +98,7 @@
 | `Gorgeous-Home` | 40 (HOUSEHOLD) | WPA2/WPA3 | ✅ Live, tested |
 | `JM&G-GUEST` | 50 (GUEST) | WPA2/WPA3, client isolation | ✅ Live, tested |
 
-All four SSIDs broadcast on both 2.4 GHz and 5 GHz from both UniFi U6+ APs.
+All five SSIDs broadcast on both 2.4 GHz and 5 GHz from both UniFi U6+ APs.
 
 ---
 
@@ -214,4 +215,4 @@ IOT and IOT-AUTO ACLs explicitly permit DNS traffic to the Pi across VLAN bounda
 
 ---
 
-*Implemented and verified: April 19, 2026*
+*Implemented and verified: April 24, 2026*

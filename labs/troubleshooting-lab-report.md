@@ -32,7 +32,7 @@ ping 192.168.20.103  → 5/5 success
 ping 8.8.8.8  → 5/5 success, 16-19ms
 ```
 
-**Result:** WAN path is working. NAT is translating and the new public IP (174.53.28.46) is functional.
+**Result:** WAN path is working. NAT is translating and the new public IP is functional.
 
 **CCNA Skill:** WAN verification, NAT validation. Maps to: *NAT/PAT operations and verification*.
 

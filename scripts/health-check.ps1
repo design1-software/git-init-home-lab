@@ -1,5 +1,5 @@
 # ============================================================
-# HOME LAB HEALTH CHECK — Windows PowerShell
+# HOME LAB HEALTH CHECK — Windows PowerShell (Docker-aware)
 # ============================================================
 # Checks all critical services and reports status.
 # Schedule via Task Scheduler every 5 minutes.
@@ -10,6 +10,7 @@
 $MCP_PORT = if ($env:MCP_PORT) { $env:MCP_PORT } else { "3000" }
 $MCP_HEALTH_URL = "http://localhost:$MCP_PORT/health"
 $NGROK_API = "http://localhost:4040/api/tunnels"
+$NGROK_EXTERNAL = "https://mea.ngrok.app/health"
 $DISK_WARN_PERCENT = 85
 $MEM_WARN_PERCENT = 90
 
@@ -39,25 +40,66 @@ Write-Host "  Home Lab Health Check — $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
 Write-Host "======================================="
 Write-Host ""
 
-# --- 1. MCP Server ---
+# --- 1. Docker Desktop ---
+Write-Host "  Docker Desktop"
+Write-Host "  -----------------------------"
+$dockerProc = Get-Process -Name "Docker Desktop" -ErrorAction SilentlyContinue
+if ($dockerProc) {
+    Write-Log "OK" "Docker Desktop running"
+} else {
+    Write-Log "FAIL" "Docker Desktop NOT running"
+    $Failures++
+}
+
+# --- 2. Docker Containers ---
+Write-Host ""
+Write-Host "  Docker Containers"
+Write-Host "  -----------------------------"
+try {
+    $composeDir = "C:\Users\jbm06\social-media-mcp"
+    $containers = docker compose -f "$composeDir\docker-compose.yml" ps --format json 2>$null | ConvertFrom-Json
+    
+    if ($containers) {
+        foreach ($c in $containers) {
+            $name = $c.Name
+            $state = $c.State
+            $health = $c.Health
+            
+            if ($state -eq "running") {
+                if ($health -eq "healthy" -or $health -eq "") {
+                    Write-Log "OK" "$name — $state $(if($health){"($health)"})"
+                } else {
+                    Write-Log "WARN" "$name — $state ($health)"
+                    $Warnings++
+                }
+            } else {
+                Write-Log "FAIL" "$name — $state"
+                $Failures++
+            }
+        }
+    } else {
+        Write-Log "FAIL" "No Docker containers found"
+        $Failures++
+    }
+} catch {
+    Write-Log "FAIL" "Could not query Docker containers: $($_.Exception.Message)"
+    $Failures++
+}
+
+# --- 3. MCP Server Health ---
+Write-Host ""
 Write-Host "  MCP Server (social-media-mcp)"
 Write-Host "  -----------------------------"
 try {
     $response = Invoke-WebRequest -Uri $MCP_HEALTH_URL -TimeoutSec 5 -UseBasicParsing -ErrorAction Stop
-    Write-Log "OK" "MCP server responding on :$MCP_PORT (HTTP $($response.StatusCode))"
+    $healthData = $response.Content | ConvertFrom-Json
+    Write-Log "OK" "MCP server healthy — v$($healthData.version), storage: $($healthData.storage.status)"
 } catch {
-    # Check if process is at least listening on the port
-    $listening = Get-NetTCPConnection -LocalPort $MCP_PORT -State Listen -ErrorAction SilentlyContinue
-    if ($listening) {
-        Write-Log "WARN" "MCP process on :$MCP_PORT but /health not responding"
-        $Warnings++
-    } else {
-        Write-Log "FAIL" "MCP server NOT running on :$MCP_PORT"
-        $Failures++
-    }
+    Write-Log "FAIL" "MCP server NOT responding on :$MCP_PORT"
+    $Failures++
 }
 
-# --- 2. Ngrok Tunnel ---
+# --- 4. Ngrok Tunnel (Local) ---
 Write-Host ""
 Write-Host "  Ngrok Tunnel"
 Write-Host "  -----------------------------"
@@ -76,7 +118,19 @@ try {
     $Failures++
 }
 
-# --- 3. Disk Usage ---
+# --- 5. External Reachability ---
+Write-Host ""
+Write-Host "  External Access (mea.ngrok.app)"
+Write-Host "  -----------------------------"
+try {
+    $extResponse = Invoke-WebRequest -Uri $NGROK_EXTERNAL -TimeoutSec 10 -UseBasicParsing -ErrorAction Stop
+    Write-Log "OK" "External health check passed (HTTP $($extResponse.StatusCode))"
+} catch {
+    Write-Log "FAIL" "External health check failed — Railway cannot reach MCP"
+    $Failures++
+}
+
+# --- 6. Disk Usage ---
 Write-Host ""
 Write-Host "  Disk Usage"
 Write-Host "  -----------------------------"
@@ -103,7 +157,7 @@ if ($diskD) {
     }
 }
 
-# --- 4. Memory ---
+# --- 7. Memory ---
 Write-Host ""
 Write-Host "  Memory"
 Write-Host "  -----------------------------"
@@ -119,30 +173,23 @@ if ($memPercent -ge $MEM_WARN_PERCENT) {
     Write-Log "OK" "Memory at ${memPercent}% (${memUsed}GB / ${memTotal}GB)"
 }
 
-# --- 5. Node.js Processes ---
+# --- 8. Docker Resource Usage ---
 Write-Host ""
-Write-Host "  Key Processes"
+Write-Host "  Docker Resources"
 Write-Host "  -----------------------------"
-$nodeProcs = Get-Process -Name "node" -ErrorAction SilentlyContinue
-if ($nodeProcs) {
-    $nodeCount = @($nodeProcs).Count
-    $totalMem = [math]::Round(($nodeProcs | Measure-Object -Property WorkingSet64 -Sum).Sum / 1MB)
-    Write-Log "OK" "$nodeCount Node.js process(es) running (${totalMem}MB total)"
-} else {
-    Write-Log "WARN" "No Node.js processes found"
+try {
+    $stats = docker stats --no-stream --format "{{.Name}}: CPU {{.CPUPerc}}, Mem {{.MemUsage}}" 2>$null
+    if ($stats) {
+        foreach ($line in $stats) {
+            Write-Log "OK" $line
+        }
+    }
+} catch {
+    Write-Log "WARN" "Could not query Docker resource stats"
     $Warnings++
 }
 
-# Check for ngrok process
-$ngrokProc = Get-Process -Name "ngrok" -ErrorAction SilentlyContinue
-if ($ngrokProc) {
-    Write-Log "OK" "Ngrok process running"
-} else {
-    Write-Log "WARN" "Ngrok process not found"
-    $Warnings++
-}
-
-# --- 6. Network ---
+# --- 9. Network ---
 Write-Host ""
 Write-Host "  Network"
 Write-Host "  -----------------------------"
