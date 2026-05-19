@@ -204,9 +204,9 @@ interface Vlan99
  ip nat inside
 !
 ip forward-protocol nd
-ip http server
+no ip http server
 ip http authentication local
-ip http secure-server
+no ip http secure-server
 ip http client source-interface GigabitEthernet0/0/0
 ! NOTE: HTTP and HTTPS management servers are enabled above.
 !       Disable both at Phase B cutover — hardening task.
@@ -298,8 +298,8 @@ end
 # OPEN ITEMS — address at Phase B cutover
 # ----------------------------------------------------------------------------
 # 1. Remove 'switchport access vlan 10' from GE0/1/2 (dead config, trunk wins)
-# 2. Disable HTTP server:  no ip http server
-# 3. Disable HTTPS server: no ip http secure-server
+# 2. DONE — HTTP server disabled (no ip http server)
+# 3. DONE — HTTPS server disabled (no ip http secure-server)
 # 4. Decide: keep or remove cisco_support user
 # 5. Confirm VLAN 1 (192.168.100.0/24) retirement — no active consumers verified
 # 6. Reconfigure GE0/1/0 as TRANSIT L3 port (192.168.199.1/30) for 3560CX link
