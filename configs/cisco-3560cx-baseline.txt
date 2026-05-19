@@ -2,17 +2,19 @@
 # Device:   Cisco Catalyst WS-C3560CX-8PC-S
 # Hostname: JLM-LAB-SW1
 # Serial:   FOC2418L4T2
-# Captured: May 16, 2026
-# Status:   STAGED — not yet cabled into production. Awaiting Phase B cutover.
+# Captured: May 19, 2026
+# Status:   PHASE A COMPLETE — staged offline, ready for Phase B cutover
 # Notes:    Passwords redacted. RTU perpetual licensing — no Smart Licensing needed.
 #           Model suffix '-S' = IP Base perpetual license unlocked at hardware level.
 #           Do NOT accept IP Services EULA — starts unnecessary 90-day eval countdown.
-#           Config register 0xF is normal for 3560CX — not user-modifiable like ISR routers.
+#           Vlan199 SVI removed — TRANSIT subnet handled by Gi0/1 as routed L3 port.
+#           Default route via 192.168.199.1 inactive until Phase B TRANSIT link cabled.
 # ============================================================================
 
 version 15.2
-service timestamps debug datetime msec
-service timestamps log datetime msec
+no service pad
+service timestamps debug datetime msec localtime
+service timestamps log datetime msec localtime
 service password-encryption
 !
 hostname JLM-LAB-SW1
@@ -20,27 +22,103 @@ hostname JLM-LAB-SW1
 boot-start-marker
 boot-end-marker
 !
+logging buffered 16384
 enable secret 9 <REDACTED>
 !
-no aaa new-model
-!
-ip domain-name lab.local
-!
 username admin privilege 15 secret 9 <REDACTED>
+no aaa new-model
+system mtu routing 1500
 !
-! ============================================================================
-! VTP CONFIGURATION
-! ============================================================================
+ip routing
+ip dhcp excluded-address 192.168.100.1 192.168.100.10
+ip dhcp excluded-address 192.168.10.1 192.168.10.10
+ip dhcp excluded-address 192.168.20.1 192.168.20.10
+ip dhcp excluded-address 192.168.30.1 192.168.30.10
+ip dhcp excluded-address 192.168.31.1 192.168.31.10
+ip dhcp excluded-address 192.168.40.1 192.168.40.10
+ip dhcp excluded-address 192.168.50.1 192.168.50.10
+ip dhcp excluded-address 192.168.60.1 192.168.60.10
+ip dhcp excluded-address 192.168.70.1 192.168.70.10
+ip dhcp excluded-address 192.168.99.1 192.168.99.10
+ip dhcp excluded-address 192.168.30.50 192.168.30.60
 !
+ip dhcp pool VLAN1
+ network 192.168.100.0 255.255.255.0
+ default-router 192.168.100.2
+ dns-server 192.168.10.16 1.1.1.1
+ lease 7
+!
+ip dhcp pool MGMT
+ network 192.168.10.0 255.255.255.0
+ default-router 192.168.10.2
+ dns-server 192.168.10.16 1.1.1.1
+ lease 7
+!
+ip dhcp pool TRUSTED
+ network 192.168.20.0 255.255.255.0
+ default-router 192.168.20.2
+ dns-server 192.168.10.16 1.1.1.1
+ lease 7
+!
+ip dhcp pool IOT
+ network 192.168.30.0 255.255.255.0
+ default-router 192.168.30.2
+ dns-server 192.168.10.16 1.1.1.1
+ lease 7
+!
+ip dhcp pool IOT-AUTO
+ network 192.168.31.0 255.255.255.0
+ default-router 192.168.31.2
+ dns-server 192.168.10.16 1.1.1.1
+!
+ip dhcp pool HOUSEHOLD
+ network 192.168.40.0 255.255.255.0
+ default-router 192.168.40.2
+ dns-server 192.168.10.16 1.1.1.1
+ lease 7
+!
+ip dhcp pool GUEST
+ network 192.168.50.0 255.255.255.0
+ default-router 192.168.50.2
+ dns-server 192.168.10.16 1.1.1.1
+ lease 7
+!
+ip dhcp pool LAB
+ network 192.168.60.0 255.255.255.0
+ default-router 192.168.60.1
+ dns-server 192.168.10.16 1.1.1.1
+ lease 7
+!
+ip dhcp pool SERVER
+ network 192.168.70.0 255.255.255.0
+ default-router 192.168.70.1
+ dns-server 192.168.10.16 1.1.1.1
+ lease 7
+!
+ip dhcp pool MGMT-NATIVE
+ network 192.168.99.0 255.255.255.0
+ default-router 192.168.99.2
+ dns-server 192.168.10.16 1.1.1.1
+ lease 7
+!
+ip dhcp pool GS308EP
+ host 192.168.100.100 255.255.255.0
+ client-identifier 2894.0184.2d8a
+ default-router 192.168.100.2
+ dns-server 192.168.10.16 1.1.1.1
+!
+ip dhcp pool PI-HOLE
+ client-identifier 0188.a29e.a833.c6
+ client-name jlm-lab-pi
+!
+no ip domain-lookup
+ip domain-name lab.local
 vtp mode transparent
 !
-! ============================================================================
-! VLAN DATABASE
-! (Pre-staged offline — not yet active in production topology)
-! ============================================================================
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
 !
-vlan 1
- name DEFAULT
+vlan internal allocation policy ascending
 !
 vlan 10
  name MGMT
@@ -72,90 +150,180 @@ vlan 99
 vlan 199
  name TRANSIT
 !
-! ============================================================================
-! SPANNING TREE
-! ============================================================================
-!
-spanning-tree mode rapid-pvst
-spanning-tree extend system-id
-!
-! ============================================================================
-! INTERFACE CONFIGURATION
-! (All ports blank at baseline — trunk/access assignments added at Phase B)
-! ============================================================================
-!
 interface GigabitEthernet0/1
- description RESERVED-UPLINK-TO-C1111
- shutdown
+ description TRUNK-TO-C1111-TRANSIT
+ no switchport
+ ip address 192.168.199.2 255.255.255.252
 !
 interface GigabitEthernet0/2
- description RESERVED-UPLINK-TO-GS308EP
- shutdown
+ description TRUNK-TO-GS308EP
+ switchport trunk allowed vlan 1,10,20,30,31,40,50,60,70,99
+ switchport trunk native vlan 99
+ switchport mode trunk
 !
 interface GigabitEthernet0/3
- description RESERVED-PROXMOX-SERVER-VLAN70
- shutdown
+ description TRUNK-TO-GS316EP
+ switchport trunk allowed vlan 1,10,20,30,31,40,50,99
+ switchport trunk native vlan 99
+ switchport mode trunk
 !
 interface GigabitEthernet0/4
- description RESERVED
- shutdown
+ description PROXMOX-SERVER-VLAN70
+ switchport trunk allowed vlan 60,70
+ switchport trunk native vlan 70
+ switchport mode trunk
 !
 interface GigabitEthernet0/5
- description RESERVED
+ description SPARE-POE
  shutdown
 !
 interface GigabitEthernet0/6
- description RESERVED
+ description SPARE-POE
  shutdown
 !
 interface GigabitEthernet0/7
- description RESERVED
+ description SPARE-POE
  shutdown
 !
 interface GigabitEthernet0/8
- description RESERVED
+ description SPARE-POE
  shutdown
 !
 interface GigabitEthernet0/9
- description RESERVED-SFP
+ description SPARE-UPLINK
  shutdown
 !
 interface GigabitEthernet0/10
- description RESERVED-SFP
+ description SPARE-UPLINK
  shutdown
 !
-! ============================================================================
-! MANAGEMENT ACCESS
-! ============================================================================
+interface GigabitEthernet0/11
+ description SPARE-SFP
+ shutdown
 !
-ip ssh version 2
-ip ssh time-out 60
-ip ssh authentication-retries 3
+interface GigabitEthernet0/12
+ description SPARE-SFP
+ shutdown
+!
+interface Vlan1
+ ip address 192.168.100.2 255.255.255.0
+!
+interface Vlan10
+ ip address 192.168.10.2 255.255.255.0
+!
+interface Vlan20
+ ip address 192.168.20.2 255.255.255.0
+!
+interface Vlan30
+ ip address 192.168.30.2 255.255.255.0
+ ip access-group IOT-ACL in
+!
+interface Vlan31
+ ip address 192.168.31.2 255.255.255.0
+ ip access-group IOT-AUTO-ACL in
+!
+interface Vlan40
+ ip address 192.168.40.2 255.255.255.0
+ ip access-group HOUSEHOLD-ACL in
+!
+interface Vlan50
+ ip address 192.168.50.2 255.255.255.0
+ ip access-group GUEST-ACL in
+!
+interface Vlan60
+ ip address 192.168.60.1 255.255.255.0
+ ip access-group LAB-ACL in
+!
+interface Vlan70
+ ip address 192.168.70.1 255.255.255.0
+!
+interface Vlan99
+ ip address 192.168.99.2 255.255.255.0
+!
+ip forward-protocol nd
 !
 no ip http server
 no ip http secure-server
+ip route 0.0.0.0 0.0.0.0 192.168.199.1
+ip ssh time-out 60
+ip ssh version 2
 !
-! ============================================================================
-! LOGGING AND TIMESTAMPS
-! ============================================================================
+ip access-list extended GUEST-ACL
+ permit udp any host 192.168.10.16 eq domain
+ permit tcp any host 192.168.10.16 eq domain
+ deny   ip any 192.168.10.0 0.0.0.255
+ deny   ip any 192.168.20.0 0.0.0.255
+ deny   ip any 192.168.30.0 0.0.0.255
+ deny   ip any 192.168.31.0 0.0.0.255
+ deny   ip any 192.168.40.0 0.0.0.255
+ deny   ip any 192.168.50.0 0.0.0.255
+ deny   ip any 192.168.60.0 0.0.0.255
+ deny   ip any 192.168.70.0 0.0.0.255
+ deny   ip any 192.168.99.0 0.0.0.255
+ deny   ip any 192.168.100.0 0.0.0.255
+ permit ip any any
 !
-logging buffered 16384
-service timestamps log datetime msec localtime
+ip access-list extended HOUSEHOLD-ACL
+ permit udp any host 192.168.10.16 eq domain
+ permit tcp any host 192.168.10.16 eq domain
+ deny   ip any 192.168.10.0 0.0.0.255
+ deny   ip any 192.168.20.0 0.0.0.255
+ deny   ip any 192.168.30.0 0.0.0.255
+ deny   ip any 192.168.31.0 0.0.0.255
+ deny   ip any 192.168.40.0 0.0.0.255
+ deny   ip any 192.168.50.0 0.0.0.255
+ deny   ip any 192.168.60.0 0.0.0.255
+ deny   ip any 192.168.70.0 0.0.0.255
+ deny   ip any 192.168.99.0 0.0.0.255
+ deny   ip any 192.168.100.0 0.0.0.255
+ permit ip any any
 !
-! ============================================================================
-! BANNER
-! ============================================================================
+ip access-list extended IOT-ACL
+ permit udp any host 192.168.10.16 eq domain
+ permit tcp any host 192.168.10.16 eq domain
+ deny   ip any 192.168.10.0 0.0.0.255
+ deny   ip any 192.168.20.0 0.0.0.255
+ deny   ip any 192.168.30.0 0.0.0.255
+ deny   ip any 192.168.31.0 0.0.0.255
+ deny   ip any 192.168.40.0 0.0.0.255
+ deny   ip any 192.168.50.0 0.0.0.255
+ deny   ip any 192.168.60.0 0.0.0.255
+ deny   ip any 192.168.70.0 0.0.0.255
+ deny   ip any 192.168.99.0 0.0.0.255
+ deny   ip any 192.168.100.0 0.0.0.255
+ permit ip any any
 !
-banner motd ^
-=========================================================
-  JLM-LAB-SW1 — Authorized Access Only
-  Unauthorized access is prohibited.
-=========================================================
-^
+ip access-list extended IOT-AUTO-ACL
+ permit udp any host 192.168.10.16 eq domain
+ permit tcp any host 192.168.10.16 eq domain
+ permit tcp any host 192.168.10.16 eq 1883
+ permit tcp any host 192.168.10.16 eq 8883
+ permit udp any any eq bootps
+ permit udp any any eq bootpc
+ deny   ip any any
 !
-! ============================================================================
-! LINE CONFIGURATION
-! ============================================================================
+ip access-list extended LAB-ACL
+ permit udp any host 192.168.10.16 eq domain
+ permit tcp any host 192.168.10.16 eq domain
+ permit tcp any 192.168.10.0 0.0.0.255 eq 389
+ permit tcp any 192.168.10.0 0.0.0.255 eq 636
+ permit tcp any 192.168.10.0 0.0.0.255 eq 88
+ deny   ip any 192.168.20.0 0.0.0.255
+ deny   ip any 192.168.30.0 0.0.0.255
+ deny   ip any 192.168.31.0 0.0.0.255
+ deny   ip any 192.168.40.0 0.0.0.255
+ deny   ip any 192.168.50.0 0.0.0.255
+ deny   ip any 192.168.99.0 0.0.0.255
+ deny   ip any 192.168.100.0 0.0.0.255
+ permit ip any any
+!
+banner motd ^C
+*******************************************************
+* JLM-LAB-SW1 - Authorized Access Only                 *
+* All connections are logged and monitored.            *
+* Unauthorized access is prohibited.                   *
+*******************************************************
+^C
 !
 line con 0
  exec-timeout 15 0
@@ -172,37 +340,28 @@ line vty 5 15
  login local
  transport input ssh
 !
-! ============================================================================
-! PNP — DISABLED
-! ============================================================================
-!
-no pnp profile pnp-zero-touch
+ntp server 216.239.35.0
 !
 end
 
 ! ============================================================================
 ! LICENSING NOTES
 ! ============================================================================
-! This switch uses Right-To-Use (RTU) perpetual licensing — NOT Smart Licensing.
-! The '-S' suffix in WS-C3560CX-8PC-S indicates IP Base license is permanently
-! unlocked at the hardware level. No token registration needed.
-!
-! A 90-day IP Services evaluation period is available but NOT activated.
-! Do not accept the IP Services EULA — IP Base is sufficient for this lab.
-!
-! Contrast with C1111-4PWB which uses Smart Licensing and requires registration
-! to a Cisco Smart Account (registered to EngageMea.com, May 16, 2026).
+! RTU perpetual licensing — NOT Smart Licensing. IP Base unlocked at hardware
+! level via '-S' model suffix. No token registration needed.
+! Contrast with C1111-4PWB which uses Smart Licensing (EngageMea.com).
 !
 ! ============================================================================
-! PHASE B CUTOVER — ITEMS TO ADD AT DEPLOYMENT
+! PHASE B CUTOVER CHECKLIST
 ! ============================================================================
-! 1. Configure SVIs for all VLANs (10, 20, 30, 31, 40, 50, 60, 70, 99, 199)
-! 2. Configure DHCP pools for all VLANs (migrate from C1111)
-! 3. Configure inter-VLAN ACLs (mirror C1111 ACLs + new VLANs 60/70)
-! 4. Configure Gi0/1 trunk to C1111 TRANSIT (192.168.199.0/30)
-! 5. Configure Gi0/2 trunk to GS308EP (VLANs 1,10,20,30,31,40,50,60,70,99)
-! 6. Configure Gi0/3 access/trunk for Proxmox server (VLAN 70)
-! 7. Set ip routing (enable L3 forwarding)
-! 8. Set default route pointing to C1111 TRANSIT IP (192.168.199.1)
-! 9. Verify all VLANs routing before cutting over DHCP
+! 1. Cable Gi0/1 to C1111 GE0/1/0 (TRANSIT link — 192.168.199.0/30)
+! 2. Cable Gi0/2 to GS308EP Port 1 (replace existing C1111 trunk)
+! 3. Cable Gi0/3 to GS316EP Port 15 (replace existing C1111 trunk)
+! 4. On C1111: reconfigure GE0/1/0 as routed port (192.168.199.1/30)
+! 5. On C1111: remove old VLAN SVIs and DHCP pools
+! 6. On C1111: add static route to 3560CX for all internal subnets
+! 7. Verify all VLANs routing through 3560CX before cutting DHCP
+! 8. Verify internet access on all VLANs after cutover
+! 9. Disable C1111 VLAN SVIs one at a time, verify no breakage
+! 10. Update NAT-INSIDE ACL on C1111 to permit 192.168.199.0/30
 ! ============================================================================
