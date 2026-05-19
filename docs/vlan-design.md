@@ -298,9 +298,9 @@ permit ip any any
 | 15 | 1 | Trunk to Cisco GE0/1/2 — carries VLANs 1,10,20,30,31,40,99 |
 | 16 | — | SFP (fiber only, not RJ-45 — do not use) |
 
-### ⚠️ Known Gap — VLAN 50 Missing from GS316EP
+### VLAN 50 on GS316EP — Resolved May 19, 2026
 
-VLAN 50 (JM&G-GUEST) is not present in the GS316EP VLAN membership table and is not carried on Port 15 trunk. This means no wired guest access is possible through the GS316EP. Currently not an issue since JM&G-GUEST is WiFi only, but must be added before any wired guest port is needed.
+VLAN 50 (JM&G-GUEST) added to GS316EP membership table and Port 15 as Tagged.
 
 **Fix required:** Add VLAN 50 to GS316EP VLAN membership table and to Port 15 as Tagged.
 
