@@ -1,0 +1,208 @@
+# cisco-3560cx-baseline.txt
+# Device:   Cisco Catalyst WS-C3560CX-8PC-S
+# Hostname: JLM-LAB-SW1
+# Serial:   FOC2418L4T2
+# Captured: May 16, 2026
+# Status:   STAGED — not yet cabled into production. Awaiting Phase B cutover.
+# Notes:    Passwords redacted. RTU perpetual licensing — no Smart Licensing needed.
+#           Model suffix '-S' = IP Base perpetual license unlocked at hardware level.
+#           Do NOT accept IP Services EULA — starts unnecessary 90-day eval countdown.
+#           Config register 0xF is normal for 3560CX — not user-modifiable like ISR routers.
+# ============================================================================
+
+version 15.2
+service timestamps debug datetime msec
+service timestamps log datetime msec
+service password-encryption
+!
+hostname JLM-LAB-SW1
+!
+boot-start-marker
+boot-end-marker
+!
+enable secret 9 <REDACTED>
+!
+no aaa new-model
+!
+ip domain-name lab.local
+!
+username admin privilege 15 secret 9 <REDACTED>
+!
+! ============================================================================
+! VTP CONFIGURATION
+! ============================================================================
+!
+vtp mode transparent
+!
+! ============================================================================
+! VLAN DATABASE
+! (Pre-staged offline — not yet active in production topology)
+! ============================================================================
+!
+vlan 1
+ name DEFAULT
+!
+vlan 10
+ name MGMT
+!
+vlan 20
+ name TRUSTED
+!
+vlan 30
+ name IOT
+!
+vlan 31
+ name IOT-AUTO
+!
+vlan 40
+ name HOUSEHOLD
+!
+vlan 50
+ name JMG-GUEST
+!
+vlan 60
+ name LAB
+!
+vlan 70
+ name SERVER
+!
+vlan 99
+ name MGMT-NATIVE
+!
+vlan 199
+ name TRANSIT
+!
+! ============================================================================
+! SPANNING TREE
+! ============================================================================
+!
+spanning-tree mode rapid-pvst
+spanning-tree extend system-id
+!
+! ============================================================================
+! INTERFACE CONFIGURATION
+! (All ports blank at baseline — trunk/access assignments added at Phase B)
+! ============================================================================
+!
+interface GigabitEthernet0/1
+ description RESERVED-UPLINK-TO-C1111
+ shutdown
+!
+interface GigabitEthernet0/2
+ description RESERVED-UPLINK-TO-GS308EP
+ shutdown
+!
+interface GigabitEthernet0/3
+ description RESERVED-PROXMOX-SERVER-VLAN70
+ shutdown
+!
+interface GigabitEthernet0/4
+ description RESERVED
+ shutdown
+!
+interface GigabitEthernet0/5
+ description RESERVED
+ shutdown
+!
+interface GigabitEthernet0/6
+ description RESERVED
+ shutdown
+!
+interface GigabitEthernet0/7
+ description RESERVED
+ shutdown
+!
+interface GigabitEthernet0/8
+ description RESERVED
+ shutdown
+!
+interface GigabitEthernet0/9
+ description RESERVED-SFP
+ shutdown
+!
+interface GigabitEthernet0/10
+ description RESERVED-SFP
+ shutdown
+!
+! ============================================================================
+! MANAGEMENT ACCESS
+! ============================================================================
+!
+ip ssh version 2
+ip ssh time-out 60
+ip ssh authentication-retries 3
+!
+no ip http server
+no ip http secure-server
+!
+! ============================================================================
+! LOGGING AND TIMESTAMPS
+! ============================================================================
+!
+logging buffered 16384
+service timestamps log datetime msec localtime
+!
+! ============================================================================
+! BANNER
+! ============================================================================
+!
+banner motd ^
+=========================================================
+  JLM-LAB-SW1 — Authorized Access Only
+  Unauthorized access is prohibited.
+=========================================================
+^
+!
+! ============================================================================
+! LINE CONFIGURATION
+! ============================================================================
+!
+line con 0
+ exec-timeout 15 0
+ logging synchronous
+ login local
+!
+line vty 0 4
+ exec-timeout 15 0
+ login local
+ transport input ssh
+!
+line vty 5 15
+ exec-timeout 15 0
+ login local
+ transport input ssh
+!
+! ============================================================================
+! PNP — DISABLED
+! ============================================================================
+!
+no pnp profile pnp-zero-touch
+!
+end
+
+! ============================================================================
+! LICENSING NOTES
+! ============================================================================
+! This switch uses Right-To-Use (RTU) perpetual licensing — NOT Smart Licensing.
+! The '-S' suffix in WS-C3560CX-8PC-S indicates IP Base license is permanently
+! unlocked at the hardware level. No token registration needed.
+!
+! A 90-day IP Services evaluation period is available but NOT activated.
+! Do not accept the IP Services EULA — IP Base is sufficient for this lab.
+!
+! Contrast with C1111-4PWB which uses Smart Licensing and requires registration
+! to a Cisco Smart Account (registered to EngageMea.com, May 16, 2026).
+!
+! ============================================================================
+! PHASE B CUTOVER — ITEMS TO ADD AT DEPLOYMENT
+! ============================================================================
+! 1. Configure SVIs for all VLANs (10, 20, 30, 31, 40, 50, 60, 70, 99, 199)
+! 2. Configure DHCP pools for all VLANs (migrate from C1111)
+! 3. Configure inter-VLAN ACLs (mirror C1111 ACLs + new VLANs 60/70)
+! 4. Configure Gi0/1 trunk to C1111 TRANSIT (192.168.199.0/30)
+! 5. Configure Gi0/2 trunk to GS308EP (VLANs 1,10,20,30,31,40,50,60,70,99)
+! 6. Configure Gi0/3 access/trunk for Proxmox server (VLAN 70)
+! 7. Set ip routing (enable L3 forwarding)
+! 8. Set default route pointing to C1111 TRANSIT IP (192.168.199.1)
+! 9. Verify all VLANs routing before cutting over DHCP
+! ============================================================================
