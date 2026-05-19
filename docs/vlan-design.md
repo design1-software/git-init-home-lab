@@ -1,6 +1,6 @@
 # VLAN Design — JLM Home Lab
 
-> Network segmentation scheme for the home lab. This document reflects the implemented and verified state as of April 19, 2026.
+> Network segmentation scheme for the home lab. This document reflects the implemented and verified state as of May 19, 2026.
 
 ---
 
@@ -9,57 +9,75 @@
 1. **Isolate production workloads** (MCP server, content system) from household and IoT traffic
 2. **Prevent IoT lateral movement** — compromised smart devices cannot reach servers or personal devices
 3. **Enable controlled cross-VLAN access** for the garage automation system (MQTT + relay control)
-4. **Separate management plane** so switch/AP/router admin interfaces aren't on the same broadcast domain as user traffic
+4. **Separate management plane** — VLAN 99 is the native/management VLAN on all trunks; AP and switch management interfaces live here
 5. **Support VLAN-tagged WiFi** via UniFi APs — one AP broadcasts multiple SSIDs, each mapped to a different VLAN
 6. **Household isolation** — family devices get internet but cannot reach lab infrastructure
+7. **Future server isolation** — VLAN 70 (SERVER) reserved for Proxmox host; VLAN 60 (LAB) reserved for schoolmate remote lab
 
 ---
 
 ## VLAN Assignments
 
+### Currently Active
+
 | VLAN ID | Name | Subnet | Gateway (Cisco SVI) | DHCP Range | Purpose |
 |---|---|---|---|---|---|
-| 1 | DEFAULT | 192.168.100.0/24 | 192.168.100.1 | .11–.254 | Legacy flat network (being phased out) |
-| 10 | SERVER | 192.168.10.0/24 | 192.168.10.1 | .11–.254 | Production servers and network services |
-| 20 | TRUSTED | 192.168.20.0/24 | 192.168.20.1 | .11–.254 | Personal devices |
+| 1 | DEFAULT | 192.168.100.0/24 | 192.168.100.1 | .11–.254 | Legacy flat network — switch management floats here; retirement planned at 3560CX cutover |
+| 10 | MGMT | 192.168.10.0/24 | 192.168.10.1 | .11–.254 | Production servers and network services (Pi, Acer) |
+| 20 | TRUSTED | 192.168.20.0/24 | 192.168.20.1 | .11–.254 | Personal devices (MacBooks, iPhones) |
 | 30 | IOT | 192.168.30.0/24 | 192.168.30.1 | .11–.254 | General smart home devices (cloud-dependent, untrusted) |
 | 31 | IOT-AUTO | 192.168.31.0/24 | 192.168.31.1 | .11–.254 | Home automation sensors/actuators (local MQTT, no cloud) |
-| 40 | HOUSEHOLD | 192.168.40.0/24 | 192.168.40.1 | .11–.254 | Family devices (internet + AirPlay only) |
-| 50 | GUEST | 192.168.50.0/24 | 192.168.50.1 | .11–.254 | Guest internet access, client isolation |
-| 99 | MGMT | 192.168.99.0/24 | 192.168.99.1 | .11–.50 | Network infrastructure management interfaces |
+| 40 | HOUSEHOLD | 192.168.40.0/24 | 192.168.40.1 | .11–.254 | Family devices (internet only) |
+| 50 | JM&G-GUEST | 192.168.50.0/24 | 192.168.50.1 | .11–.254 | Guest internet access, client isolation |
+| 99 | MGMT/NATIVE | 192.168.99.0/24 | 192.168.99.1 | .11–.50 | Native VLAN on all trunks — AP management |
+
+### Planned (pending 3560CX cutover)
+
+| VLAN ID | Name | Subnet | Gateway | Purpose |
+|---|---|---|---|---|
+| 60 | LAB | 192.168.60.0/24 | 192.168.60.1 | Schoolmate remote lab — AD, osTicket, M365 sandbox |
+| 70 | SERVER | 192.168.70.0/24 | 192.168.70.1 | Proxmox hypervisor host + VM/LXC traffic |
+| 199 | TRANSIT | 192.168.199.0/30 | — | Point-to-point L3 link between C1111 and 3560CX |
 
 ---
 
 ## Device-to-VLAN Mapping
 
-### VLAN 10 — SERVER
+### VLAN 1 — DEFAULT (Legacy / Switch Management)
 
 | Device | IP | Connection | Notes |
 |---|---|---|---|
-| Acer Aspire 3 (MCP server) | 192.168.10.17 | Cisco GE0/1/0 (access VLAN 10) | Docker: social-media-mcp + Ngrok sidecar, closet-monitor subscriber, Streamlit (:8501) |
-| Raspberry Pi 4B | 192.168.10.16 | GS308EP Port 3 (PoE, access VLAN 10) | Pi-hole, UniFi Controller, Mosquitto MQTT, CUPS print server |
-| HP ENVY Inspire 7200e | — | USB to Pi 4B | Print queue: `HP_Envy_Lab` via CUPS (USB path only; WiFi on VLAN 30) |
-| Future NAS | TBD | GS308EP or GS316EP | Backup storage |
+| Cisco C1111 SVI | 192.168.100.1 | Vlan1 SVI | Legacy gateway — retirement planned at cutover |
+| NETGEAR GS308EP | 192.168.100.100 | DHCP reserved (MAC 28:94:01:84:2D:8A) | Web UI: http://192.168.100.100 |
+| NETGEAR GS316EP | 192.168.100.96 | DHCP (MAC 28:94:01:7F:A7:F7) | Web UI: http://192.168.100.96 |
+
+### VLAN 10 — MGMT (Production Servers)
+
+| Device | IP | Connection | Notes |
+|---|---|---|---|
+| Acer Server | 192.168.10.11 | Cisco GE0/1/0 (access VLAN 10) | Docker: social-media-mcp + Ngrok sidecar, Streamlit (:8501) |
+| Raspberry Pi 4B | 192.168.10.16 | GS308EP Port 3 (PoE, access VLAN 10) | Pi-hole, UniFi Controller, Mosquitto MQTT, CUPS |
+| HP ENVY Inspire 7200e | — | USB to Pi 4B | Print queue via CUPS (USB path only; WiFi on VLAN 30) |
 
 ### VLAN 20 — TRUSTED
 
 | Device | IP | Connection | Notes |
 |---|---|---|---|
-| iMac | DHCP | WiFi (Gorgeous) | Development |
+| MacBook Pro | DHCP | WiFi (Gorgeous) | Development + fb-content-system |
 | MacBook Air | DHCP | WiFi (Gorgeous) | Development |
-| MacBook Pro | DHCP | WiFi (Gorgeous) | Development + fb-content-system (always-on) |
+| iMac | DHCP | WiFi (Gorgeous) | Development |
 | iPhones | DHCP | WiFi (Gorgeous) | Personal |
-| Apple TV ×3 | DHCP | GS316EP Ports 2-4 (wired, VLAN 20) | DHCP required — static IPs cause app failures |
+| Apple TV ×3 | DHCP | GS316EP Ports 2–4 (wired, VLAN 20) | DHCP required — static IPs cause app failures |
 
 ### VLAN 30 — IOT
 
 | Device | IP | Connection | Notes |
 |---|---|---|---|
-| HP ENVY Inspire 7200e | DHCP (192.168.30.x) | WiFi (Gorgeous-IoT) | WiFi for HP Instant Ink / Print Anywhere only; printing via USB/CUPS on VLAN 10 |
+| HP ENVY Inspire 7200e | DHCP | WiFi (Gorgeous-IoT) | WiFi for HP Instant Ink only; printing via USB/CUPS on VLAN 10 |
 | Ring cameras + doorbell | DHCP | WiFi (Gorgeous-IoT) | ✅ Migrated |
-| Kasa Smart Plugs | DHCP | WiFi (Gorgeous-IoT) | Pending (app issue) |
+| Kasa EP10 Smart Plugs ×4 | DHCP | WiFi (Gorgeous-IoT) | ⏳ Pending — app issue blocking migration |
 | Ecobee thermostat | DHCP | WiFi (Gorgeous-IoT) | ✅ Migrated |
-| Amazon Alexa devices | DHCP | WiFi (Gorgeous-IoT) | ✅ Migrated |
+| Amazon Alexa devices ×3 | DHCP | WiFi (Gorgeous-IoT) | ✅ Migrated |
 | Somfy Hub | DHCP | WiFi (Gorgeous-IoT) | ✅ Migrated |
 | Samsung Smart TV | DHCP | WiFi (Gorgeous-IoT) | ✅ Migrated |
 | Wyze Cam v3 ×2 | DHCP | WiFi (Gorgeous-IoT) | Stock firmware, Wyze cloud |
@@ -68,151 +86,263 @@
 
 | Device | IP | Connection | Notes |
 |---|---|---|---|
-| ESP32 closet sensor | DHCP | WiFi (Gorgeous-Auto) | ✅ Active — BME280, publishing MQTT to Pi (192.168.10.16:1883) |
-| ESP32 garage (reed switch + relay) | DHCP | WiFi (Gorgeous-Auto) | Future — door state sensor + closer |
+| ESP32 closet sensor | DHCP | WiFi (Gorgeous-Auto) | ✅ Active — BME280, MQTT to Pi (192.168.10.16:1883) |
+| ESP32 garage (reed switch + relay) | DHCP | WiFi (Gorgeous-Auto) | Planned — door state sensor + closer |
 
 ### VLAN 40 — HOUSEHOLD
 
 | Device | IP | Connection | Notes |
 |---|---|---|---|
-| Family phones/tablets/laptops | DHCP | WiFi (Gorgeous-Home) | Internet + AirPlay only |
+| Family phones/tablets/laptops | DHCP | WiFi (Gorgeous-Home) | Internet only |
 
-### VLAN 99 — MGMT
+### VLAN 50 — JM&G-GUEST
 
 | Device | IP | Connection | Notes |
 |---|---|---|---|
-| Cisco C1111-4PWB | 192.168.99.1 | SVI (gateway) | Also reachable via console |
-| Netgear GS308EP | Floats (no configurable mgmt VLAN) | GS308EP Port 1 trunk, native VLAN 99 | Switch management accessible from any VLAN (hardware limitation) |
-| UniFi U6+ AP #1 | DHCP on VLAN 99 | GS308EP Port 4, untagged VLAN 99 | AP management interface |
-| UniFi U6+ AP #2 | DHCP on VLAN 99 | GS308EP Port 5, untagged VLAN 99 | AP management interface |
+| Guest devices | DHCP | WiFi (JM&G-GUEST) | Internet only, client isolation enforced in UniFi |
+
+### VLAN 99 — MGMT/NATIVE
+
+| Device | IP | Connection | Notes |
+|---|---|---|---|
+| Cisco C1111 SVI | 192.168.99.1 | Vlan99 SVI | Also reachable via console |
+| UniFi U6+ AP #1 | 192.168.99.12 | GS308EP Port 4, native VLAN 99 | AP management interface |
+| UniFi U6+ AP #2 | 192.168.99.11 | GS308EP Port 5, native VLAN 99 | AP management interface |
+
+### VLAN 70 — SERVER (planned)
+
+| Device | IP | Connection | Notes |
+|---|---|---|---|
+| Custom Proxmox Server | Static TBD | Trunk to GS308EP | Ryzen 9 7900X, dual NIC — mgmt on VLAN 70, VM traffic on VLANs 60/70 |
+
+### VLAN 60 — LAB (planned)
+
+| Device | IP | Connection | Notes |
+|---|---|---|---|
+| Active Directory VM | DHCP or static | Proxmox, VLAN 60 | Windows Server 2022 Eval |
+| osTicket VM | DHCP or static | Proxmox, VLAN 60 | Help desk ticketing for schoolmate lab |
+| M365 admin sandbox | DHCP or static | Proxmox, VLAN 60 | Remote access via Tailscale subnet routing |
 
 ---
 
 ## WiFi SSID-to-VLAN Mapping
 
-| SSID | VLAN | Security | Status |
-|---|---|---|---|
-| `Gorgeous` | 20 (TRUSTED) | WPA2/WPA3 | ✅ Live, tested |
-| `Gorgeous-IoT` | 30 (IOT) | WPA2-PSK | ✅ Live, tested |
-| `Gorgeous-Auto` | 31 (IOT-AUTO) | WPA2-PSK | ✅ Live, tested |
-| `Gorgeous-Home` | 40 (HOUSEHOLD) | WPA2/WPA3 | ✅ Live, tested |
-| `JM&G-GUEST` | 50 (GUEST) | WPA2/WPA3, client isolation | ✅ Live, tested |
-
-All five SSIDs broadcast on both 2.4 GHz and 5 GHz from both UniFi U6+ APs.
+| SSID | VLAN | Security | Band | Status |
+|---|---|---|---|---|
+| Gorgeous | 20 (TRUSTED) | WPA2/WPA3 | 2.4 + 5 GHz | ✅ Live |
+| Gorgeous-IoT | 30 (IOT) | WPA2-PSK | 2.4 GHz | ✅ Live |
+| Gorgeous-Auto | 31 (IOT-AUTO) | WPA2-PSK | 2.4 GHz | ✅ Live |
+| Gorgeous-Home | 40 (HOUSEHOLD) | WPA2/WPA3 | 2.4 + 5 GHz | ✅ Live |
+| JM&G-GUEST | 50 (JM&G-GUEST) | WPA2/WPA3, client isolation | 5 GHz | ✅ Live |
 
 ---
 
 ## Inter-VLAN Access Control (ACL Matrix)
 
-| From ↓ / To → | SERVER (10) | TRUSTED (20) | IOT (30) | IOT-AUTO (31) | HOUSEHOLD (40) | MGMT (99) | INTERNET |
-|---|---|---|---|---|---|---|---|
-| **SERVER (10)** | — | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **TRUSTED (20)** | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ |
-| **IOT (30)** | DNS only | ❌ | — | ❌ | ❌ | ❌ | ✅ |
-| **IOT-AUTO (31)** | DNS + MQTT only | ❌ | ❌ | — | ❌ | ❌ | ❌ |
-| **HOUSEHOLD (40)** | DNS only | ❌ | ❌ | ❌ | — | ❌ | ✅ |
-| **GUEST (50)** | DNS only | ❌ | ❌ | ❌ | ❌ | — | ✅ |
-| **MGMT (99)** | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ |
+### Current (active on C1111)
 
-### Implemented ACLs (applied to Cisco SVIs)
+| From ↓ / To → | MGMT (10) | TRUSTED (20) | IOT (30) | IOT-AUTO (31) | HOUSEHOLD (40) | GUEST (50) | NATIVE (99) | INTERNET |
+|---|---|---|---|---|---|---|---|---|
+| **MGMT (10)** | — | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **TRUSTED (20)** | ✅ | — | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| **IOT (30)** | DNS only | ❌ | — | ❌ | ❌ | ❌ | ❌ | ✅ |
+| **IOT-AUTO (31)** | DNS+MQTT only | ❌ | ❌ | — | ❌ | ❌ | ❌ | ❌ |
+| **HOUSEHOLD (40)** | DNS only | ❌ | ❌ | ❌ | — | ❌ | ❌ | ✅ |
+| **GUEST (50)** | DNS only | ❌ | ❌ | ❌ | ❌ | — | ❌ | ✅ |
+| **NATIVE (99)** | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | — | ✅ |
+
+### Planned additions at 3560CX cutover
+
+| From ↓ / To → | SERVER (70) | LAB (60) |
+|---|---|---|
+| **SERVER (70)** | — | ✅ |
+| **LAB (60)** | DNS + AD services only | — |
+| **MGMT (10)** | ✅ | ✅ |
+| **TRUSTED (20)** | ✅ | ❌ |
+| **All others** | ❌ | ❌ |
+
+---
+
+## Implemented ACLs (applied to Cisco C1111 SVIs)
 
 **IOT-ACL** (applied inbound on Vlan30):
-- Permit DNS (UDP/TCP 53) to Pi-hole (192.168.10.16)
-- Deny all private subnets (192.168.x.x)
-- Permit all other (internet)
+```
+permit udp any host 192.168.10.16 eq 53
+permit tcp any host 192.168.10.16 eq 53
+deny   ip any 192.168.10.0 0.0.0.255
+deny   ip any 192.168.20.0 0.0.0.255
+deny   ip any 192.168.30.0 0.0.0.255
+deny   ip any 192.168.31.0 0.0.0.255
+deny   ip any 192.168.40.0 0.0.0.255
+deny   ip any 192.168.99.0 0.0.0.255
+deny   ip any 192.168.100.0 0.0.0.255
+permit ip any any
+```
 
 **IOT-AUTO-ACL** (applied inbound on Vlan31):
-- Permit DNS (UDP/TCP 53) to Pi-hole (192.168.10.16)
-- Permit MQTT (TCP 1883, 8883) to Pi (192.168.10.16)
-- Deny all other traffic
+```
+permit udp any host 192.168.10.16 eq 53
+permit tcp any host 192.168.10.16 eq 53
+permit tcp any host 192.168.10.16 eq 1883
+permit tcp any host 192.168.10.16 eq 8883
+permit udp any any eq 67
+permit udp any any eq 68
+deny   ip any any
+```
 
 **HOUSEHOLD-ACL** (applied inbound on Vlan40):
-- Permit DNS (UDP/TCP 53) to Pi-hole (192.168.10.16)
-- Deny all private subnets (192.168.x.x)
-- Permit all other (internet)
+```
+permit udp any host 192.168.10.16 eq 53
+permit tcp any host 192.168.10.16 eq 53
+deny   ip any 192.168.10.0 0.0.0.255
+deny   ip any 192.168.20.0 0.0.0.255
+deny   ip any 192.168.30.0 0.0.0.255
+deny   ip any 192.168.31.0 0.0.0.255
+deny   ip any 192.168.40.0 0.0.0.255
+deny   ip any 192.168.99.0 0.0.0.255
+deny   ip any 192.168.100.0 0.0.0.255
+permit ip any any
+```
 
 **GUEST-ACL** (applied inbound on Vlan50):
-- Permit DNS (UDP/TCP 53) to Pi-hole (192.168.10.16)
-- Deny all private subnets (192.168.x.x)
-- Permit all other (internet)
-- Client isolation enabled in UniFi (guests cannot see each other)
+```
+permit udp any host 192.168.10.16 eq 53
+permit tcp any host 192.168.10.16 eq 53
+deny   ip any 192.168.10.0 0.0.0.255
+deny   ip any 192.168.20.0 0.0.0.255
+deny   ip any 192.168.30.0 0.0.0.255
+deny   ip any 192.168.31.0 0.0.0.255
+deny   ip any 192.168.40.0 0.0.0.255
+deny   ip any 192.168.50.0 0.0.0.255
+deny   ip any 192.168.99.0 0.0.0.255
+deny   ip any 192.168.100.0 0.0.0.255
+permit ip any any
+```
 
-Note: AirPlay cross-VLAN rules were removed from HOUSEHOLD-ACL. Apple TVs use DHCP on VLAN 20 (TRUSTED). AirPlay works natively within the same VLAN — family devices join Gorgeous (VLAN 20) to cast.
-
-SERVER, TRUSTED, and MGMT have no restrictive ACLs — full access by design.
+> ⚠️ All ACLs migrate to the 3560CX at cutover. New ACLs for VLANs 60 and 70 added at that time.
 
 ---
 
 ## GS308EP Switch Configuration (Advanced 802.1Q)
 
+**Model:** NETGEAR GS308EP
 **Firmware:** V2.0.0.5
 **MAC:** 28:94:01:84:2D:8A
 **Serial:** 6V665C53A4801
+**Management IP:** 192.168.100.100 (DHCP reserved on C1111)
+**Management VLAN:** VLAN 1 (DEFAULT) — hardware limitation, no configurable management VLAN
 
-### VLAN Membership Table
+### VLAN Membership Table (verified May 19, 2026)
 
-| VLAN | P1 | P2 | P3 | P4 | P5 | P6 | P7 | P8 |
-|------|----|----|----|----|----|----|----|----|
-| 1    | T  | U  | E  | E  | E  | U  | U  | U  |
-| 10   | T  | E  | U  | E  | E  | E  | E  | E  |
-| 20   | T  | E  | E  | T  | T  | E  | E  | E  |
-| 30   | T  | E  | E  | T  | T  | E  | E  | E  |
-| 31   | T  | E  | E  | T  | T  | E  | E  | E  |
-| 40   | T  | E  | E  | T  | T  | E  | E  | E  |
-| 99   | U  | E  | E  | U  | U  | E  | E  | E  |
-
-### Port PVIDs
-
-| Port | PVID | Role |
+| VLAN | Name | Port Members |
 |---|---|---|
-| 1 | 99 | Trunk to Cisco GE0/1/1 |
-| 2 | 1 | Spare access port |
-| 3 | 10 | Pi 4B (SERVER) — PoE powered, active |
-| 4 | 99 | UniFi U6+ AP #1 (trunk + MGMT native) |
-| 5 | 99 | UniFi U6+ AP #2 (trunk + MGMT native) |
-| 6 | 1 | Spare access port |
-| 7 | 1 | Spare access port |
-| 8 | 1 | Spare access port |
+| 1 | DEFAULT | 1, 2, 6, 7, 8 |
+| 10 | SERVER | 1, 3 |
+| 20 | TRUSTED | 1, 4, 5 |
+| 30 | IOT | 1, 4, 5 |
+| 31 | IOT-AUTO | 1, 4, 5 |
+| 40 | HOUSEHOLD | 1, 4, 5 |
+| 50 | JM&G-GUEST | 1, 4, 5 |
+| 99 | MGMT | 1, 4, 5 |
+
+### Port PVID Table (verified May 19, 2026)
+
+| Port | PVID | VLANs | Role |
+|---|---|---|---|
+| 1 | 99 | 1,10,20,30,31,40,50,99 | Trunk to Cisco GE0/1/1 |
+| 2 | 1 | 1 | Spare |
+| 3 | 10 | 10 | Pi 4B (PoE, VLAN 10) |
+| 4 | 99 | 20,30,31,40,50,99 | UniFi AP #1 |
+| 5 | 99 | 20,30,31,40,50,99 | UniFi AP #2 |
+| 6 | 1 | 1 | Spare |
+| 7 | 1 | 1 | Spare |
+| 8 | 1 | 1 | Spare |
 
 ### Critical Configuration Notes
 
-1. **VLAN 1 MUST be Tagged (T) on Port 1 (trunk).** Excluding VLAN 1 from the trunk breaks the switch's internal MAC forwarding table. This is per official Netgear documentation — every Netgear example shows the trunk port Tagged in VLAN 1.
-2. **The GS308EP has no configurable management VLAN.** Its management interface floats across all VLANs. This is a documented hardware limitation of the Netgear Plus series.
-3. **The Cisco trunk must include VLAN 1 in the allowed list** to match: `switchport trunk allowed vlan 1,10,20,30,31,40,99`
+1. **VLAN 1 must be present on Port 1 (trunk).** Excluding VLAN 1 breaks the switch's internal MAC forwarding table. Per official Netgear documentation.
+2. **VLAN 50 must be on both AP ports (4 and 5).** Required for JM&G-GUEST SSID to broadcast from both APs. Corrected May 19, 2026 — Port 4 was missing VLAN 50.
+3. **GS308EP has no configurable management VLAN.** Management interface floats on VLAN 1 (DEFAULT). This is a documented hardware limitation.
+4. **GS308EP management IP is DHCP-reserved at 192.168.100.100** via C1111 DHCP pool (client-identifier 2894.0184.2d8a). IP locked permanently.
 
 ---
 
-## Cisco Trunk Configuration
+## GS316EP Switch Configuration (Advanced 802.1Q)
+
+**Model:** NETGEAR GS316EP
+**MAC:** 28:94:01:7F:A7:F7
+**Management IP:** 192.168.100.96 (DHCP, floats — no reservation set)
+**Management VLAN:** VLAN 1 (DEFAULT) — hardware limitation
+
+### VLAN Membership Table (verified May 19, 2026)
+
+| VLAN | Name | Port Members |
+|---|---|---|
+| 1 | DEFAULT | 1,5,6,7,8,9,10,11,12,13,14,15,16 |
+| 10 | SERVER | 15 |
+| 20 | TRUSTED | 2,3,4,15 |
+| 30 | IOT | 15 |
+| 31 | IOT-AUTO | 15 |
+| 40 | HOUSEHOLD | 15 |
+| 99 | MGMT | 15 |
+
+### Port Assignments
+
+| Port | PVID | Role |
+|---|---|---|
+| 1 | 1 | Spare |
+| 2 | 20 | Apple TV (Front Bedroom) |
+| 3 | 20 | Apple TV (Living Room) |
+| 4 | 20 | Apple TV (Master Bedroom) |
+| 5–14 | 1 | Wall outlets (spare) |
+| 15 | 1 | Trunk to Cisco GE0/1/2 — carries VLANs 1,10,20,30,31,40,99 |
+| 16 | — | SFP (fiber only, not RJ-45 — do not use) |
+
+### ⚠️ Known Gap — VLAN 50 Missing from GS316EP
+
+VLAN 50 (JM&G-GUEST) is not present in the GS316EP VLAN membership table and is not carried on Port 15 trunk. This means no wired guest access is possible through the GS316EP. Currently not an issue since JM&G-GUEST is WiFi only, but must be added before any wired guest port is needed.
+
+**Fix required:** Add VLAN 50 to GS316EP VLAN membership table and to Port 15 as Tagged.
+
+---
+
+## Cisco Trunk Configuration (verified May 19, 2026)
 
 ```
 interface GigabitEthernet0/1/1
- switchport mode trunk
- switchport trunk allowed vlan 1,10,20,30,31,40,99
  switchport trunk native vlan 99
+ switchport trunk allowed vlan 1,10,20,30,31,40,50,99
+ switchport mode trunk
+
+interface GigabitEthernet0/1/2
+ switchport trunk native vlan 99
+ switchport trunk allowed vlan 1,10,20,30,31,40,50,99
+ switchport mode trunk
 ```
+
+> At Phase B cutover, GE0/1/1 will trunk to the 3560CX uplink. GE0/1/2 trunk to GS316EP remains unchanged.
 
 ---
 
 ## DNS Strategy
 
-All VLANs receive **Pi-hole (192.168.10.16)** as primary DNS via DHCP, with **1.1.1.1 (Cloudflare)** as fallback.
-
-IOT and IOT-AUTO ACLs explicitly permit DNS traffic to the Pi across VLAN boundaries.
+All VLANs receive **Pi-hole (192.168.10.16)** as primary DNS via DHCP, with **1.1.1.1 (Cloudflare)** as fallback. IOT, IOT-AUTO, HOUSEHOLD, and GUEST ACLs explicitly permit DNS traffic to the Pi across VLAN boundaries. At 3560CX cutover, DHCP pools and DNS assignments migrate to the 3560CX — Pi-hole IP does not change.
 
 ---
 
 ## Lessons Learned During Implementation
 
-1. **Netgear Basic 802.1Q "Trunk" ≠ Cisco trunk.** Basic mode only forwards switch management frames, not device traffic. Must use Advanced 802.1Q with manual T/U/E assignments.
-2. **VLAN 1 must be Tagged on the trunk port** in Netgear Advanced 802.1Q. Excluding it breaks internal MAC learning/forwarding.
-3. **Cisco trunk must allow VLAN 1** even if no devices use it, because the Netgear tags VLAN 1 on the trunk.
-4. **Pi-hole sets a static IP during installation.** Never override from the network side (DHCP reservation) without changing the Pi's own config first. This caused a multi-hour debugging session.
-5. **Always verify cables.** A bad Ethernet cable caused the Pi's MAC to never appear in the Cisco's MAC table, mimicking a switch forwarding failure.
-6. **Always follow official documentation.** Community shortcuts and assumptions cost more time than reading the manual.
-7. **Apple TVs require DHCP, not static IPs.** Static IP configuration causes app connectivity failures even when Layer 3 is working. Apple TV devices depend on DHCP-provided parameters beyond IP/gateway/DNS.
-8. **Pi-hole blocks Apple service domains by default.** Whitelist required: gsa.apple.com, configuration.apple.com, apps.apple.com, and others.
-9. **TCP MSS clamping (`ip tcp adjust-mss 1452`) is needed after bridge mode cutover.** The changed WAN path can silently drop large TCP segments without this.
+1. **Netgear Basic 802.1Q ≠ Cisco trunk.** Must use Advanced 802.1Q with manual T/U/E assignments.
+2. **VLAN 1 must be present on the trunk port** in Netgear Advanced 802.1Q or internal MAC learning breaks.
+3. **Cisco trunk must allow VLAN 1** to match Netgear tagging behavior.
+4. **VLAN 50 must be explicitly added to all AP ports.** Missing from Port 4 caused guest SSID to broadcast from only one AP. Corrected May 19, 2026.
+5. **GS308EP management IP floats on VLAN 1.** Lock it with a DHCP reservation on the C1111 to prevent it changing on reboot.
+6. **Pi-hole sets a static IP during installation.** Never override from the network side without changing the Pi config first.
+7. **Apple TVs require DHCP, not static IPs.** Static IP configuration causes app connectivity failures.
+8. **Pi-hole blocks Apple service domains by default.** Whitelist: gsa.apple.com, configuration.apple.com, apps.apple.com.
+9. **TCP MSS clamping value is 1380** (`ip tcp adjust-mss 1380`) on C1111 WAN interface — verified from live config. Earlier docs incorrectly stated 1452.
+10. **IOT-AUTO-ACL deny-all must come after DHCP permits.** Missing `permit udp any any eq 67/68` before deny caused 169.254.x.x addresses on VLAN 31.
 
 ---
 
-*Implemented and verified: April 24, 2026*
+*Implemented and verified: May 19, 2026*
