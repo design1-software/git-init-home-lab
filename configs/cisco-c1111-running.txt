@@ -273,6 +273,10 @@ ip access-list extended IOT-AUTO-ACL
 !
 access-list 1 permit 192.168.100.0 0.0.0.255
 !
+ntp master 3
+ntp server 216.239.35.0
+ntp server 216.239.35.4
+!
 snmp-server community <REDACTED> RO
 snmp-server location JLM-Home-Lab-Closet
 snmp-server contact julius
