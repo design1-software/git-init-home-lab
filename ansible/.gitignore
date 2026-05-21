@@ -1,0 +1,3 @@
+backups/*.txt
+backups/*.cfg
+inventory/vault.yml

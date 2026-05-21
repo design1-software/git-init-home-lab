@@ -509,6 +509,11 @@ all:
    XE 17.x would resolve both the security issue and the Ansible
    compatibility problem simultaneously.
 
+7. **Bash `!!` history expansion breaks environment variables.** Passwords
+   containing `!!` must be wrapped in single quotes when exported in bash:
+   `CISCO_PASSWORD='password!!'`. Double quotes do not suppress `!!`
+   expansion. Single quotes treat all characters literally.
+
 ---
 
 ## Next Steps
