@@ -160,18 +160,24 @@ interface GigabitEthernet0/2
  switchport trunk allowed vlan 1,10,20,30,31,40,50,60,70,99
  switchport trunk native vlan 99
  switchport mode trunk
+ ip dhcp snooping trust
+ ip arp inspection trust
 !
 interface GigabitEthernet0/3
  description TRUNK-TO-GS316EP
  switchport trunk allowed vlan 1,10,20,30,31,40,50,99
  switchport trunk native vlan 99
  switchport mode trunk
+ ip dhcp snooping trust
+ ip arp inspection trust
 !
 interface GigabitEthernet0/4
  description PROXMOX-SERVER-VLAN70
  switchport trunk allowed vlan 60,70
  switchport trunk native vlan 70
  switchport mode trunk
+ ip dhcp snooping trust
+ ip arp inspection trust
 !
 interface GigabitEthernet0/5
  description SPARE-POE
@@ -245,6 +251,11 @@ ip forward-protocol nd
 no ip http server
 no ip http secure-server
 ip route 0.0.0.0 0.0.0.0 192.168.199.1
+ip dhcp snooping
+ip dhcp snooping vlan 30,31,40,50,60
+no ip dhcp snooping information option
+!
+ip arp inspection vlan 30,31,40,50,60
 ip ssh time-out 60
 ip ssh version 2
 !
