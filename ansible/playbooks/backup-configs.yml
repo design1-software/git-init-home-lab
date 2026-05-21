@@ -1,0 +1,27 @@
+---
+- name: Backup Cisco device configurations
+  hosts: cisco_routers
+  gather_facts: false
+  vars:
+    ansible_connection: network_cli
+    ansible_network_os: cisco.ios.ios
+    ansible_paramiko_host_key_auto_add: true
+
+  tasks:
+    - name: Gather IOS running config
+      cisco.ios.ios_command:
+        commands:
+          - show running-config
+      register: config_output
+      vars:
+        ansible_command_timeout: 60
+
+    - name: Save config to local file
+      copy:
+        content: "{{ config_output.stdout[0] }}"
+        dest: "{{ playbook_dir }}/../backups/{{ inventory_hostname }}-{{ lookup('pipe', 'date +%Y%m%d-%H%M%S') }}.txt"
+      delegate_to: localhost
+
+    - name: Show backup confirmation
+      debug:
+        msg: "Config backed up for {{ inventory_hostname }}"
