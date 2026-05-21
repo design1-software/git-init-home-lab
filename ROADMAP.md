@@ -27,19 +27,26 @@
   - No enforcement until Aug 14, 2026 — auto-resolves on daily check-in
 - [x] Catalyst 3560CX-8PC-S acquired (from LoneStar Networks / Whaley Communications)
 - [x] 3560CX baseline hardened from console (hostname JLM-LAB-SW1, SSHv2, Type 9 creds, VTP transparent, RTU perpetual licensing)
-- [x] 3560CX staged offline — awaiting Phase B cutover
+- [x] 3560CX Phase A pre-staging complete — VLANs, SVIs, DHCP pools, ACLs, trunk configs offline
+- [x] HTTP/HTTPS management disabled on C1111 (hardening — May 19, 2026)
+- [x] NTP hierarchy configured — C1111 stratum 2, Pi/Acer/3560CX stratum 3 (May 21, 2026)
+- [x] OSPFv2 configured on C1111 — process 1, router-ID 10.0.0.1, all VLANs in area 0 (May 21, 2026)
+- [x] IPv6 dual-stack on VLAN 10 and VLAN 20 (2001:db8:10::/64, 2001:db8:20::/64) (May 21, 2026)
+- [x] RESTCONF enabled on C1111 — Python REST API queries verified (May 21, 2026)
 
 ### Step 1: Physical Infrastructure ✅
 
 - [x] CyberPower CP1500PFCLCD UPS installed, all critical infra on battery-backed outlets
-- [x] GS308EP connected to Cisco as lab switch
-- [x] GS316EP trunked to Cisco GE0/1/2 for household wired devices
+- [x] GS308EP connected to Cisco as lab switch — VLAN 50 corrected on Port 4 (May 19, 2026)
+- [x] GS316EP trunked to Cisco GE0/1/2 for household wired devices — VLAN 50 added (May 19, 2026)
+- [x] GS308EP management IP locked to 192.168.100.100 via DHCP reservation (May 19, 2026)
 
 ### Step 2: Raspberry Pi Setup ✅
 
 - [x] Pi 4B flashed headless (Pi Imager, SSH pre-enabled)
 - [x] Pi-hole installed — 87K+ domain blocklist, serving DNS for all VLANs
 - [x] UniFi Network Application v10.1.89 installed
+- [x] NTP client configured — syncing from C1111 (192.168.10.1) (May 21, 2026)
 
 ### Step 3: WiFi Deployment ✅
 
@@ -55,9 +62,9 @@
 
 ### Step 4: VLAN Implementation ✅
 
-- [x] 7 VLANs implemented and verified (1, 10, 20, 30, 31, 40, 50, 99)
+- [x] 8 VLANs implemented and verified (1, 10, 20, 30, 31, 40, 50, 99)
 - [x] Cisco SVIs with per-VLAN DHCP pools and NAT
-- [x] GS308EP configured in Advanced 802.1Q mode
+- [x] GS308EP configured in Advanced 802.1Q mode — all 8 VLANs verified
 - [x] VLAN 99 as native/management VLAN on all trunks (192.168.99.0/24)
 - [x] 802.1Q trunks: Cisco GE0/1/1 → GS308EP, Cisco GE0/1/2 → GS316EP
 - [x] 4 extended ACLs written and applied:
@@ -72,13 +79,13 @@
 
 - [ ] Migrate Kasa EP10 plugs to VLAN 30 (blocked by app issue)
 - [ ] Ceiling-mount APs (physical task)
-- [ ] IOS rollback on C1111 to pre-16.10.1 (C1111-specific image required — not the 3560CX image)
+- [ ] IOS rollback on C1111 to pre-16.10.1 (C1111-specific image required)
 
-### Phase 2 — Open Decisions (blocking Phase B cutover)
+### Phase 2 — Open Decisions (resolved May 19, 2026)
 
-- [ ] Keep or remove `cisco_support` user on C1111
-- [ ] Confirm VLAN 1 (192.168.100.0/24) retirement at cutover
-- [ ] Confirm disabling HTTP/HTTPS on C1111 at cutover
+- [x] Keep `cisco_support` user on C1111 — decision: keep
+- [x] VLAN 1 retirement — decision: keep as legacy/switch management
+- [x] HTTP/HTTPS on C1111 — decision: disabled (hardened), RESTCONF re-enables HTTPS only
 
 ---
 
@@ -96,6 +103,7 @@
 - [x] CUPS access hardened (print: VLAN 10/20/40; admin: VLAN 20 only)
 - [x] Printer segmented — HP cloud services on VLAN 30, print path via VLAN 10
 - [x] Printer hardening — Wi-Fi Direct disabled, HP marketing data disabled
+- [x] Acer NTP client configured — syncing from C1111 (May 21, 2026)
 - [ ] Runbooks: update for Docker (server restart, tunnel recovery)
 - [ ] Runbook: disaster recovery (bare metal → production)
 - [ ] Authelia for service authentication (deferred to Phase 7)
@@ -121,28 +129,41 @@
 
 ---
 
-## Phase 5: 3560CX Cutover & New Server Deployment ❌ NOT STARTED
+## Phase 5: 3560CX Cutover & New Server Deployment 🔄 IN PROGRESS
 
 **Goal:** Promote 3560CX to L3 core, retire C1111 as edge-only, bring up custom Proxmox server on VLAN 70.
 
-### Phase A — Pre-stage 3560CX offline (zero production impact)
-- [ ] Build VLAN database on 3560CX (VLANs 1,10,20,30,31,40,50,60,70,99,199)
-- [ ] Configure SVIs with IP addresses for all VLANs
-- [ ] Configure DHCP pools for all VLANs
-- [ ] Write and apply inter-VLAN ACLs (mirror C1111 ACLs + new VLANs 60/70)
-- [ ] Configure trunk ports (uplink to GS308EP, GS316EP, C1111 TRANSIT)
-- [ ] Save and verify config offline
+### Phase A — Pre-stage 3560CX offline ✅ COMPLETE (May 19, 2026)
+- [x] Build VLAN database on 3560CX (VLANs 1,10,20,30,31,40,50,60,70,99,199)
+- [x] Configure SVIs with IP addresses for all VLANs
+- [x] Configure DHCP pools for all VLANs + GS308EP reservation
+- [x] Write and apply inter-VLAN ACLs (IOT, IOT-AUTO, HOUSEHOLD, GUEST, LAB)
+- [x] Configure trunk ports (Gi0/2 → GS308EP, Gi0/3 → GS316EP, Gi0/4 → Proxmox)
+- [x] Configure Gi0/1 as L3 TRANSIT port (192.168.199.2/30)
+- [x] DHCP snooping on VLANs 30,31,40,50,60 (May 19, 2026)
+- [x] DAI on VLANs 30,31,40,50,60 (May 19, 2026)
+- [x] Rapid-PVST+ configured, STP documented (May 21, 2026)
+- [x] NTP client configured — syncing from C1111 (May 21, 2026)
+- [x] Config saved and committed to repo
 
-### Phase B — Light cutover (~5 min WiFi outage, schedule off-peak)
-- [ ] Cable 3560CX into production
-- [ ] Configure TRANSIT VLAN 199 (192.168.199.0/30) between C1111 and 3560CX
-- [ ] Move default route — C1111 points to 3560CX, 3560CX points to C1111 for WAN
+### Phase B — Light cutover (~5 min WiFi outage, schedule off-peak) ❌
+- [ ] Cable Gi0/1 to C1111 GE0/1/0 (TRANSIT link)
+- [ ] Cable Gi0/2 to GS308EP Port 1 (replace C1111 trunk)
+- [ ] Cable Gi0/3 to GS316EP Port 15 (replace C1111 trunk)
+- [ ] On C1111: reconfigure GE0/1/0 as routed port (192.168.199.1/30)
+- [ ] On C1111: remove old VLAN SVIs and DHCP pools
+- [ ] On C1111: add static/OSPF route to 3560CX for all internal subnets
+- [ ] Set 3560CX as STP root: `spanning-tree vlan 1,10,20,30,31,40,50,60,70,99 priority 4096`
 - [ ] Verify all VLANs routing through 3560CX
 - [ ] Verify internet access on all VLANs
+- [ ] Configure OSPFv2 adjacency between C1111 and 3560CX (TRANSIT link)
+- [ ] Configure HSRP on VLANs 10 and 20
 - [ ] Roll back plan documented and saved before cutover begins
 
-### Phase C — Proxmox server bring-up
+### Phase C — Proxmox server bring-up ❌
 - [ ] Assemble custom ATX server (Ryzen 9 7900X, B650, PA120 SE, SAMA V40, SL-650G)
+  - ⏳ RAM (DDR5 UDIMM 64GB) — watching for price drop
+  - ⏳ NVMe (WD Black SN770 2TB in cart) — ready to order
 - [ ] Set PPT power cap to 88W in BIOS for server efficiency
 - [ ] Install Proxmox VE bare metal
 - [ ] Assign static IP on VLAN 70 (SERVER, 192.168.70.0/24)
@@ -153,13 +174,12 @@
 - [ ] Install Wazuh agents on Acer, Pi 4B, and Proxmox host
 - [ ] Deploy Netdata, NetAlertX, ntfy (completing Phase 4)
 
-### Phase D — VLAN 60 schoolmate lab
+### Phase D — VLAN 60 schoolmate lab ❌
 - [ ] Build VLAN 60 (LAB, 192.168.60.0/24) on 3560CX
-- [ ] Deploy Active Directory VM on Proxmox (VLAN 60)
+- [ ] Deploy Active Directory VM on Proxmox — forest: jlm.lab
 - [ ] Deploy osTicket help desk VM on Proxmox (VLAN 60)
 - [ ] Deploy M365 admin sandbox (VLAN 60)
 - [ ] Configure Tailscale subnet routing for Ohio schoolmate access
-- [ ] Define AD forest name (jlm.lab vs corp.builtwithpurpose.dev — TBD)
 
 ---
 
@@ -179,9 +199,11 @@
 
 ## Phase 7: Infrastructure as Code ❌ NOT STARTED
 
-- [ ] Ansible playbook for base server setup
+- [x] Ansible project structure built (ansible.cfg, inventory, vault, playbook)
+- [x] Netmiko config backup working — C1111 backup verified (May 21, 2026)
+- [x] RESTCONF Python API script — 5 live queries verified (May 21, 2026)
 - [ ] Ansible roles: MCP server, Ngrok, Pi deployment, CUPS config, Wazuh agent, Netdata agent
-- [ ] Cisco config templating via Netmiko/Ansible
+- [ ] Cisco config templating via Netmiko (extend to 3560CX after Phase B)
 - [ ] One-command bare metal rebuild
 - [ ] Optional: GitHub Actions CI/CD
 
@@ -204,6 +226,30 @@
 
 ---
 
+## CCNA Lab Progress 🎓
+
+Labs completed and documented in `labs/`:
+
+| Lab | Topic | CCNA Domain |
+|---|---|---|
+| lab-003-ntp-snmp.md | NTP hierarchy + SNMP | Domain 4 — IP Services |
+| lab-004-network-automation.md | Ansible, Netmiko, legacy SSH | Domain 6 — Automation |
+| lab-005-restconf.md | RESTCONF REST API + Python | Domain 6 — Automation |
+| lab-006-stp-rstp.md | STP/RSTP, Rapid-PVST+ | Domain 2 — Network Access |
+
+Live configurations:
+- [x] OSPFv2 — process 1, router-ID 10.0.0.1, 9 networks area 0
+- [x] IPv6 dual-stack — VLAN 10 (2001:db8:10::/64), VLAN 20 (2001:db8:20::/64)
+- [x] DHCP snooping + DAI — VLANs 30,31,40,50,60 on 3560CX
+- [x] NTP — C1111 stratum 2, all devices stratum 3
+- [x] RESTCONF — enabled on C1111, Python queries verified
+- [ ] OSPFv2 adjacency C1111 ↔ 3560CX — pending Phase B
+- [ ] HSRP — pending Phase B
+- [ ] EtherChannel — pending Phase B
+- [ ] STP root bridge + PortFast + BPDU Guard — pending Phase B
+
+---
+
 ## Ongoing / Blocked
 
 - [ ] IOS rollback on C1111 to pre-16.10.1 (C1111-specific image required)
@@ -213,7 +259,8 @@
 - [ ] HP ENVY 5640 — bring online via CUPS or remove from Instant Ink subscription
 - [ ] Algo VPN — planned, not started
 - [ ] Add phone and Android 7.0 tablet to Tailscale tailnet
-- [ ] RAM + NVMe pricing — watching for DDR5 price drop before purchasing
+- [ ] RAM (DDR5 UDIMM 64GB) — watching for price drop
+- [ ] NVMe (WD Black SN770 2TB) — ready to order when RAM decision made
 
 ---
 
@@ -221,14 +268,14 @@
 
 | Device | Status | Notes |
 |---|---|---|
-| Cisco C1111-4PWB (JLM-LAB-R1) | ✅ Production | Smart Licensing REGISTERED, OUT OF COMPLIANCE (no enforcement until Aug 2026) |
-| Catalyst 3560CX-8PC-S (JLM-LAB-SW1) | 🔄 Staged | Baselined, awaiting Phase B cutover |
-| NETGEAR GS308EP | ✅ Production | L2 lab switch, VLAN 99 management |
-| NETGEAR GS316EP | ✅ Production | L2 household switch |
+| Cisco C1111-4PWB (JLM-LAB-R1) | ✅ Production | OSPF, IPv6, NTP, RESTCONF live |
+| Catalyst 3560CX-8PC-S (JLM-LAB-SW1) | 🔄 Phase A complete | VLANs, SVIs, ACLs, DHCP snooping, DAI staged |
+| NETGEAR GS308EP | ✅ Production | VLAN 50 corrected, mgmt IP locked |
+| NETGEAR GS316EP | ✅ Production | VLAN 50 added May 19 |
 | UniFi U6+ APs (×2) | ✅ Production | 5 SSIDs, desk-mounted pending ceiling mount |
-| Raspberry Pi 4B | ✅ Production | Pi-hole, UniFi Controller, Mosquitto, CUPS |
-| Acer Server | ✅ Production | Docker: social-media-mcp + Ngrok, Streamlit |
-| Custom ATX Server (Proxmox) | 🔄 In build | Ryzen 9 7900X, B650, PA120 SE, SAMA V40, SL-650G — RAM + NVMe pending |
+| Raspberry Pi 4B | ✅ Production | Pi-hole, UniFi, Mosquitto, CUPS, NTP client |
+| Acer Server | ✅ Production | Docker: MCP + Ngrok, Streamlit, NTP client |
+| Custom ATX Server (Proxmox) | 🔄 In build | Parts on hand — RAM + NVMe pending |
 
 ---
 
@@ -242,10 +289,10 @@
 | Phase 4 | Build end-to-end IoT monitoring pipelines and production observability |
 | Phase 5 | Execute a zero-downtime L3 network cutover and deploy a hypervisor platform |
 | Phase 6 | Deploy and operate a SIEM for continuous security monitoring |
-| Phase 7 | Implement Infrastructure as Code for repeatable deployments |
+| Phase 7 | Implement Infrastructure as Code — Ansible, Netmiko, RESTCONF Python API |
 | Phase 8 | Communicate technical work through structured labs and case studies |
 | **All** | Operate a real production system — not just build one |
 
 ---
 
-*Last updated: May 19, 2026*
+*Last updated: May 21, 2026*
