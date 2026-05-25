@@ -33,6 +33,9 @@
 - [x] OSPFv2 configured on C1111 — process 1, router-ID 10.0.0.1, all VLANs in area 0 (May 21, 2026)
 - [x] IPv6 dual-stack on VLAN 10 and VLAN 20 (2001:db8:10::/64, 2001:db8:20::/64) (May 21, 2026)
 - [x] RESTCONF enabled on C1111 — Python REST API queries verified (May 21, 2026)
+- [x] AAA configured on C1111 — aaa new-model, local authentication, exec authorization (May 25, 2026)
+- [x] OSPFv3 configured on C1111 — process 1, router-ID 10.0.0.1, Loopback0/Vlan10/Vlan20 (May 25, 2026)
+
 
 ### Step 1: Physical Infrastructure ✅
 
@@ -145,6 +148,8 @@
 - [x] Rapid-PVST+ configured, STP documented (May 21, 2026)
 - [x] NTP client configured — syncing from C1111 (May 21, 2026)
 - [x] Config saved and committed to repo
+- [x] IP Source Guard configured on Gi0/5-Gi0/8 — activates at Phase B (May 25, 2026)
+
 
 ### Phase B — Light cutover (~5 min WiFi outage, schedule off-peak) ❌
 - [ ] Cable Gi0/1 to C1111 GE0/1/0 (TRANSIT link)
@@ -236,6 +241,9 @@ Labs completed and documented in `labs/`:
 | lab-004-network-automation.md | Ansible, Netmiko, legacy SSH | Domain 6 — Automation |
 | lab-005-restconf.md | RESTCONF REST API + Python | Domain 6 — Automation |
 | lab-006-stp-rstp.md | STP/RSTP, Rapid-PVST+ | Domain 2 — Network Access |
+| lab-007-ospfv3.md | OSPFv3 IPv6 routing | Domain 3 — IP Connectivity |
+| lab-008-aaa.md | AAA local authentication | Domain 5 — Security |
+| lab-009-ip-source-guard.md | IP Source Guard | Domain 5 — Security |
 
 Live configurations:
 - [x] OSPFv2 — process 1, router-ID 10.0.0.1, 9 networks area 0
