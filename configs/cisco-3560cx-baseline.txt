@@ -180,19 +180,23 @@ interface GigabitEthernet0/4
  ip arp inspection trust
 !
 interface GigabitEthernet0/5
- description SPARE-POE
+ description SPARE-
+ ip verify source
  shutdown
 !
 interface GigabitEthernet0/6
  description SPARE-POE
+ ip verify source
  shutdown
 !
 interface GigabitEthernet0/7
  description SPARE-POE
+ ip verify source
  shutdown
 !
 interface GigabitEthernet0/8
  description SPARE-POE
+ ip verify source
  shutdown
 !
 interface GigabitEthernet0/9
@@ -256,6 +260,10 @@ ip dhcp snooping vlan 30,31,40,50,60
 no ip dhcp snooping information option
 !
 ip arp inspection vlan 30,31,40,50,60
+!
+! IP Source Guard configured on access ports Gi0/5-Gi0/8
+! Status: inactive-no-snooping-vlan until Phase B devices connect
+! Activates automatically when DHCP snooping binding table populates
 ip ssh time-out 60
 ip ssh version 2
 !
