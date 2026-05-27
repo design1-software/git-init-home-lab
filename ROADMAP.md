@@ -186,6 +186,15 @@
 - [ ] Deploy M365 admin sandbox (VLAN 60)
 - [ ] Configure Tailscale subnet routing for Ohio schoolmate access
 
+### Phase E — AWS Site-to-Site VPN ❌
+> **Decision note:** AWS Free Tier for training adds less ground than the physical lab already covers — Free Tier EC2 doesn't go meaningfully further. The Site-to-Site VPN is genuinely useful but belongs here in Phase 5, not before.
+
+- [ ] Create AWS VPC with public subnet
+- [ ] Provision Virtual Private Gateway and Customer Gateway (C1111 WAN IP)
+- [ ] Configure IKEv2 / IPsec Site-to-Site VPN tunnel on C1111
+- [ ] Verify bidirectional routing between home lab subnets and AWS VPC
+- [ ] Document tunnel config and BGP/static route options
+
 ---
 
 ## Phase 6: Security Audit & SIEM ❌ NOT STARTED
@@ -303,4 +312,4 @@ Live configurations:
 
 ---
 
-*Last updated: May 21, 2026*
+*Last updated: May 27, 2026*
