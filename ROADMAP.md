@@ -40,6 +40,7 @@
 ### Step 1: Physical Infrastructure ✅
 
 - [x] CyberPower CP1500PFCLCD UPS installed, all critical infra on battery-backed outlets
+- [x] CyberPower SX950U (950VA/510W) — second UPS unit added for secondary gear
 - [x] GS308EP connected to Cisco as lab switch — VLAN 50 corrected on Port 4 (May 19, 2026)
 - [x] GS316EP trunked to Cisco GE0/1/2 for household wired devices — VLAN 50 added (May 19, 2026)
 - [x] GS308EP management IP locked to 192.168.100.100 via DHCP reservation (May 19, 2026)
@@ -315,4 +316,4 @@ Live configurations:
 
 ---
 
-*Last updated: May 30, 2026*
+*Last updated: May 30, 2026 (SX950U added)*
