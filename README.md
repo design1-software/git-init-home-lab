@@ -75,7 +75,7 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 │                                                                         │
 │   DNS: Pi-hole (192.168.10.16) serving all VLANs                        │
 │   UPS #1: CyberPower CP1500PFCLCD — critical infra (auto-shutdown)     │
-│   UPS #2: CyberPower SX950U — secondary gear (950VA/510W)              │
+│   UPS #2: CyberPower SX950U — office Tailscale nodes (950VA/510W)      │
 │   Remote: Tailscale mesh VPN (8 nodes — see table below)               │
 │   No port forwarding — all ingress via Ngrok tunnel                     │
 │                                                                         │
@@ -122,7 +122,7 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 | UniFi U6+ APs (×2) | ✅ Broadcasting | 5 SSIDs on 5 VLANs, pending ceiling mount |
 | VLAN segmentation | ✅ Implemented | 8 VLANs active, 4 ACLs enforcing isolation |
 | CyberPower CP1500PFCLCD (UPS #1) | ✅ Protecting infra | Auto-shutdown via PowerPanel Personal (USB-B to Acer) |
-| CyberPower SX950U (UPS #2) | ✅ Active | 950VA/510W · 12 outlets · 890J surge · USB charging |
+| CyberPower SX950U (UPS #2) | ✅ Active | 950VA/510W · 12 outlets · 890J surge · currently protecting office Tailscale nodes — not yet on network infra |
 | Acer Server | ✅ Dockerized | social-media-mcp + Ngrok in Docker Compose, auto-restart |
 | CUPS Print Server | ✅ Serving | Pi → USB → HP ENVY 7200e |
 | Xfinity bridge mode | ✅ Active | Cisco sole router, public IP via DHCP from Comcast |
@@ -162,7 +162,7 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 | Lab Switch | Netgear GS308EP | 8-port PoE+, Advanced 802.1Q | ✅ Active |
 | Household Switch | Netgear GS316EP | 16-port PoE+, Advanced 802.1Q | ✅ Active |
 | UPS #1 | CyberPower CP1500PFCLCD | Battery backup, auto-shutdown (USB-B → Acer) | ✅ Active |
-| UPS #2 | CyberPower SX950U | 950VA/510W · 12 outlets · 890J surge · USB charging | ✅ Active |
+| UPS #2 | CyberPower SX950U | 950VA/510W · 12 outlets · 890J surge · office Tailscale nodes — not yet on network infra | ✅ Active |
 | WiFi | 2× Ubiquiti UniFi U6+ | 5 VLAN-tagged SSIDs | ✅ Active |
 
 ### Compute
@@ -206,7 +206,7 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 - **CUPS access control** — print from VLAN 10/20/40; admin restricted to VLAN 20
 - **Printer hardening** — Wi-Fi Direct disabled, HP marketing data disabled, admin password changed
 - **Remote access** — Tailscale mesh VPN (8 nodes, jbm0674@gmail.com)
-- **UPS auto-shutdown** — CyberPower CP1500PFCLCD (primary), graceful shutdown at 20% battery · CyberPower SX950U (secondary, 950VA/510W)
+- **UPS auto-shutdown** — CyberPower CP1500PFCLCD (primary), graceful shutdown at 20% battery · CyberPower SX950U (office, 950VA/510W — currently protecting Tailscale nodes, not yet on network infra)
 - **TCP MSS clamping** — `ip tcp adjust-mss 1380` on WAN interface (verified)
 - **Cisco IOS hardening** — enable secret (Type 9), console timeout, service password-encryption, SSHv2, local auth
 - **AAA** — `aaa new-model`, local authentication + exec authorization, console + vty hardened, `login on-success log`
