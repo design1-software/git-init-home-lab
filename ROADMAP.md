@@ -136,6 +136,8 @@
 
 **Goal:** Promote 3560CX to L3 core, retire C1111 as edge-only, bring up custom Proxmox server on VLAN 70.
 
+> Proxmox server ✅ live (192.168.100.10, Tailscale pve 100.71.239.21) — Phase C base install complete. VLAN 70 cabling and VM workloads pending Phase B/C cutover.
+
 ### Phase A — Pre-stage 3560CX offline ✅ COMPLETE (May 19, 2026)
 - [x] Build VLAN database on 3560CX (VLANs 1,10,20,30,31,40,50,60,70,99,199)
 - [x] Configure SVIs with IP addresses for all VLANs
@@ -165,13 +167,13 @@
 - [ ] Configure HSRP on VLANs 10 and 20
 - [ ] Roll back plan documented and saved before cutover begins
 
-### Phase C — Proxmox server bring-up ❌
-- [ ] Assemble custom ATX server (Ryzen 9 7900X, B650, PA120 SE, SAMA V40, SL-650G)
-  - ⏳ RAM (DDR5 UDIMM 64GB) — watching for price drop
-  - ⏳ NVMe (WD Black SN770 2TB in cart) — ready to order
+### Phase C — Proxmox server bring-up 🔄 IN PROGRESS
+- [x] Assemble custom ATX server (Ryzen 9 7900X, B650, PA120 SE, SAMA V40, SL-650G)
+  - [x] RAM (DDR5 UDIMM 64GB) — installed
+  - [x] NVMe (WD Black SN770 2TB) — installed
+- [x] Install Proxmox VE bare metal — live at 192.168.100.10 :8006
 - [ ] Set PPT power cap to 88W in BIOS for server efficiency
-- [ ] Install Proxmox VE bare metal
-- [ ] Assign static IP on VLAN 70 (SERVER, 192.168.70.0/24)
+- [ ] Assign static IP on VLAN 70 (SERVER, 192.168.70.0/24) — pending Phase B cable cutover
 - [ ] Trunk both NICs to GS308EP — management on VLAN 70, VM traffic on VLANs 60/70
 - [ ] Add as 7th Tailscale node
 - [ ] Enable Tailscale subnet routing for VLAN 60 (LAB) → Ohio schoolmate access
@@ -256,8 +258,11 @@ Labs completed and documented in `labs/`:
 
 Live configurations:
 - [x] OSPFv2 — process 1, router-ID 10.0.0.1, 9 networks area 0
+- [x] OSPFv3 — process 1, router-ID 10.0.0.1, Lo0 / Vlan10 / Vlan20 in area 0
 - [x] IPv6 dual-stack — VLAN 10 (2001:db8:10::/64), VLAN 20 (2001:db8:20::/64)
 - [x] DHCP snooping + DAI — VLANs 30,31,40,50,60 on 3560CX
+- [x] IP Source Guard — 3560CX Gi0/5–Gi0/8 configured, activates at Phase B
+- [x] AAA — aaa new-model, local auth + exec authorization, console + vty hardened, login on-success log
 - [x] NTP — C1111 stratum 2, all devices stratum 3
 - [x] RESTCONF — enabled on C1111, Python queries verified
 - [ ] OSPFv2 adjacency C1111 ↔ 3560CX — pending Phase B
@@ -276,8 +281,6 @@ Live configurations:
 - [ ] HP ENVY 5640 — bring online via CUPS or remove from Instant Ink subscription
 - [ ] Algo VPN — planned, not started
 - [ ] Add phone and Android 7.0 tablet to Tailscale tailnet
-- [ ] RAM (DDR5 UDIMM 64GB) — watching for price drop
-- [ ] NVMe (WD Black SN770 2TB) — ready to order when RAM decision made
 
 ---
 
@@ -292,7 +295,7 @@ Live configurations:
 | UniFi U6+ APs (×2) | ✅ Production | 5 SSIDs, desk-mounted pending ceiling mount |
 | Raspberry Pi 4B | ✅ Production | Pi-hole, UniFi, Mosquitto, CUPS, NTP client |
 | Acer Server | ✅ Production | Docker: MCP + Ngrok, Streamlit, NTP client |
-| Custom ATX Server (Proxmox) | 🔄 In build | Parts on hand — RAM + NVMe pending |
+| Proxmox Server (pve) | ✅ Live | Proxmox VE · 192.168.100.10 · SN770 2TB NVMe vmstore · Samsung 860 EVO OS + backup vault · Tailscale 100.71.239.21 · VLAN 70 cabling pending |
 
 ---
 
@@ -312,4 +315,4 @@ Live configurations:
 
 ---
 
-*Last updated: May 27, 2026*
+*Last updated: May 30, 2026*

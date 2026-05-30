@@ -23,6 +23,7 @@
 | UniFi AP #2 | 192.168.99.11 | 99 (MGMT/NATIVE) | 6C:63:F8:A5:73:AD | Via UniFi Controller |
 | XB8 (bridge mode) | Not routable (modem only) | — | — | Physical access only. Factory reset: hold reset 30 sec |
 | Catalyst 3560CX (JLM-LAB-SW1) | Staged — not yet in production | — | — | Console cable · SSH after cutover |
+| Proxmox Server (pve) | 192.168.100.10 :8006 (web UI) | 1 (VLAN 70 cabling pending) | — | `https://192.168.100.10:8006` · Tailscale 100.71.239.21 |
 
 ---
 
@@ -36,8 +37,10 @@
 | iMac | juliuss-imac | 100.75.3.82 | macOS |
 | Desktop | desktop-opm9863 | 100.87.58.10 | Windows 10 |
 | MacBook Air | macbook-air | 100.102.47.66 | macOS |
+| Proxmox Server | pve | 100.71.239.21 | Linux (Proxmox VE) |
+| Desktop (Windows) | jm-swe | 100.74.46.90 | Windows |
 
-> Phone and Android 7.0 tablet pending addition. Custom Proxmox server will be 7th node at Phase C.
+> Phone and Android 7.0 tablet pending addition.
 
 ---
 
@@ -181,4 +184,4 @@
 
 ---
 
-*Last verified: May 19, 2026*
+*Last verified: May 30, 2026*

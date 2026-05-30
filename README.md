@@ -75,7 +75,7 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 │                                                                         │
 │   DNS: Pi-hole (192.168.10.16) serving all VLANs                        │
 │   UPS: CyberPower CP1500PFCLCD protecting all critical infra            │
-│   Remote: Tailscale mesh VPN (6 nodes — see table below)               │
+│   Remote: Tailscale mesh VPN (8 nodes — see table below)               │
 │   No port forwarding — all ingress via Ngrok tunnel                     │
 │                                                                         │
 │   Staged (not yet in production):                                       │
@@ -124,9 +124,9 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 | Acer Server | ✅ Dockerized | social-media-mcp + Ngrok in Docker Compose, auto-restart |
 | CUPS Print Server | ✅ Serving | Pi → USB → HP ENVY 7200e |
 | Xfinity bridge mode | ✅ Active | Cisco sole router, public IP via DHCP from Comcast |
-| Tailscale | ✅ Connected | 6 nodes on mesh VPN (see table below) |
+| Tailscale | ✅ Connected | 8 nodes on mesh VPN (see table below) |
 | closet-monitor | ✅ Production | ESP32 → MQTT → Pi → SQLite → Streamlit dashboard |
-| Custom ATX Server (Proxmox) | 🔄 In build | Ryzen 9 7900X · B650 · RAM + NVMe pending — will be VLAN 70 |
+| Proxmox Server (pve) | ✅ Live | Proxmox VE · 192.168.100.10 · web UI :8006 · VLAN 70 cabling pending Phase C |
 | IoT device migration | 🔄 Mostly done | Ring, Alexa, Ecobee, Somfy, Samsung TV migrated · Kasa plugs pending |
 
 ---
@@ -141,8 +141,10 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 | juliuss-imac | 100.75.3.82 | iMac | macOS |
 | desktop-opm9863 | 100.87.58.10 | Desktop | Windows 10 |
 | macbook-air | 100.102.47.66 | MacBook Air | macOS |
+| pve | 100.71.239.21 | Proxmox Server | Linux (Proxmox VE) |
+| jm-swe | 100.74.46.90 | Desktop (Windows) | Windows |
 
-> Custom Proxmox server will be added as 7th node at Phase C.
+> Phone and Android 7.0 tablet pending addition.
 
 ---
 
@@ -166,7 +168,7 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 |---|---|---|---|
 | Home Server | Acer Aspire 3 15 | Docker: MCP Server + Ngrok (24/7) · VLAN 10 | ✅ Active |
 | Network Services | Raspberry Pi 4B + PoE HAT | Pi-hole, UniFi, MQTT, CUPS · VLAN 10 | ✅ Active |
-| Proxmox Server | Custom ATX (Ryzen 9 7900X) | Hypervisor — Wazuh, VMs, schoolmate lab · VLAN 70 | 🔄 In build |
+| Proxmox Server | Custom ATX (Ryzen 9 7900X) | Hypervisor — Proxmox VE · OS: Samsung 860 EVO (/dev/sda) · vmstore: WD Black SN770 2TB NVMe (LVM-thin, 1.8TB) · backup vault: Samsung 860 EVO (458GB) · NICs: Intel I225V (mgmt) · Realtek RTL8125 (future VM trunk) · 192.168.100.10 · web :8006 · VLAN 70 cabling pending Phase C | ✅ Live |
 | Printer | HP ENVY Inspire 7200e | USB to Pi (CUPS) · WiFi on VLAN 30 | ✅ Active |
 | Laptop | MacBook Pro | Development + fb-content-system | ✅ Active |
 
@@ -200,10 +202,12 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 - **Containerized services** — Docker Compose with health checks, auto-restart, log rotation
 - **CUPS access control** — print from VLAN 10/20/40; admin restricted to VLAN 20
 - **Printer hardening** — Wi-Fi Direct disabled, HP marketing data disabled, admin password changed
-- **Remote access** — Tailscale mesh VPN (6 nodes, jbm0674@gmail.com)
+- **Remote access** — Tailscale mesh VPN (8 nodes, jbm0674@gmail.com)
 - **UPS auto-shutdown** — CyberPower CP1500PFCLCD, graceful shutdown at 20% battery
 - **TCP MSS clamping** — `ip tcp adjust-mss 1380` on WAN interface (verified)
 - **Cisco IOS hardening** — enable secret (Type 9), console timeout, service password-encryption, SSHv2, local auth
+- **AAA** — `aaa new-model`, local authentication + exec authorization, console + vty hardened, `login on-success log`
+- **Rapid-PVST+** — JLM-LAB-SW1 (3560CX): Extended system ID enabled, Bridge Assurance configured
 - **DNS filtering** — Pi-hole blocking 87K+ domains, serving all VLANs
 - **Smart Licensing** — C1111 REGISTERED to EngageMea.com Smart Account
 
@@ -235,15 +239,15 @@ Produces 182 posts per week per page across 3 Facebook pages.
 
 | Domain | Implementation |
 |---|---|
-| **Enterprise Networking** | Cisco IOS XE: 8 VLANs, SVIs, inter-VLAN routing, extended ACLs, NAT/PAT, DHCP (8 pools), 802.1Q trunking, SSH, Smart Licensing |
+| **Enterprise Networking** | Cisco IOS XE: 8 VLANs, SVIs, inter-VLAN routing, extended ACLs, NAT/PAT, DHCP (8 pools), 802.1Q trunking, SSH, Smart Licensing, OSPFv3 (IPv6), IP Source Guard, AAA |
 | **Network Infrastructure** | Dual managed switch topology, Netgear Advanced 802.1Q, enterprise PoE+ AP deployment, VLAN-tagged WiFi (5 SSIDs) |
 | **L3 Switching** | Catalyst 3560CX-8PC-S baselined and staged as future L3 core — cutover planned |
 | **Linux Server Admin** | Headless Raspberry Pi OS, Pi-hole DNS, UniFi Controller, Mosquitto MQTT, CUPS |
 | **Containerization** | Docker multi-stage builds, Docker Compose with health checks, Ngrok sidecar, auto-restart, log rotation |
 | **Software Engineering** | 78K+ lines across 3 repos; MCP protocol server; multi-API orchestration |
 | **IoT / Automation** | ESP32 sensor pipeline (BME280 → MQTT → SQLite → Streamlit), VLAN-isolated IoT network |
-| **Hypervisor Platform** | Custom ATX Proxmox server in build (Ryzen 9 7900X) — Wazuh SIEM, AD lab, schoolmate remote lab |
-| **Remote Access** | Tailscale mesh VPN (6 nodes), Ngrok fixed-domain tunnel, zero port forwarding |
+| **Hypervisor Platform** | Proxmox VE live (Ryzen 9 7900X) — 192.168.100.10 · SN770 2TB NVMe vmstore — Wazuh SIEM, AD lab, schoolmate remote lab planned |
+| **Remote Access** | Tailscale mesh VPN (8 nodes), Ngrok fixed-domain tunnel, zero port forwarding |
 | **Security** | Zero port forwarding; VLAN isolation with ACLs; CUPS access control; credential encryption; DNS filtering |
 
 ---
@@ -256,7 +260,7 @@ See [ROADMAP.md](ROADMAP.md) for the full phased plan:
 - **Phase 2** ✅ Network hardening (Cisco, VLANs, ACLs, Pi-hole, UniFi — complete)
 - **Phase 3** ✅ Server hardening (Docker, CUPS, print infrastructure — complete)
 - **Phase 4** 🔄 Monitoring & observability (closet-monitor live · Netdata/NetAlertX/ntfy pending)
-- **Phase 5** ❌ 3560CX cutover + Proxmox server deployment
+- **Phase 5** 🔄 3560CX cutover (pending Phase B) · Proxmox deployment ✅
 - **Phase 6** ❌ Security audit & SIEM (Wazuh)
 - **Phase 7** ❌ Infrastructure as Code (Ansible)
 - **Phase 8** ❌ Portfolio & documentation (builtwithpurpose.dev)
@@ -274,4 +278,4 @@ See [ROADMAP.md](ROADMAP.md) for the full phased plan:
 
 ---
 
-*Last updated: May 19, 2026*
+*Last updated: May 30, 2026*
