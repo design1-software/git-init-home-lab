@@ -176,7 +176,7 @@
 - [ ] Set PPT power cap to 88W in BIOS for server efficiency
 - [ ] Assign static IP on VLAN 70 (SERVER, 192.168.70.0/24) — pending Phase B cable cutover
 - [ ] Trunk both NICs to GS308EP — management on VLAN 70, VM traffic on VLANs 60/70
-- [ ] Add as 7th Tailscale node
+- [x] Add to Tailscale mesh — pve (100.71.239.21) ✅ online
 - [ ] Enable Tailscale subnet routing for VLAN 60 (LAB) → Ohio schoolmate access
 - [ ] Deploy Wazuh SIEM as LXC container on Proxmox
 - [ ] Install Wazuh agents on Acer, Pi 4B, and Proxmox host
