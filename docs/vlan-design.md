@@ -1,6 +1,6 @@
 # VLAN Design — JLM Home Lab
 
-> Network segmentation scheme for the home lab. This document reflects the implemented and verified state as of May 19, 2026.
+> Network segmentation scheme for the home lab. This document reflects the implemented and verified state as of May 31, 2026.
 
 ---
 
@@ -31,13 +31,18 @@
 | 50 | JM&G-GUEST | 192.168.50.0/24 | 192.168.50.1 | .11–.254 | Guest internet access, client isolation |
 | 99 | MGMT/NATIVE | 192.168.99.0/24 | 192.168.99.1 | .11–.50 | Native VLAN on all trunks — AP management |
 
+### Configured — Awaiting Cable / Full Activation
+
+| VLAN ID | Name | Subnet | Gateway | Purpose |
+|---|---|---|---|---|
+| 199 | TRANSIT | 192.168.199.0/30 | — | P2P L3 link C1111 ↔ 3560CX — SVI configured both sides, cable pending (May 31, 2026) |
+
 ### Planned (pending 3560CX cutover)
 
 | VLAN ID | Name | Subnet | Gateway | Purpose |
 |---|---|---|---|---|
 | 60 | LAB | 192.168.60.0/24 | 192.168.60.1 | Schoolmate remote lab — AD, osTicket, M365 sandbox |
 | 70 | SERVER | 192.168.70.0/24 | 192.168.70.1 | Proxmox hypervisor host + VM/LXC traffic |
-| 199 | TRANSIT | 192.168.199.0/30 | — | Point-to-point L3 link between C1111 and 3560CX |
 
 ---
 
@@ -48,14 +53,14 @@
 | Device | IP | Connection | Notes |
 |---|---|---|---|
 | Cisco C1111 SVI | 192.168.100.1 | Vlan1 SVI | Legacy gateway — retirement planned at cutover |
-| NETGEAR GS308EP | 192.168.100.100 | DHCP reserved (MAC 28:94:01:84:2D:8A) | Web UI: http://192.168.100.100 |
+| NETGEAR GS308EP | 192.168.100.95 | DHCP reserved (MAC 28:94:01:84:2D:8A) | Web UI: http://192.168.100.95 |
 | NETGEAR GS316EP | 192.168.100.96 | DHCP (MAC 28:94:01:7F:A7:F7) | Web UI: http://192.168.100.96 |
 
 ### VLAN 10 — MGMT (Production Servers)
 
 | Device | IP | Connection | Notes |
 |---|---|---|---|
-| Acer Server | 192.168.10.11 | Cisco GE0/1/0 (access VLAN 10) | Docker: social-media-mcp + Ngrok sidecar, Streamlit (:8501) |
+| Acer Server | 192.168.10.11 | GS308EP Port 2 (VLAN 10, moved May 31, 2026) | Docker: social-media-mcp + Ngrok sidecar, Streamlit (:8501) |
 | Raspberry Pi 4B | 192.168.10.16 | GS308EP Port 3 (PoE, access VLAN 10) | Pi-hole, UniFi Controller, Mosquitto MQTT, CUPS |
 | HP ENVY Inspire 7200e | — | USB to Pi 4B | Print queue via CUPS (USB path only; WiFi on VLAN 30) |
 
@@ -229,15 +234,15 @@ permit ip any any
 **Firmware:** V2.0.0.5
 **MAC:** 28:94:01:84:2D:8A
 **Serial:** 6V665C53A4801
-**Management IP:** 192.168.100.100 (DHCP reserved on C1111)
+**Management IP:** 192.168.100.95 (DHCP reserved on C1111)
 **Management VLAN:** VLAN 1 (DEFAULT) — hardware limitation, no configurable management VLAN
 
-### VLAN Membership Table (verified May 19, 2026)
+### VLAN Membership Table (verified May 31, 2026)
 
 | VLAN | Name | Port Members |
 |---|---|---|
-| 1 | DEFAULT | 1, 2, 6, 7, 8 |
-| 10 | SERVER | 1, 3 |
+| 1 | DEFAULT | 1, 6, 7, 8 |
+| 10 | SERVER | 1, 2, 3 |
 | 20 | TRUSTED | 1, 4, 5 |
 | 30 | IOT | 1, 4, 5 |
 | 31 | IOT-AUTO | 1, 4, 5 |
@@ -245,12 +250,12 @@ permit ip any any
 | 50 | JM&G-GUEST | 1, 4, 5 |
 | 99 | MGMT | 1, 4, 5 |
 
-### Port PVID Table (verified May 19, 2026)
+### Port PVID Table (verified May 31, 2026)
 
 | Port | PVID | VLANs | Role |
 |---|---|---|---|
 | 1 | 99 | 1,10,20,30,31,40,50,99 | Trunk to Cisco GE0/1/1 |
-| 2 | 1 | 1 | Spare |
+| 2 | 10 | 10 | Acer Server (192.168.10.11) |
 | 3 | 10 | 10 | Pi 4B (PoE, VLAN 10) |
 | 4 | 99 | 20,30,31,40,50,99 | UniFi AP #1 |
 | 5 | 99 | 20,30,31,40,50,99 | UniFi AP #2 |
@@ -263,7 +268,7 @@ permit ip any any
 1. **VLAN 1 must be present on Port 1 (trunk).** Excluding VLAN 1 breaks the switch's internal MAC forwarding table. Per official Netgear documentation.
 2. **VLAN 50 must be on both AP ports (4 and 5).** Required for JM&G-GUEST SSID to broadcast from both APs. Corrected May 19, 2026 — Port 4 was missing VLAN 50.
 3. **GS308EP has no configurable management VLAN.** Management interface floats on VLAN 1 (DEFAULT). This is a documented hardware limitation.
-4. **GS308EP management IP is DHCP-reserved at 192.168.100.100** via C1111 DHCP pool (client-identifier 2894.0184.2d8a). IP locked permanently.
+4. **GS308EP management IP is 192.168.100.95** — acquired via regular DHCP. The C1111 DHCP reservation for .100 (client-identifier 2894.0184.2d8a) is stuck in Selecting state; reservation is not functioning. Switch will float to whatever DHCP assigns. Cleanup task: investigate reservation after Stage 2 cutover.
 
 ---
 
@@ -306,21 +311,48 @@ VLAN 50 (JM&G-GUEST) added to GS316EP membership table and Port 15 as Tagged.
 
 ---
 
-## Cisco Trunk Configuration (verified May 19, 2026)
+## Cisco C1111 Port Configuration (updated May 31, 2026)
 
 ```
+! Trunk to GS308EP (unchanged)
 interface GigabitEthernet0/1/1
  switchport trunk native vlan 99
  switchport trunk allowed vlan 1,10,20,30,31,40,50,99
  switchport mode trunk
 
+! Trunk to GS316EP (unchanged)
 interface GigabitEthernet0/1/2
  switchport trunk native vlan 99
  switchport trunk allowed vlan 1,10,20,30,31,40,50,99
  switchport mode trunk
+
+! TRANSIT to 3560CX — access port in VLAN 199 (NIM-ES2 is L2-only; routed via SVI)
+vlan 199
+ name TRANSIT
+interface GigabitEthernet0/1/0
+ description TRANSIT-TO-3560CX
+ switchport mode access
+ switchport access vlan 199
+ no shutdown
+
+! TRANSIT SVI — C1111 side of /30
+interface Vlan199
+ ip address 192.168.199.1 255.255.255.252
+ ip nat inside
+ no shutdown
+
+! OSPFv2 — additive to pre-existing process 1 (Step 1.3, May 31, 2026)
+! Note: router-id 1.1.1.1, passive-interface default, Loopback0, and all VLAN
+! network statements were already present from prior lab work.
+router ospf 1
+ network 192.168.199.0 0.0.0.3 area 0   ! brings Vlan199 into OSPF
+ default-information originate           ! advertises default route to 3560CX as O*E2
+ no passive-interface Vlan199            ! allows hellos on TRANSIT SVI only
 ```
 
-> At Phase B cutover, GE0/1/1 will trunk to the 3560CX uplink. GE0/1/2 trunk to GS316EP remains unchanged.
+> **Hardware constraint:** C1111-4PWB GE0/1/0–0/1/3 are on the NIM-ES2 module — Layer 2 only. `no switchport` is unavailable on these ports. TRANSIT L3 is implemented on Vlan199 SVI; the physical port is an access port in VLAN 199. OSPF runs on the SVI, not the physical port — `no passive-interface Vlan199` (not GigabitEthernet0/1/0) is the correct command.
+
+> GE0/1/1 will become the uplink to the 3560CX at Phase B cabling. GE0/1/2 trunk to GS316EP remains unchanged.
 
 ---
 
@@ -336,13 +368,16 @@ All VLANs receive **Pi-hole (192.168.10.16)** as primary DNS via DHCP, with **1.
 2. **VLAN 1 must be present on the trunk port** in Netgear Advanced 802.1Q or internal MAC learning breaks.
 3. **Cisco trunk must allow VLAN 1** to match Netgear tagging behavior.
 4. **VLAN 50 must be explicitly added to all AP ports.** Missing from Port 4 caused guest SSID to broadcast from only one AP. Corrected May 19, 2026.
-5. **GS308EP management IP floats on VLAN 1.** Lock it with a DHCP reservation on the C1111 to prevent it changing on reboot.
+5. **GS308EP management IP floats on VLAN 1.** DHCP reservation for .100 is not functioning (stuck in Selecting). IP is currently .95. Cleanup task post-Stage 2.
 6. **Pi-hole sets a static IP during installation.** Never override from the network side without changing the Pi config first.
 7. **Apple TVs require DHCP, not static IPs.** Static IP configuration causes app connectivity failures.
 8. **Pi-hole blocks Apple service domains by default.** Whitelist: gsa.apple.com, configuration.apple.com, apps.apple.com.
 9. **TCP MSS clamping value is 1380** (`ip tcp adjust-mss 1380`) on C1111 WAN interface — verified from live config. Earlier docs incorrectly stated 1452.
 10. **IOT-AUTO-ACL deny-all must come after DHCP permits.** Missing `permit udp any any eq 67/68` before deny caused 169.254.x.x addresses on VLAN 31.
+11. **C1111-4PWB GE0/1/0–0/1/3 are L2-only (NIM-ES2 module).** `no switchport` fails on these ports — you cannot create a routed L3 interface directly. TRANSIT L3 requires placing an SVI on a dedicated VLAN and putting the physical port in access mode for that VLAN. Confirmed May 31, 2026 against Cisco IOS XE docs and community examples for this exact platform.
+12. **IOS labels DHCP-learned default routes as "static" in `show ip route`.** The AD 254 (vs. 1 for true static) is the distinguishing marker. AD 254 is intentionally low-priority so any dynamic routing protocol (OSPF 110, EIGRP 90, BGP 20) wins automatically. The C1111's WAN default (174.53.x.x from Comcast) is DHCP-learned — correct, self-healing behavior.
+13. **NAT-INSIDE ACL must include every `ip nat inside` subnet.** When Vlan199 (TRANSIT) was given `ip nat inside`, `permit 192.168.199.0 0.0.0.3` was added to the NAT-INSIDE ACL to match. Missing this causes asymmetric NAT failures for traffic originating from the TRANSIT segment.
 
 ---
 
-*Implemented and verified: May 19, 2026*
+*Implemented and verified: May 31, 2026*

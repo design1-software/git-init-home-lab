@@ -10,7 +10,7 @@
 | Device | IP / Access | VLAN | MAC | How to Reach |
 |---|---|---|---|---|
 | Cisco C1111 (JLM-LAB-R1) | 192.168.10.1 (SSH) | All (SVIs) | 44:AE:25:99:9D:80 | `ssh cisco` from Acer · `ssh -oKexAlgorithms=+diffie-hellman-group14-sha1 -oHostKeyAlgorithms=+ssh-rsa admin@192.168.10.1` from Mac |
-| GS308EP | 192.168.100.100 (web UI) | 1 (hardware limit) | 28:94:01:84:2D:8A | `http://192.168.100.100` — must be on VLAN 1 or route via C1111. DHCP reserved permanently. |
+| GS308EP | 192.168.100.95 (web UI) | 1 (hardware limit) | 28:94:01:84:2D:8A | `http://192.168.100.95` — must be on VLAN 1 or route via C1111. DHCP reserved permanently. |
 | GS316EP | 192.168.100.96 (web UI) | 1 (hardware limit) | 28:94:01:7F:A7:F7 | `http://192.168.100.96` — must be on VLAN 1 or route via C1111. DHCP, no reservation set. |
 | Pi 4B | 192.168.10.16 | 10 (MGMT) | 88:A2:9E:A8:33:C6 | `ssh admin@192.168.10.16` |
 | Pi-hole | 192.168.10.16/admin | 10 (MGMT) | (same as Pi) | `http://192.168.10.16/admin` |
@@ -49,24 +49,24 @@
 | Port | Connected To | Mode | VLAN(s) |
 |---|---|---|---|
 | GE0/0/0 | XB8 WAN (public IP from Comcast) | DHCP client | Outside |
-| GE0/1/0 | Acer Server | Access | 10 |
+| GE0/1/0 | 3560CX Gi0/1 (cable pending) | Access | 199 (TRANSIT) |
 | GE0/1/1 | GS308EP Port 1 | Trunk (native 99) | 1,10,20,30,31,40,50,99 |
 | GE0/1/2 | GS316EP Port 15 | Trunk (native 99) | 1,10,20,30,31,40,50,99 |
 | GE0/1/3 | Available | — | — |
 
-> At Phase B cutover: GE0/1/0 becomes TRANSIT L3 port (192.168.199.1/30). Acer moves to 3560CX port. GE0/1/1 becomes uplink to 3560CX.
+> **Stage 1 COMPLETE (May 31, 2026) — no outage.** Acer → GS308EP Port 2 / VLAN 10. TRANSIT VLAN 199 configured (SVI pattern — NIM-ES2 constraint). OSPFv2 extended: Vlan199 in area 0, ASBR, `default-information originate` active, hellos sending. NAT-INSIDE ACL updated with 192.168.199.0/30. WAN default route is DHCP-learned from Comcast (AD 254, IOS labels it "static" — expected). **Stage 2 next:** run cables, configure OSPFv2 on 3560CX. **Cleanup backlog:** GS308EP DHCP reservation stuck in Selecting (reachable at .95 via regular DHCP).
 
 ---
 
-## GS308EP Port Map (verified May 19, 2026)
+## GS308EP Port Map (verified May 31, 2026)
 
-**Management IP:** 192.168.100.100 (DHCP reserved)
+**Management IP:** 192.168.100.95 (DHCP reserved)
 **Firmware:** V2.0.0.5 · **Serial:** 6V665C53A4801
 
 | Port | Device | PVID | VLANs |
 |---|---|---|---|
 | 1 | Trunk to Cisco GE0/1/1 | 99 | 1,10,20,30,31,40,50,99 |
-| 2 | Spare | 1 | 1 |
+| 2 | Acer Server (192.168.10.11) | 10 | 10 |
 | 3 | Pi 4B (PoE) | 10 | 10 |
 | 4 | UniFi AP #1 | 99 | 20,30,31,40,50,99 |
 | 5 | UniFi AP #2 | 99 | 20,30,31,40,50,99 |
@@ -178,10 +178,10 @@
 
 ## Access Notes
 
-- **GS308EP and GS316EP web UIs** are on VLAN 1 (192.168.100.0/24). Your Mac is on VLAN 20. To reach the UIs, temporarily set a static IP on your Mac: `192.168.100.50`, subnet `255.255.255.0`, gateway `192.168.100.1`.
+- **GS308EP and GS316EP web UIs** are on VLAN 1 (192.168.100.0/24). The C1111 routes between VLAN 20 and VLAN 1 — reach them directly at `http://192.168.100.95` (GS308EP) and `http://192.168.100.96` (GS316EP) from any routed VLAN. No static IP workaround needed.
 - **Cisco HTTP management UI** is accessible at `http://192.168.99.1` — disable this at Phase B cutover (hardening task).
 - **3560CX** (JLM-LAB-SW1) is staged offline. Console access via USB-to-serial cable. SSH available after Phase B cutover.
 
 ---
 
-*Last verified: May 30, 2026*
+*Last verified: May 31, 2026*

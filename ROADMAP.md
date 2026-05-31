@@ -43,7 +43,7 @@
 - [x] CyberPower SX950U (950VA/510W) — office UPS added; currently protecting office Tailscale nodes, not yet on network infra
 - [x] GS308EP connected to Cisco as lab switch — VLAN 50 corrected on Port 4 (May 19, 2026)
 - [x] GS316EP trunked to Cisco GE0/1/2 for household wired devices — VLAN 50 added (May 19, 2026)
-- [x] GS308EP management IP locked to 192.168.100.100 via DHCP reservation (May 19, 2026)
+- [x] GS308EP management IP locked to 192.168.100.95 via DHCP reservation (confirmed May 31, 2026)
 
 ### Step 2: Raspberry Pi Setup ✅
 
@@ -154,11 +154,18 @@
 - [x] IP Source Guard configured on Gi0/5-Gi0/8 — activates at Phase B (May 25, 2026)
 
 
-### Phase B — Light cutover (~5 min WiFi outage, schedule off-peak) ❌
-- [ ] Cable Gi0/1 to C1111 GE0/1/0 (TRANSIT link)
+### Phase B — Light cutover (~5 min WiFi outage, schedule off-peak) 🔄 In Progress
+- [x] GS308EP Port 2: PVID→10, VLAN 10 member, Acer cabled in — verified 192.168.10.11 + IPv6 GUA on VLAN 10 (May 31, 2026)
+- [x] GE0/1/0 confirmed down/notconnect — Acer fully off C1111, port free for TRANSIT repurpose (May 31, 2026) ← **Step 1.1 COMPLETE**
+- [x] C1111 TRANSIT configured via SVI (NIM-ES2 ports are L2-only — no switchport unavailable): VLAN 199, GE0/1/0 access VLAN 199, Vlan199 SVI 192.168.199.1/30, ip nat inside — config saved to NVRAM (May 31, 2026) ← **Step 1.2 COMPLETE**
+- [x] C1111 OSPFv2 extended (process 1 pre-existed from lab work): added Vlan199 to area 0, default-information originate, no passive-interface Vlan199 — config saved to NVRAM (May 31, 2026) ← **Step 1.3 COMPLETE** — see lab-010-ospfv2.md
+- [x] NAT-INSIDE ACL updated: added `permit 192.168.199.0 0.0.0.3` so TRANSIT /30 is covered by PAT overload rule — config saved (May 31, 2026) ← **Step 1.4 COMPLETE**
+- [x] Step 1.5 skipped — no static default route exists on C1111; WAN default is DHCP-learned from Comcast (AD 254, IOS displays as "static" — this is normal IOS behavior). default-information originate will propagate it to 3560CX via OSPF once adjacency forms. ← **Step 1.5 N/A**
+- **Stage 1 COMPLETE — no outage. All changes additive. Production traffic unaffected.** ✅
+- [ ] Cable Gi0/1 to C1111 GE0/1/0 (TRANSIT link — Stage 2)
+- 🔧 Cleanup (separate from cutover): GS308EP DHCP reservation for .100 stuck in Selecting — switch reachable at .95 via regular DHCP. Investigate reservation client-identifier after Stage 2.
 - [ ] Cable Gi0/2 to GS308EP Port 1 (replace C1111 trunk)
 - [ ] Cable Gi0/3 to GS316EP Port 15 (replace C1111 trunk)
-- [ ] On C1111: reconfigure GE0/1/0 as routed port (192.168.199.1/30)
 - [ ] On C1111: remove old VLAN SVIs and DHCP pools
 - [ ] On C1111: add static/OSPF route to 3560CX for all internal subnets
 - [ ] Set 3560CX as STP root: `spanning-tree vlan 1,10,20,30,31,40,50,60,70,99 priority 4096`

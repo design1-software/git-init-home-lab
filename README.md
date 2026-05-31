@@ -48,17 +48,18 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 │            │                                                            │
 │     ┌──────┴───────────────────────────────────────────────┐           │
 │     │                                                       │           │
-│     │  GE0/1/0: Acer Server (VLAN 10, 192.168.10.11)       │           │
+│     │  GE0/1/0: Available (Acer moved to GS308EP Port 2)    │           │
 │     │  GE0/1/1: TRUNK → GS308EP (VLANs 1,10,20,30,31,     │           │
 │     │                             40,50,99 · native 99)    │           │
 │     │  GE0/1/2: TRUNK → GS316EP (VLANs 1,10,20,30,31,     │           │
 │     │                             40,50,99 · native 99)    │           │
 │     │                                                       │           │
 │     │  GS308EP (8-port PoE+, Advanced 802.1Q)              │           │
+│     │    Port 2: Acer Server (VLAN 10, 192.168.10.11)       │           │
 │     │    Port 3: Pi 4B (VLAN 10, PoE, 192.168.10.16)       │           │
 │     │    Port 4: UniFi U6+ AP #1 (VLANs 20,30,31,40,50,99)│           │
 │     │    Port 5: UniFi U6+ AP #2 (VLANs 20,30,31,40,50,99)│           │
-│     │    Mgmt IP: 192.168.100.100 (DHCP reserved)          │           │
+│     │    Mgmt IP: 192.168.100.95 (DHCP reserved)           │           │
 │     │                                                       │           │
 │     │  GS316EP (16-port PoE+, household wired devices)     │           │
 │     │    Ports 2-4: Apple TVs (VLAN 20)                    │           │
@@ -115,7 +116,7 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 |---|---|---|
 | Cisco C1111-4PWB (JLM-LAB-R1) | ✅ Online | 8 VLANs, inter-VLAN routing, 4 ACLs, NAT, SSH · Smart Licensing REGISTERED |
 | Catalyst 3560CX-8PC-S (JLM-LAB-SW1) | 🔄 Staged | Baselined, hardened — awaiting Phase B cutover as L3 core |
-| GS308EP (Lab Switch) | ✅ Production | Advanced 802.1Q, 8 VLANs, mgmt IP 192.168.100.100 (reserved) |
+| GS308EP (Lab Switch) | ✅ Production | Advanced 802.1Q, 8 VLANs, mgmt IP 192.168.100.95 (reserved) |
 | GS316EP (Household Switch) | ✅ Production | Advanced 802.1Q, trunk port 15 → Cisco GE0/1/2 |
 | Pi 4B | ✅ Multi-service | Pi-hole, UniFi Controller, Mosquitto MQTT, CUPS |
 | UniFi Controller | ✅ Active | v10.1.89 on Pi, 2 APs adopted |
