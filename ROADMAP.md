@@ -162,7 +162,9 @@
 - [x] NAT-INSIDE ACL updated: added `permit 192.168.199.0 0.0.0.3` so TRANSIT /30 is covered by PAT overload rule — config saved (May 31, 2026) ← **Step 1.4 COMPLETE**
 - [x] Step 1.5 skipped — no static default route exists on C1111; WAN default is DHCP-learned from Comcast (AD 254, IOS displays as "static" — this is normal IOS behavior). default-information originate will propagate it to 3560CX via OSPF once adjacency forms. ← **Step 1.5 N/A**
 - **Stage 1 COMPLETE — no outage. All changes additive. Production traffic unaffected.** ✅
-- [ ] Cable Gi0/1 to C1111 GE0/1/0 (TRANSIT link — Stage 2)
+- [x] Cable 1 (TRANSIT) plugged in — C1111 GE0/1/0 up/up, Vlan199 up/up, 3560CX Gi0/1 up/up (May 31, 2026)
+- [x] OSPFv2 configured on 3560CX (process 1, router-id 2.2.2.2, passive-interface default, no passive Gi0/1, all VLAN network statements) — config saved (May 31, 2026)
+- [x] OSPF adjacency FULL both ways: C1111 (DR, 1.1.1.1) ↔ 3560CX (BDR, 2.2.2.2), Dead timers ~33-34s, hellos every 10s — **Stage 2 Step 2.1 COMPLETE** ✅ — see lab-010-ospfv2.md
 - 🔧 Cleanup (separate from cutover): GS308EP DHCP reservation for .100 stuck in Selecting — switch reachable at .95 via regular DHCP. Investigate reservation client-identifier after Stage 2.
 - [ ] Cable Gi0/2 to GS308EP Port 1 (replace C1111 trunk)
 - [ ] Cable Gi0/3 to GS316EP Port 15 (replace C1111 trunk)

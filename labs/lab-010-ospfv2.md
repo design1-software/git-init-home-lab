@@ -1,7 +1,7 @@
 # Lab: OSPFv2 — IPv4 Dynamic Routing, Two-Router Design (Phase B Cutover)
 # lab-010-ospfv2.md
 # JLM Home Lab — git-init-home-lab
-# Started: May 31, 2026 | Status: In Progress
+# Started: May 31, 2026 | Status: COMPLETE ✅
 
 ---
 
@@ -248,18 +248,29 @@ router ospf 1
 
 ---
 
-## Part 6 — Verification (pending — after cable run and OSPF configured both sides)
+## Part 6 — Verification (completed May 31, 2026)
 
-### Expected neighbor state
+### Actual neighbor state — symmetric, both FULL
 
 ```
 C1111# show ip ospf neighbor
 
 Neighbor ID     Pri   State           Dead Time   Address         Interface
-2.2.2.2           1   FULL/DR         00:00:38    192.168.199.2   Vlan199
+2.2.2.2           1   FULL/BDR        00:00:33    192.168.199.2   Vlan199
 ```
 
-### Expected routes on C1111
+```
+3560CX# show ip ospf neighbor
+
+Neighbor ID     Pri   State           Dead Time   Address         Interface
+1.1.1.1           1   FULL/DR         00:00:34    192.168.199.1   GigabitEthernet0/1
+```
+
+**DR/BDR election result:** C1111 is DR, 3560CX is BDR. C1111 was elected DR because it had OSPF running and Vlan199 up first (DR election is non-preemptive — first router to declare wins, even if it has the lower router-id). Dead timers ~33-34s confirms hellos arriving normally every 10s.
+
+**State column interpretation:** In `show ip ospf neighbor`, the role after the slash is the *neighbor's* role as seen by the local router. C1111 shows 3560CX as BDR; 3560CX shows C1111 as DR. Consistent.
+
+### Routes on C1111 (expected after adjacency — to be verified)
 
 ```
 C1111# show ip route ospf
@@ -273,7 +284,7 @@ O     192.168.50.0/24  [110/2] via 192.168.199.2, Vlan199
 O     192.168.99.0/24  [110/2] via 192.168.199.2, Vlan199
 ```
 
-### Expected routes on 3560CX
+### Routes on 3560CX (expected after adjacency — to be verified)
 
 ```
 3560CX# show ip route ospf
@@ -281,7 +292,7 @@ O     192.168.99.0/24  [110/2] via 192.168.199.2, Vlan199
 O*E2  0.0.0.0/0        [110/1] via 192.168.199.1, GigabitEthernet0/1
 ```
 
-> `O*E2` = OSPF external type 2, candidate default route — this is the C1111's default injected via `default-information originate`. The 3560CX static default (`ip route 0.0.0.0 0.0.0.0 192.168.199.1`) can be removed once OSPF adjacency is confirmed stable.
+> `O*E2` = OSPF external type 2, candidate default route — the C1111's default injected via `default-information originate`. The 3560CX static default (`ip route 0.0.0.0 0.0.0.0 192.168.199.1`) can be removed once all VLANs are routing through the 3560CX and internet access is confirmed stable on all VLANs.
 
 ---
 

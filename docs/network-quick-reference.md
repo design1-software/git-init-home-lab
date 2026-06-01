@@ -49,12 +49,12 @@
 | Port | Connected To | Mode | VLAN(s) |
 |---|---|---|---|
 | GE0/0/0 | XB8 WAN (public IP from Comcast) | DHCP client | Outside |
-| GE0/1/0 | 3560CX Gi0/1 (cable pending) | Access | 199 (TRANSIT) |
+| GE0/1/0 | 3560CX Gi0/1 | Access | 199 (TRANSIT) |
 | GE0/1/1 | GS308EP Port 1 | Trunk (native 99) | 1,10,20,30,31,40,50,99 |
 | GE0/1/2 | GS316EP Port 15 | Trunk (native 99) | 1,10,20,30,31,40,50,99 |
 | GE0/1/3 | Available | — | — |
 
-> **Stage 1 COMPLETE (May 31, 2026) — no outage.** Acer → GS308EP Port 2 / VLAN 10. TRANSIT VLAN 199 configured (SVI pattern — NIM-ES2 constraint). OSPFv2 extended: Vlan199 in area 0, ASBR, `default-information originate` active, hellos sending. NAT-INSIDE ACL updated with 192.168.199.0/30. WAN default route is DHCP-learned from Comcast (AD 254, IOS labels it "static" — expected). **Stage 2 next:** run cables, configure OSPFv2 on 3560CX. **Cleanup backlog:** GS308EP DHCP reservation stuck in Selecting (reachable at .95 via regular DHCP).
+> **Stages 1–2 Step 2.1 COMPLETE (May 31, 2026) — no outage.** TRANSIT cable in, both interfaces up/up. OSPFv2 adjacency FULL both ways: C1111 (DR 1.1.1.1) ↔ 3560CX (BDR 2.2.2.2), Dead timers ~33-34s. Dynamic routing live. **Next:** cable Gi0/2 → GS308EP Port 1 and Gi0/3 → GS316EP Port 15 (trunk replacements). **Cleanup backlog:** GS308EP DHCP reservation stuck in Selecting (reachable at .95). See also: docs/runbooks/ssh-key-collision.md for SSH host key issues after gateway IP handoffs.
 
 ---
 
