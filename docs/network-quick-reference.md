@@ -9,7 +9,7 @@
 
 | Device | IP / Access | VLAN | MAC | How to Reach |
 |---|---|---|---|---|
-| Cisco C1111 (JLM-LAB-R1) | 192.168.10.1 (SSH) | All (SVIs) | 44:AE:25:99:9D:80 | `ssh cisco` from Acer · `ssh -oKexAlgorithms=+diffie-hellman-group14-sha1 -oHostKeyAlgorithms=+ssh-rsa admin@192.168.10.1` from Mac |
+| Cisco C1111 (JLM-LAB-R1) | 192.168.199.1 (SSH — TRANSIT SVI) | All (SVIs) | 44:AE:25:99:9D:80 | `ssh -oKexAlgorithms=+diffie-hellman-group14-sha1 -oHostKeyAlgorithms=+ssh-rsa admin@192.168.199.1` — 192.168.10.1 is now the 3560CX HSRP VIP |
 | GS308EP | 192.168.100.95 (web UI) | 1 (hardware limit) | 28:94:01:84:2D:8A | `http://192.168.100.95` — must be on VLAN 1 or route via C1111. DHCP reserved permanently. |
 | GS316EP | 192.168.100.96 (web UI) | 1 (hardware limit) | 28:94:01:7F:A7:F7 | `http://192.168.100.96` — must be on VLAN 1 or route via C1111. DHCP, no reservation set. |
 | Pi 4B | 192.168.10.16 | 10 (MGMT) | 88:A2:9E:A8:33:C6 | `ssh admin@192.168.10.16` |
@@ -22,7 +22,7 @@
 | UniFi AP #1 | 192.168.99.12 | 99 (MGMT/NATIVE) | 6C:63:F8:A5:7C:1D | Via UniFi Controller |
 | UniFi AP #2 | 192.168.99.11 | 99 (MGMT/NATIVE) | 6C:63:F8:A5:73:AD | Via UniFi Controller |
 | XB8 (bridge mode) | Not routable (modem only) | — | — | Physical access only. Factory reset: hold reset 30 sec |
-| Catalyst 3560CX (JLM-LAB-SW1) | Staged — not yet in production | — | — | Console cable · SSH after cutover |
+| Catalyst 3560CX (JLM-LAB-SW1) | Phase B — TRANSIT live, trunks not yet moved | 199 (TRANSIT active) | — | SSH via 192.168.199.2 · Console cable |
 | Proxmox Server (pve) | 192.168.100.10 :8006 (web UI) | 1 (VLAN 70 cabling pending) | — | `https://192.168.100.10:8006` · Tailscale 100.71.239.21 |
 
 ---
@@ -50,22 +50,22 @@
 |---|---|---|---|
 | GE0/0/0 | XB8 WAN (public IP from Comcast) | DHCP client | Outside |
 | GE0/1/0 | 3560CX Gi0/1 | Access | 199 (TRANSIT) |
-| GE0/1/1 | GS308EP Port 1 | Trunk (native 99) | 1,10,20,30,31,40,50,99 |
-| GE0/1/2 | GS316EP Port 15 | Trunk (native 99) | 1,10,20,30,31,40,50,99 |
+| GE0/1/1 | Available (trunk moved to 3560CX Gi0/2) | — | — |
+| GE0/1/2 | Available (trunk moved to 3560CX Gi0/3) | — | — |
 | GE0/1/3 | Available | — | — |
 
-> **Stages 1–2 Step 2.1 COMPLETE (May 31, 2026) — no outage.** TRANSIT cable in, both interfaces up/up. OSPFv2 adjacency FULL both ways: C1111 (DR 1.1.1.1) ↔ 3560CX (BDR 2.2.2.2), Dead timers ~33-34s. Dynamic routing live. **Next:** cable Gi0/2 → GS308EP Port 1 and Gi0/3 → GS316EP Port 15 (trunk replacements). **Cleanup backlog:** GS308EP DHCP reservation stuck in Selecting (reachable at .95). See also: docs/runbooks/ssh-key-collision.md for SSH host key issues after gateway IP handoffs.
+> **Phase B trunk cutover COMPLETE (Jun 1, 2026).** 3560CX is the active L3 core. Trunks moved: Gi0/2 → GS308EP Port 1, Gi0/3 → GS316EP Port 15. C1111 GE0/1/1 and GE0/1/2 are now free. HSRP VIPs active. OSPF FULL. Internet and DNS verified. **Post-cutover cleanup remaining:** remove C1111 VLAN SVIs/DHCP pools, remove 3560CX static default. **Cleanup backlog:** GS308EP DHCP reservation stuck in Selecting (reachable at .95). See also: docs/runbooks/ssh-key-collision.md for SSH host key issues after gateway IP handoffs.
 
 ---
 
-## GS308EP Port Map (verified May 31, 2026)
+## GS308EP Port Map (verified Jun 1, 2026)
 
 **Management IP:** 192.168.100.95 (DHCP reserved)
 **Firmware:** V2.0.0.5 · **Serial:** 6V665C53A4801
 
 | Port | Device | PVID | VLANs |
 |---|---|---|---|
-| 1 | Trunk to Cisco GE0/1/1 | 99 | 1,10,20,30,31,40,50,99 |
+| 1 | Trunk to 3560CX Gi0/2 | 99 | 1,10,20,30,31,40,50,99 |
 | 2 | Acer Server (192.168.10.11) | 10 | 10 |
 | 3 | Pi 4B (PoE) | 10 | 10 |
 | 4 | UniFi AP #1 | 99 | 20,30,31,40,50,99 |
@@ -88,7 +88,7 @@
 | 3 | Apple TV (Living Room) | 20 | 20 |
 | 4 | Apple TV (Master Bedroom) | 20 | 20 |
 | 5–14 | Wall outlets (spare) | 1 | 1 |
-| 15 | Trunk to Cisco GE0/1/2 | 1 | 1,10,20,30,31,40,99 |
+| 15 | Trunk to 3560CX Gi0/3 | 1 | 1,10,20,30,31,40,99 |
 | 16 | SFP (fiber only — do not use) | — | — |
 
 > VLAN 50 (JM&G-GUEST) added May 19, 2026 — Port 15 carries all active VLANs.
@@ -109,7 +109,7 @@
 | 99 | MGMT/NATIVE | 192.168.99.0/24 | .1 | — | None | ✅ Active (native on trunks) |
 | 60 | LAB | 192.168.60.0/24 | .1 | — | TBD | ❌ Pending Phase D |
 | 70 | SERVER | 192.168.70.0/24 | .1 | — | TBD | ❌ Pending Phase C |
-| 199 | TRANSIT | 192.168.199.0/30 | — | — | None | ❌ Pending Phase B |
+| 199 | TRANSIT | 192.168.199.0/30 | — | — | None | ✅ Active Phase B — routed transit C1111 ↔ 3560CX, OSPFv2 FULL |
 
 ---
 
@@ -131,8 +131,17 @@
 
 | Task | Command |
 |---|---|
-| SSH from Mac | `ssh -oKexAlgorithms=+diffie-hellman-group14-sha1 -oHostKeyAlgorithms=+ssh-rsa admin@192.168.10.1` |
+| SSH from Mac | `ssh -oKexAlgorithms=+diffie-hellman-group14-sha1 -oHostKeyAlgorithms=+ssh-rsa admin@192.168.199.1` |
+| Note | `192.168.10.1` is now the 3560CX HSRP VIP — use TRANSIT SVI `192.168.199.1` to reach C1111 directly |
 | SSH from Acer | `ssh cisco` |
+
+### Catalyst 3560CX (JLM-LAB-SW1)
+
+| Task | Command |
+|---|---|
+| SSH from Mac | `ssh -oKexAlgorithms=+diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1 -oHostKeyAlgorithms=+ssh-rsa admin@192.168.199.2` |
+
+> 3560CX offers both `diffie-hellman-group14-sha1` and `diffie-hellman-group-exchange-sha1` — both must be permitted. The C1111 only requires `group14-sha1`.
 | Show all DHCP leases | `show ip dhcp binding` |
 | Show MAC table | `show mac address-table` |
 | Show trunk VLANs | `show interfaces trunk` |
@@ -180,7 +189,7 @@
 
 - **GS308EP and GS316EP web UIs** are on VLAN 1 (192.168.100.0/24). The C1111 routes between VLAN 20 and VLAN 1 — reach them directly at `http://192.168.100.95` (GS308EP) and `http://192.168.100.96` (GS316EP) from any routed VLAN. No static IP workaround needed.
 - **Cisco HTTP management UI** is accessible at `http://192.168.99.1` — disable this at Phase B cutover (hardening task).
-- **3560CX** (JLM-LAB-SW1) is staged offline. Console access via USB-to-serial cable. SSH available after Phase B cutover.
+- **3560CX** (JLM-LAB-SW1) — Phase B in progress. TRANSIT link live (Gi0/1 ↔ C1111 GE0/1/0, VLAN 199). OSPFv2 adjacency FULL. Production trunks (Gi0/2 → GS308EP, Gi0/3 → GS316EP) not yet moved — still terminating on C1111. SSH reachable at 192.168.199.2 from the C1111 side.
 
 ---
 

@@ -48,11 +48,9 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 │            │                                                            │
 │     ┌──────┴───────────────────────────────────────────────┐           │
 │     │                                                       │           │
-│     │  GE0/1/0: Available (Acer moved to GS308EP Port 2)    │           │
-│     │  GE0/1/1: TRUNK → GS308EP (VLANs 1,10,20,30,31,     │           │
-│     │                             40,50,99 · native 99)    │           │
-│     │  GE0/1/2: TRUNK → GS316EP (VLANs 1,10,20,30,31,     │           │
-│     │                             40,50,99 · native 99)    │           │
+│     │  GE0/1/0: TRANSIT → 3560CX Gi0/1 (VLAN 199, /30)     │           │
+│     │  GE0/1/1: Available (trunk moved to 3560CX Gi0/2)    │           │
+│     │  GE0/1/2: Available (trunk moved to 3560CX Gi0/3)    │           │
 │     │                                                       │           │
 │     │  GS308EP (8-port PoE+, Advanced 802.1Q)              │           │
 │     │    Port 2: Acer Server (VLAN 10, 192.168.10.11)       │           │
@@ -63,7 +61,7 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 │     │                                                       │           │
 │     │  GS316EP (16-port PoE+, household wired devices)     │           │
 │     │    Ports 2-4: Apple TVs (VLAN 20)                    │           │
-│     │    Port 15: Trunk to Cisco GE0/1/2                   │           │
+│     │    Port 15: Trunk to 3560CX Gi0/3                    │           │
 │     │    Mgmt IP: 192.168.100.96                           │           │
 │     └───────────────────────────────────────────────────────┘           │
 │                                                                         │
@@ -114,10 +112,10 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 
 | System | Status | Details |
 |---|---|---|
-| Cisco C1111-4PWB (JLM-LAB-R1) | ✅ Online | 8 VLANs, inter-VLAN routing, 4 ACLs, NAT, SSH · Smart Licensing REGISTERED |
-| Catalyst 3560CX-8PC-S (JLM-LAB-SW1) | 🔄 Staged | Baselined, hardened — awaiting Phase B cutover as L3 core |
-| GS308EP (Lab Switch) | ✅ Production | Advanced 802.1Q, 8 VLANs, mgmt IP 192.168.100.95 (reserved) |
-| GS316EP (Household Switch) | ✅ Production | Advanced 802.1Q, trunk port 15 → Cisco GE0/1/2 |
+| Cisco C1111-4PWB (JLM-LAB-R1) | ✅ Online | WAN edge, NAT, OSPF neighbor — VLAN 1 retained for ISR AP/legacy segment; remaining SVIs/DHCP pending cleanup |
+| Catalyst 3560CX-8PC-S (JLM-LAB-SW1) | ✅ Production | Active L3 core — VLAN gateways, HSRP VIPs, inter-VLAN ACLs, OSPF, trunks to GS308EP + GS316EP |
+| GS308EP (Lab Switch) | ✅ Production | Advanced 802.1Q, 8 VLANs, trunk → 3560CX Gi0/2, mgmt IP 192.168.100.95 |
+| GS316EP (Household Switch) | ✅ Production | Advanced 802.1Q, trunk port 15 → 3560CX Gi0/3 |
 | Pi 4B | ✅ Multi-service | Pi-hole, UniFi Controller, Mosquitto MQTT, CUPS |
 | UniFi Controller | ✅ Active | v10.1.89 on Pi, 2 APs adopted |
 | UniFi U6+ APs (×2) | ✅ Broadcasting | 5 SSIDs on 5 VLANs, pending ceiling mount |
@@ -129,7 +127,8 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 | Xfinity bridge mode | ✅ Active | Cisco sole router, public IP via DHCP from Comcast |
 | Tailscale | ✅ Connected | 8 nodes on mesh VPN (see table below) |
 | closet-monitor | ✅ Production | ESP32 → MQTT → Pi → SQLite → Streamlit dashboard |
-| Proxmox Server (pve) | ✅ Live | Proxmox VE · 192.168.100.10 · web UI :8006 · VLAN 70 cabling pending Phase C |
+| Proxmox Server (pve) | ✅ Live | Proxmox VE · 192.168.100.10 · web UI :8006 · Tailscale: pve / 100.71.239.21 · BIOS PPT power cap completed in motherboard settings · VLAN 70 cabling/static IP pending Phase C |
+| Comet GL-RM1PE KVM | Planned | Out-of-band KVM management for the custom Proxmox ATX server · ATX board integration planned |
 | IoT device migration | 🔄 Mostly done | Ring, Alexa, Ecobee, Somfy, Samsung TV migrated · Kasa plugs pending |
 
 ---
@@ -172,7 +171,8 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 |---|---|---|---|
 | Home Server | Acer Aspire 3 15 | Docker: MCP Server + Ngrok (24/7) · VLAN 10 | ✅ Active |
 | Network Services | Raspberry Pi 4B + PoE HAT | Pi-hole, UniFi, MQTT, CUPS · VLAN 10 | ✅ Active |
-| Proxmox Server | Custom ATX (Ryzen 9 7900X) | Hypervisor — Proxmox VE · OS: Samsung 860 EVO (/dev/sda) · vmstore: WD Black SN770 2TB NVMe (LVM-thin, 1.8TB) · backup vault: Samsung 860 EVO (458GB) · NICs: Intel I225V (mgmt) · Realtek RTL8125 (future VM trunk) · 192.168.100.10 · web :8006 · VLAN 70 cabling pending Phase C | ✅ Live |
+| Proxmox Server | Custom ATX (Ryzen 9 7900X) | Hypervisor — Proxmox VE · BIOS PPT power cap completed in motherboard settings · OS: Samsung 860 EVO (/dev/sda) · vmstore: WD Black SN770 2TB NVMe (LVM-thin, 1.8TB) · backup vault: Samsung 860 EVO (458GB) · NICs: Intel I225V (mgmt) · Realtek RTL8125 (future VM trunk) · current IP: 192.168.100.10 · web :8006 · Tailscale: pve / 100.71.239.21 · VLAN 70 cabling/static IP pending Phase C | ✅ Live |
+| Out-of-Band KVM | Comet GL-RM1PE KVM + ATX board | Planned KVM-over-IP / out-of-band access path for the custom Proxmox ATX server, reducing dependency on local keyboard/monitor access during VLAN and hypervisor maintenance | Planned |
 | Printer | HP ENVY Inspire 7200e | USB to Pi (CUPS) · WiFi on VLAN 30 | ✅ Active |
 | Laptop | MacBook Pro | Development + fb-content-system | ✅ Active |
 
@@ -250,7 +250,8 @@ Produces 182 posts per week per page across 3 Facebook pages.
 | **Containerization** | Docker multi-stage builds, Docker Compose with health checks, Ngrok sidecar, auto-restart, log rotation |
 | **Software Engineering** | 78K+ lines across 3 repos; MCP protocol server; multi-API orchestration |
 | **IoT / Automation** | ESP32 sensor pipeline (BME280 → MQTT → SQLite → Streamlit), VLAN-isolated IoT network |
-| **Hypervisor Platform** | Proxmox VE live (Ryzen 9 7900X) — 192.168.100.10 · SN770 2TB NVMe vmstore — Wazuh SIEM, AD lab, schoolmate remote lab planned |
+| **Hypervisor Platform** | Proxmox VE live (Ryzen 9 7900X) — BIOS PPT power cap completed · 192.168.100.10 · Tailscale reachable as pve / 100.71.239.21 · SN770 2TB NVMe vmstore — Wazuh SIEM, AD lab, schoolmate remote lab planned |
+| **Out-of-Band Management** | Comet GL-RM1PE KVM with ATX board planned for Proxmox server console access, improving recoverability during VLAN cutovers, BIOS changes, and remote troubleshooting |
 | **Remote Access** | Tailscale mesh VPN (8 nodes), Ngrok fixed-domain tunnel, zero port forwarding |
 | **Security** | Zero port forwarding; VLAN isolation with ACLs; CUPS access control; credential encryption; DNS filtering |
 

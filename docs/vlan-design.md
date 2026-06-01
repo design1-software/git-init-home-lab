@@ -31,11 +31,11 @@
 | 50 | JM&G-GUEST | 192.168.50.0/24 | 192.168.50.1 | .11–.254 | Guest internet access, client isolation |
 | 99 | MGMT/NATIVE | 192.168.99.0/24 | 192.168.99.1 | .11–.50 | Native VLAN on all trunks — AP management |
 
-### Configured — Awaiting Cable / Full Activation
+### Currently Active (continued)
 
 | VLAN ID | Name | Subnet | Gateway | Purpose |
 |---|---|---|---|---|
-| 199 | TRANSIT | 192.168.199.0/30 | — | P2P L3 link C1111 ↔ 3560CX — SVI configured both sides, cable pending (May 31, 2026) |
+| 199 | TRANSIT | 192.168.199.0/30 | — | Active Phase B routed transit between C1111 and 3560CX — OSPFv2 adjacency FULL (May 31, 2026) |
 
 ### Planned (pending 3560CX cutover)
 
@@ -353,6 +353,53 @@ router ospf 1
 > **Hardware constraint:** C1111-4PWB GE0/1/0–0/1/3 are on the NIM-ES2 module — Layer 2 only. `no switchport` is unavailable on these ports. TRANSIT L3 is implemented on Vlan199 SVI; the physical port is an access port in VLAN 199. OSPF runs on the SVI, not the physical port — `no passive-interface Vlan199` (not GigabitEthernet0/1/0) is the correct command.
 
 > GE0/1/1 will become the uplink to the 3560CX at Phase B cabling. GE0/1/2 trunk to GS316EP remains unchanged.
+
+---
+
+## Phase B HSRP Status (Jun 1, 2026)
+
+HSRP is currently staged on the Cisco Catalyst 3560CX only.
+
+The 3560CX uses physical SVI addresses ending in `.2` and staged HSRP virtual gateway addresses ending in `.1` for the active production VLANs. This preserves the existing client default-gateway convention after the Phase B cutover — no client reconfiguration required.
+
+### HSRP groups configured on 3560CX
+
+| VLAN | Name | 3560CX Physical SVI | HSRP Virtual Gateway (VIP) |
+|---|---|---|---|
+| 1 | DEFAULT | 192.168.100.2 | 192.168.100.1 |
+| 10 | MGMT | 192.168.10.2 | 192.168.10.1 |
+| 20 | TRUSTED | 192.168.20.2 | 192.168.20.1 |
+| 30 | IOT | 192.168.30.2 | 192.168.30.1 |
+| 31 | IOT-AUTO | 192.168.31.2 | 192.168.31.1 |
+| 40 | HOUSEHOLD | 192.168.40.2 | 192.168.40.1 |
+| 50 | JM&G-GUEST | 192.168.50.2 | 192.168.50.1 |
+| 99 | MGMT/NATIVE | 192.168.99.2 | 192.168.99.1 |
+
+### Current status
+
+- C1111 is **not** configured as an HSRP peer.
+- This is **not** true gateway redundancy — it is gateway IP preservation during ownership transfer from C1111 to 3560CX.
+- After the Phase B trunk move, the C1111 will no longer be Layer-2 adjacent to the production VLANs and cannot participate in HSRP for those segments.
+
+### Role split post-cutover
+
+| Device | Role |
+|---|---|
+| C1111 | WAN edge, NAT/PAT, default route originator, OSPF neighbor over VLAN 199 |
+| 3560CX | LAN L3 core, VLAN gateways (via HSRP VIPs), inter-VLAN ACLs, DHCP |
+| GS308EP / GS316EP | Access-layer switches |
+
+### ⚠️ Critical cutover risk — IP conflict
+
+The C1111 currently owns `.1` as **physical SVI addresses** on all production VLANs. The 3560CX has **staged HSRP virtual `.1` addresses** for those same VLANs. These must not be active on the same Layer-2 segment simultaneously — doing so would create an IP conflict and disrupt all VLAN gateways.
+
+**The Phase B trunk migration must be break-before-make:**
+1. Disconnect production trunks from C1111 (GE0/1/1 from GS308EP Port 1, GE0/1/2 from GS316EP Port 15)
+2. Connect production trunks to 3560CX (Gi0/2 to GS308EP Port 1, Gi0/3 to GS316EP Port 15)
+
+### True HSRP redundancy — deferred
+
+True redundancy requires both devices to share Layer-2 adjacency on the routed VLANs, with unique physical SVI addresses and a shared virtual gateway address. After Phase B, the C1111 will not be L2-adjacent to the production VLANs, making it ineligible as an HSRP peer for those segments. Deferred to a later design phase.
 
 ---
 

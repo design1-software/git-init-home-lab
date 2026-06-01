@@ -155,6 +155,9 @@
 
 
 ### Phase B — Light cutover (~5 min WiFi outage, schedule off-peak) 🔄 In Progress
+> **Current state (Jun 1, 2026):** Stable hybrid. C1111 still owns active production VLAN gateways and switch trunks. 3560CX has live routed TRANSIT adjacency via VLAN 199. OSPFv2 is FULL both ways. HSRP is staged on the 3560CX only for gateway IP preservation — it is not true gateway redundancy because the C1111 is not configured as an HSRP peer and will not remain Layer-2 adjacent to the production VLANs after the Phase B trunk move. Role split: C1111 = WAN edge / NAT / default route originator / OSPF neighbor; 3560CX = LAN L3 core / VLAN gateways / inter-VLAN ACLs / DHCP post-cutover; GS308EP + GS316EP = access-layer switches.
+>
+> ⚠️ **IP conflict risk:** C1111 currently owns `.1` as physical SVI addresses on all production VLANs. 3560CX has staged HSRP virtual `.1` addresses for those same VLANs. These must not be active on the same L2 segment simultaneously. The trunk migration must be **break-before-make**: disconnect C1111 trunks before connecting 3560CX trunks.
 - [x] GS308EP Port 2: PVID→10, VLAN 10 member, Acer cabled in — verified 192.168.10.11 + IPv6 GUA on VLAN 10 (May 31, 2026)
 - [x] GE0/1/0 confirmed down/notconnect — Acer fully off C1111, port free for TRANSIT repurpose (May 31, 2026) ← **Step 1.1 COMPLETE**
 - [x] C1111 TRANSIT configured via SVI (NIM-ES2 ports are L2-only — no switchport unavailable): VLAN 199, GE0/1/0 access VLAN 199, Vlan199 SVI 192.168.199.1/30, ip nat inside — config saved to NVRAM (May 31, 2026) ← **Step 1.2 COMPLETE**
@@ -166,23 +169,31 @@
 - [x] OSPFv2 configured on 3560CX (process 1, router-id 2.2.2.2, passive-interface default, no passive Gi0/1, all VLAN network statements) — config saved (May 31, 2026)
 - [x] OSPF adjacency FULL both ways: C1111 (DR, 1.1.1.1) ↔ 3560CX (BDR, 2.2.2.2), Dead timers ~33-34s, hellos every 10s — **Stage 2 Step 2.1 COMPLETE** ✅ — see lab-010-ospfv2.md
 - 🔧 Cleanup (separate from cutover): GS308EP DHCP reservation for .100 stuck in Selecting — switch reachable at .95 via regular DHCP. Investigate reservation client-identifier after Stage 2.
-- [ ] Cable Gi0/2 to GS308EP Port 1 (replace C1111 trunk)
-- [ ] Cable Gi0/3 to GS316EP Port 15 (replace C1111 trunk)
-- [ ] On C1111: remove old VLAN SVIs and DHCP pools
-- [ ] On C1111: add static/OSPF route to 3560CX for all internal subnets
-- [ ] Set 3560CX as STP root: `spanning-tree vlan 1,10,20,30,31,40,50,60,70,99 priority 4096`
-- [ ] Verify all VLANs routing through 3560CX
-- [ ] Verify internet access on all VLANs
-- [ ] Configure OSPFv2 adjacency between C1111 and 3560CX (TRANSIT link)
-- [ ] Configure HSRP on VLANs 10 and 20
-- [ ] Roll back plan documented and saved before cutover begins
+**Outage-window steps — COMPLETE ✅ (Jun 1, 2026)**
+- [x] HSRP staged on 3560CX only for gateway IP preservation — C1111 is not an HSRP peer and will not remain L2-adjacent to production VLANs after trunk move (Jun 1, 2026) ← **Step 3 COMPLETE**
+- [x] Cable 3560CX Gi0/2 → GS308EP Port 1 (replaced C1111 GE0/1/1 trunk) (Jun 1, 2026)
+- [x] Cable 3560CX Gi0/3 → GS316EP Port 15 (replaced C1111 GE0/1/2 trunk) (Jun 1, 2026)
+- [x] 3560CX trunks active (Jun 1, 2026) ✅
+- [x] 3560CX SVIs up/up (Jun 1, 2026) ✅
+- [x] HSRP virtual gateways active on 3560CX (Jun 1, 2026) ✅
+- [x] C1111 learns LAN routes over OSPF (Jun 1, 2026) ✅
+- [x] Client internet works by IP (Jun 1, 2026) ✅
+- [x] Pi-hole DNS works from VLAN 20 (Jun 1, 2026) ✅
+- [x] Pi renewed DHCP — gateway now 192.168.10.1 (3560CX HSRP VIP) (Jun 1, 2026) ✅
+- [x] OSPFv2 adjacency between C1111 and 3560CX — FULL both ways (May 31, 2026) ✅
+- **3560CX IS NOW THE ACTIVE L3 CORE. Phase B trunk cutover complete.** ✅
+
+**Post-cutover cleanup (no outage):**
+- [ ] Remove production VLAN SVIs and DHCP pools from C1111 (C1111 becomes edge-only) — VLAN 1 retained temporarily for ISR AP / legacy VLAN 1 segment; it is not part of the migrated production trunk path
+- [ ] Remove 3560CX static default once OSPF-learned `O*E2 0.0.0.0/0` is stable
+- [ ] True HSRP redundancy (future): requires a second L3-capable device L2-adjacent to production VLANs — not achievable with current topology post-cutover
 
 ### Phase C — Proxmox server bring-up 🔄 IN PROGRESS
 - [x] Assemble custom ATX server (Ryzen 9 7900X, B650, PA120 SE, SAMA V40, SL-650G)
   - [x] RAM (DDR5 UDIMM 64GB) — installed
   - [x] NVMe (WD Black SN770 2TB) — installed
 - [x] Install Proxmox VE bare metal — live at 192.168.100.10 :8006
-- [ ] Set PPT power cap to 88W in BIOS for server efficiency
+- [x] Set PPT power cap in motherboard BIOS settings for server efficiency
 - [ ] Assign static IP on VLAN 70 (SERVER, 192.168.70.0/24) — pending Phase B cable cutover
 - [ ] Trunk both NICs to GS308EP — management on VLAN 70, VM traffic on VLANs 60/70
 - [x] Add to Tailscale mesh — pve (100.71.239.21) ✅ online
@@ -190,6 +201,16 @@
 - [ ] Deploy Wazuh SIEM as LXC container on Proxmox
 - [ ] Install Wazuh agents on Acer, Pi 4B, and Proxmox host
 - [ ] Deploy Netdata, NetAlertX, ntfy (completing Phase 4)
+
+
+### Phase C.1 — Out-of-Band KVM Management 🔄 PLANNED
+
+- [ ] Add Comet GL-RM1PE KVM
+- [ ] Install ATX board integration for custom Proxmox server
+- [ ] Validate BIOS-level remote console access
+- [ ] Validate Proxmox console access through KVM
+- [ ] Document recovery workflow for failed VLAN cutover or unreachable Proxmox host
+- [ ] Add KVM access notes to the custom Proxmox server build writeup
 
 ### Phase D — VLAN 60 schoolmate lab ❌
 - [ ] Build VLAN 60 (LAB, 192.168.60.0/24) on 3560CX
