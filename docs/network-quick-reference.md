@@ -22,7 +22,7 @@
 | UniFi AP #1 | 192.168.99.12 | 99 (MGMT/NATIVE) | 6C:63:F8:A5:7C:1D | Via UniFi Controller |
 | UniFi AP #2 | 192.168.99.11 | 99 (MGMT/NATIVE) | 6C:63:F8:A5:73:AD | Via UniFi Controller |
 | XB8 (bridge mode) | Not routable (modem only) | — | — | Physical access only. Factory reset: hold reset 30 sec |
-| Catalyst 3560CX (JLM-LAB-SW1) | Phase B — TRANSIT live, trunks not yet moved | 199 (TRANSIT active) | — | SSH via 192.168.199.2 · Console cable |
+| Catalyst 3560CX (JLM-LAB-SW1) | 192.168.10.1 (HSRP VIP) / 192.168.199.2 (SSH) | All production VLANs | — | `ssh -oKexAlgorithms=+diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1 -oHostKeyAlgorithms=+ssh-rsa admin@192.168.199.2` |
 | Proxmox Server (pve) | 192.168.100.10 :8006 (web UI) | 1 (VLAN 70 cabling pending) | — | `https://192.168.100.10:8006` · Tailscale 100.71.239.21 |
 
 ---
@@ -54,7 +54,20 @@
 | GE0/1/2 | Available (trunk moved to 3560CX Gi0/3) | — | — |
 | GE0/1/3 | Available | — | — |
 
-> **Phase B trunk cutover COMPLETE (Jun 1, 2026).** 3560CX is the active L3 core. Trunks moved: Gi0/2 → GS308EP Port 1, Gi0/3 → GS316EP Port 15. C1111 GE0/1/1 and GE0/1/2 are now free. HSRP VIPs active. OSPF FULL. Internet and DNS verified. **Post-cutover cleanup remaining:** remove C1111 VLAN SVIs/DHCP pools, remove 3560CX static default. **Cleanup backlog:** GS308EP DHCP reservation stuck in Selecting (reachable at .95). See also: docs/runbooks/ssh-key-collision.md for SSH host key issues after gateway IP handoffs.
+> **Phase B trunk cutover COMPLETE (Jun 1, 2026).** 3560CX is the active L3 core. HSRP VIPs active. OSPF FULL. Internet and DNS verified. **Post-cutover cleanup remaining:** remove C1111 VLAN SVIs/DHCP pools, remove 3560CX static default. **Cleanup backlog:** GS308EP DHCP reservation stuck in Selecting (reachable at .95). See also: docs/runbooks/ssh-key-collision.md for SSH host key issues after gateway IP handoffs.
+
+---
+
+## Catalyst 3560CX Port Map (verified Jun 1, 2026)
+
+**Hostname:** JLM-LAB-SW1 · **SSH:** `admin@192.168.199.2`
+
+| Port | Connected To | Mode | Role |
+|---|---|---|---|
+| Gi0/1 | C1111 GE0/1/0 | Routed (no switchport) | TRANSIT — 192.168.199.2/30 |
+| Gi0/2 | GS308EP Port 1 | Trunk | Production access-layer switch |
+| Gi0/3 | GS316EP Port 15 | Trunk | Household access-layer switch |
+| Gi0/4 | Proxmox Server | Trunk (reserved) | Currently down — Proxmox VLAN 70 cabling pending |
 
 ---
 
@@ -139,7 +152,8 @@
 
 | Task | Command |
 |---|---|
-| SSH from Mac | `ssh -oKexAlgorithms=+diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1 -oHostKeyAlgorithms=+ssh-rsa admin@192.168.199.2` |
+| SSH from Mac (alias) | `ssh jlm-lab-sw1` |
+| SSH from Mac (explicit) | `ssh -oKexAlgorithms=+diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1 -oHostKeyAlgorithms=+ssh-rsa admin@192.168.199.2` |
 
 > 3560CX offers both `diffie-hellman-group14-sha1` and `diffie-hellman-group-exchange-sha1` — both must be permitted. The C1111 only requires `group14-sha1`.
 | Show all DHCP leases | `show ip dhcp binding` |
@@ -189,7 +203,7 @@
 
 - **GS308EP and GS316EP web UIs** are on VLAN 1 (192.168.100.0/24). The C1111 routes between VLAN 20 and VLAN 1 — reach them directly at `http://192.168.100.95` (GS308EP) and `http://192.168.100.96` (GS316EP) from any routed VLAN. No static IP workaround needed.
 - **Cisco HTTP management UI** is accessible at `http://192.168.99.1` — disable this at Phase B cutover (hardening task).
-- **3560CX** (JLM-LAB-SW1) — Phase B in progress. TRANSIT link live (Gi0/1 ↔ C1111 GE0/1/0, VLAN 199). OSPFv2 adjacency FULL. Production trunks (Gi0/2 → GS308EP, Gi0/3 → GS316EP) not yet moved — still terminating on C1111. SSH reachable at 192.168.199.2 from the C1111 side.
+- **3560CX** (JLM-LAB-SW1) — Active L3 core. SSH at `192.168.199.2` (TRANSIT SVI). Gi0/1 = routed TRANSIT to C1111 · Gi0/2 = trunk to GS308EP · Gi0/3 = trunk to GS316EP · Gi0/4 = reserved for Proxmox (currently down).
 
 ---
 

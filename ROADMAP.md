@@ -181,6 +181,9 @@
 - [x] Pi-hole DNS works from VLAN 20 (Jun 1, 2026) ✅
 - [x] Pi renewed DHCP — gateway now 192.168.10.1 (3560CX HSRP VIP) (Jun 1, 2026) ✅
 - [x] OSPFv2 adjacency between C1111 and 3560CX — FULL both ways (May 31, 2026) ✅
+- [x] STP root: 3560CX confirmed as root bridge (Jun 1, 2026) ✅
+- [x] Default route to C1111 via OSPF: STABLE (Jun 1, 2026) ✅
+- [x] SSH to 3560CX: works with legacy algorithm flags AND `ssh jlm-lab-sw1` alias (Jun 1, 2026) ✅
 - **3560CX IS NOW THE ACTIVE L3 CORE. Phase B trunk cutover complete.** ✅
 
 **Post-cutover cleanup (no outage):**
@@ -299,7 +302,8 @@ Live configurations:
 - [ ] OSPFv2 adjacency C1111 ↔ 3560CX — pending Phase B
 - [ ] HSRP — pending Phase B
 - [ ] EtherChannel — pending Phase B
-- [ ] STP root bridge + PortFast + BPDU Guard — pending Phase B
+- [x] STP root bridge — 3560CX confirmed root (Jun 1, 2026)
+- [ ] PortFast + BPDU Guard on access ports — pending
 
 ---
 
