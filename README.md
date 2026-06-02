@@ -42,27 +42,27 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 │   Xfinity XB8 (Bridge Mode — modem only)                               │
 │     └─ Cisco C1111-4PWB WAN (DHCP client, public IP from Comcast)      │
 │            │                                                            │
-│   Cisco C1111-4PWB (JLM-LAB-R1)                                        │
-│   IOS XE · 8 VLANs · Inter-VLAN routing · NAT · 4 ACLs · SSH          │
-│   Smart Licensing: REGISTERED (EngageMea.com)                          │
+│   Cisco C1111-4PWB (JLM-LAB-R1) — WAN Edge                             │
+│   NAT · DHCP · ACLs · SSH · OSPFv2 neighbor · Smart Licensing REGISTERED│
+│            │ GE0/1/0 → TRANSIT (192.168.199.0/30, VLAN 199)             │
+│            │                                                            │
+│   Catalyst 3560CX-8PC-S (JLM-LAB-SW1) — Active L3 Core                 │
+│   VLAN gateways · HSRP VIPs · Inter-VLAN routing · OSPFv2 · STP root   │
 │            │                                                            │
 │     ┌──────┴───────────────────────────────────────────────┐           │
-│     │                                                       │           │
-│     │  GE0/1/0: TRANSIT → 3560CX Gi0/1 (VLAN 199, /30)     │           │
-│     │  GE0/1/1: Available (trunk moved to 3560CX Gi0/2)    │           │
-│     │  GE0/1/2: Available (trunk moved to 3560CX Gi0/3)    │           │
-│     │                                                       │           │
-│     │  GS308EP (8-port PoE+, Advanced 802.1Q)              │           │
+│     │  Gi0/2 → GS308EP (8-port PoE+, Advanced 802.1Q)      │           │
 │     │    Port 2: Acer Server (VLAN 10, 192.168.10.11)       │           │
 │     │    Port 3: Pi 4B (VLAN 10, PoE, 192.168.10.16)       │           │
 │     │    Port 4: UniFi U6+ AP #1 (VLANs 20,30,31,40,50,99)│           │
 │     │    Port 5: UniFi U6+ AP #2 (VLANs 20,30,31,40,50,99)│           │
 │     │    Mgmt IP: 192.168.100.95 (DHCP reserved)           │           │
 │     │                                                       │           │
-│     │  GS316EP (16-port PoE+, household wired devices)     │           │
+│     │  Gi0/3 → GS316EP (16-port PoE+, household)           │           │
 │     │    Ports 2-4: Apple TVs (VLAN 20)                    │           │
 │     │    Port 15: Trunk to 3560CX Gi0/3                    │           │
 │     │    Mgmt IP: 192.168.100.96                           │           │
+│     │                                                       │           │
+│     │  Gi0/4 → Proxmox Server (reserved — VLAN 70 pending) │           │
 │     └───────────────────────────────────────────────────────┘           │
 │                                                                         │
 │   WiFi SSIDs (5 active):                                                │
@@ -78,8 +78,6 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 │   Remote: Tailscale mesh VPN (8 nodes — see table below)               │
 │   No port forwarding — all ingress via Ngrok tunnel                     │
 │                                                                         │
-│   Staged (not yet in production):                                       │
-│     Catalyst 3560CX-8PC-S (JLM-LAB-SW1) — future L3 core switch       │
 └─────────────────────────────────────────────────────────────────────────┘
                                    │ Ethernet
 ┌──────────────────────────────────┴──────────────────────────────────────┐
@@ -158,7 +156,7 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 |---|---|---|---|
 | ISP Gateway | Xfinity XB8 | Modem only (bridge mode) | ✅ Active |
 | Edge Router | Cisco C1111-4PWB ISR | NAT, VLANs, ACLs, DHCP, SSH | ✅ Active |
-| Core Switch (staged) | Catalyst 3560CX-8PC-S | Future L3 core — baselined | 🔄 Staged |
+| Core Switch | Catalyst 3560CX-8PC-S | Active L3 core — VLAN gateways, HSRP VIPs, OSPFv2, STP root | ✅ Production |
 | Lab Switch | Netgear GS308EP | 8-port PoE+, Advanced 802.1Q | ✅ Active |
 | Household Switch | Netgear GS316EP | 16-port PoE+, Advanced 802.1Q | ✅ Active |
 | UPS #1 | CyberPower CP1500PFCLCD | Battery backup, auto-shutdown (USB-B → Acer) | ✅ Active |
@@ -192,7 +190,7 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 | 99 | MGMT/NATIVE | 192.168.99.0/24 | — | None | ✅ Active (native on trunks) |
 | 60 | LAB | 192.168.60.0/24 | — | TBD | ❌ Pending Phase D |
 | 70 | SERVER | 192.168.70.0/24 | — | TBD | ❌ Pending Phase C |
-| 199 | TRANSIT | 192.168.199.0/30 | — | None | ❌ Pending Phase B |
+| 199 | TRANSIT | 192.168.199.0/30 | — | None | ✅ Active Phase B |
 
 > 📄 See [docs/vlan-design.md](docs/vlan-design.md) for the full VLAN design with ACL rules, switch configs, and lessons learned.
 
@@ -245,7 +243,7 @@ Produces 182 posts per week per page across 3 Facebook pages.
 |---|---|
 | **Enterprise Networking** | Cisco IOS XE: 8 VLANs, SVIs, inter-VLAN routing, extended ACLs, NAT/PAT, DHCP (8 pools), 802.1Q trunking, SSH, Smart Licensing, OSPFv3 (IPv6), IP Source Guard, AAA |
 | **Network Infrastructure** | Dual managed switch topology, Netgear Advanced 802.1Q, enterprise PoE+ AP deployment, VLAN-tagged WiFi (5 SSIDs) |
-| **L3 Switching** | Catalyst 3560CX-8PC-S baselined and staged as future L3 core — cutover planned |
+| **L3 Switching** | Catalyst 3560CX-8PC-S active as production L3 core — VLAN gateways, HSRP VIPs, OSPFv2, STP root, trunks to GS308EP + GS316EP (Phase B complete Jun 1, 2026) |
 | **Linux Server Admin** | Headless Raspberry Pi OS, Pi-hole DNS, UniFi Controller, Mosquitto MQTT, CUPS |
 | **Containerization** | Docker multi-stage builds, Docker Compose with health checks, Ngrok sidecar, auto-restart, log rotation |
 | **Software Engineering** | 78K+ lines across 3 repos; MCP protocol server; multi-API orchestration |
@@ -265,7 +263,7 @@ See [ROADMAP.md](ROADMAP.md) for the full phased plan:
 - **Phase 2** ✅ Network hardening (Cisco, VLANs, ACLs, Pi-hole, UniFi — complete)
 - **Phase 3** ✅ Server hardening (Docker, CUPS, print infrastructure — complete)
 - **Phase 4** 🔄 Monitoring & observability (closet-monitor live · Netdata/NetAlertX/ntfy pending)
-- **Phase 5** 🔄 3560CX cutover (pending Phase B) · Proxmox deployment ✅
+- **Phase 5** ✅ 3560CX Phase B cutover complete (Jun 1, 2026) · Proxmox deployment ✅
 - **Phase 6** ❌ Security audit & SIEM (Wazuh)
 - **Phase 7** ❌ Infrastructure as Code (Ansible)
 - **Phase 8** ❌ Portfolio & documentation (builtwithpurpose.dev)
