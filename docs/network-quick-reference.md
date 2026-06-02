@@ -102,9 +102,11 @@
 | 4 | Apple TV (Master Bedroom) | 20 | 20 |
 | 5–14 | Wall outlets (spare) | 1 | 1 |
 | 15 | Trunk to 3560CX Gi0/3 | 1 | 1,10,20,30,31,40,99 |
-| 16 | SFP (fiber only — do not use) | — | — |
+| 16 | SFP slot — empty, not in use | — | — |
 
 > VLAN 50 (JM&G-GUEST) added May 19, 2026 — Port 15 carries all active VLANs.
+
+> **Port 16 — SFP slot:** Mini-GBIC expansion port. Accepts a fiber SFP transceiver (1000BASE-SX/LX) or a compatible copper SFP (1000BASE-T). Currently empty — no module inserted. Not connected to anything. Reserved for future fiber uplink if a longer run is ever needed (e.g., cross-building or basement-to-floor fiber drop). Do not insert a copper SFP and expect PoE — this slot has no PoE budget.
 
 ---
 
