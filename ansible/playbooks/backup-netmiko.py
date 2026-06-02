@@ -7,8 +7,8 @@ Replaces ansible cisco.ios playbook which fails due to legacy KEX
 algorithm incompatibility between cisco.ios 11.x and IOS XE 16.10.
 
 Devices:
-  - JLM-LAB-R1: C1111-4PWB, IOS XE 16.10, 192.168.10.1
-  - JLM-LAB-SW1: 3560CX, IOS 15.2(7)E2, 192.168.99.2 (after Phase B cutover)
+  - JLM-LAB-R1: C1111-4PWB, IOS XE 16.10, 192.168.199.1 (TRANSIT port — post-Phase B)
+  - JLM-LAB-SW1: 3560CX, IOS 15.2(7)E2, 192.168.99.2 (MGMT SVI)
 
 Usage:
   CISCO_PASSWORD=yourpassword python3 backup-netmiko.py
@@ -35,21 +35,20 @@ from netmiko.exceptions import NetmikoTimeoutException, NetmikoAuthenticationExc
 DEVICES = [
     {
         "device_type": "cisco_ios",
-        "host": "192.168.10.1",
+        "host": "192.168.199.1",  # TRANSIT port — 192.168.10.1 is now 3560CX HSRP VIP
         "username": os.environ.get("CISCO_USERNAME", "admin"),
         "password": os.environ.get("CISCO_PASSWORD"),
         "secret": os.environ.get("CISCO_PASSWORD"),
         "hostname": "JLM-LAB-R1",
     },
-    # Uncomment after Phase B cutover when 3560CX is in production
-    # {
-    #     "device_type": "cisco_ios",
-    #     "host": "192.168.99.2",
-    #     "username": os.environ.get("CISCO_USERNAME", "admin"),
-    #     "password": os.environ.get("CISCO_PASSWORD"),
-    #     "secret": os.environ.get("CISCO_PASSWORD"),
-    #     "hostname": "JLM-LAB-SW1",
-    # },
+    {
+        "device_type": "cisco_ios",
+        "host": "192.168.99.2",  # MGMT SVI (VLAN 99)
+        "username": os.environ.get("CISCO_USERNAME", "admin"),
+        "password": os.environ.get("CISCO_PASSWORD"),
+        "secret": os.environ.get("CISCO_PASSWORD"),
+        "hostname": "JLM-LAB-SW1",
+    },
 ]
 
 
