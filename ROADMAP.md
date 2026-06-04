@@ -256,10 +256,11 @@
 - [x] Define first 10 training ticket scenarios
 - [x] Choose ticketing platform direction — **Zammad** (modern UI, closer to real-world service desks)
 
-### Phase AI-2 — Knowledge Base Design 🔲
-- [ ] Define source curation — which repo docs feed the mentor
-- [ ] Design vector database structure (ChromaDB or similar)
-- [ ] Define update workflow — how mentor knowledge stays current with repo
+### Phase AI-2 — Knowledge Base Design ✅ COMPLETE (Jun 4, 2026)
+- [x] Create `docs/ai-mentor-knowledge-base-plan.md` — approved sources, excluded sources, document categories, metadata tags, retrieval behavior, student-facing vs mentor-only split, ticket-to-runbook mapping, update workflow, deployment gate
+- [x] Define source curation — approved and excluded sources documented
+- [x] Design vector database structure (ChromaDB or similar) — defined in plan
+- [x] Define update workflow — rebuild on doc commits, no live crawl
 
 ### Phase AI-3 — Ticketing Integration Design 🔲
 - [ ] Design Zammad instance for lab — user roles, ticket categories, SLA levels
@@ -282,7 +283,8 @@
 - [x] `labs/helpdesk/ticket-002-vlan-misassignment.md`
 - [x] `labs/helpdesk/ticket-003-proxmox-apt-egress-failure.md` (based on real ARIA incident)
 - [x] `labs/helpdesk/ticket-004-ssh-legacy-kex.md` (based on real Phase B incident)
-- [ ] Tickets 005–010 — access point offline, printer unreachable, MQTT ACL, Proxmox recovery, Wazuh alert, AD login
+- [x] `labs/helpdesk/ticket-005-vlan1-return-path-failure.md` (asymmetric routing — real ARIA incident)
+- [ ] Tickets 006–010 — access point offline, printer unreachable, MQTT ACL, Proxmox recovery, Wazuh alert, AD login
 
 ### Deployment Gate 🔲
 - [ ] ATX control board installed and hard reset validated
@@ -413,4 +415,4 @@ Live configurations:
 
 ---
 
-*Last updated: Jun 4, 2026 (Phase AI-1 complete — AI Mentor design + first 4 helpdesk tickets)*
+*Last updated: Jun 4, 2026 (Phase AI-2 complete — knowledge base plan + ticket-005 asymmetric routing)*
