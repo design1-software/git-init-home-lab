@@ -267,16 +267,22 @@
 - [x] v1 decision: AI does not auto-post into tickets — draft panel model; no auto-close, no priority changes, no system actions
 - [x] Future v2 webhook plan documented — gated on v1 validation
 
-### Phase AI-4 — Model & Architecture Decision 🔲
-- [ ] Finalize API-based vs local LLM for MVP (recommendation: API-based first)
-- [ ] Define backend framework — FastAPI (Python) recommended
-- [ ] Define session logging schema — every response tied to ticket ID + student ID
+### Phase AI-4 — Model & Architecture Decision ✅ COMPLETE (Jun 4, 2026)
+- [x] Create `docs/ai-mentor-model-decision.md` — v1 = API-based locked in; local LLM deferred
+- [x] Provider decision: Claude recommended (instruction following, reasoning quality, refusal behavior)
+- [x] Infrastructure analysis: ARIA hosts app + ChromaDB, external API handles inference
+- [x] Local LLM future path documented with evaluation criteria and candidate models
 
-### Phase AI-5 — Guardrails & Prompt Engineering 🔲 (pending ARIA VLAN 70)
-- [ ] Write and test system prompt — mentor persona, scope limits, escalation behavior
-- [ ] Validate no destructive-command behavior
-- [ ] Validate evidence-first enforcement
-- [ ] Test Cisco-specific rules: show → explain risk → rollback → confirm → config
+### Phase AI-5 — Guardrails & Prompt Engineering ✅ COMPLETE (Jun 4, 2026)
+- [x] Create `docs/ai-mentor-guardrails-expanded.md` — 7 guardrail domains fully specified
+- [x] Destructive commands — mandatory warning/rollback/confirmation sequence
+- [x] Cisco config changes — 7-step mandatory sequence (verify → explain → risk → rollback → save timing → config → verify)
+- [x] Student answer leakage — rules, maximum hint level, mentor-only content classification
+- [x] Credential handling — no asking, no storing, placeholder enforcement, leakage response
+- [x] Ticket state changes — permitted/not permitted in v1 and v2, audit rationale
+- [x] Live system access — no direct access to any lab system; evidence comes from student only
+- [x] Mentor-only runbooks — classification table, correct usage model, student-facing limits
+- [x] 8 deployment validation test cases defined — all must pass before v1 goes live
 
 ### Phase AI-6 — First Lab Use Cases 🔲 (pending ARIA VLAN 70)
 - [x] `labs/helpdesk/ticket-001-dns-failure.md`
@@ -416,4 +422,4 @@ Live configurations:
 
 ---
 
-*Last updated: Jun 4, 2026 (Phase AI-3 complete — ticketing integration design + ticket-006 layered apt failure)*
+*Last updated: Jun 4, 2026 (Phase AI-4 + AI-5 complete — model decision locked, guardrails fully specified)*
