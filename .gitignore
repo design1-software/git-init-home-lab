@@ -1,0 +1,17 @@
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+
+# Timestamped backup files — committed snapshots live in configs/ only
+backups/network-configs/*.txt
+
+# Secrets — never commit
+.env
+*.key
+*.pem

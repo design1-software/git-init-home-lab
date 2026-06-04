@@ -3,6 +3,8 @@
 # Hostname: JLM-LAB-R1
 # Serial:   FGL2511L5WK
 # Captured: May 19, 2026
+# STALE: pre-Phase B — does not include TRANSIT VLAN 199, OSPF, NAT-INSIDE update, or HSRP changes
+# Run: CISCO_PASSWORD=secret python3 scripts/netmiko_backup.py --update-configs
 # Notes:    Passwords redacted. Smart Licensing registered to EngageMea.com.
 #           GE0/1/2 has legacy 'switchport access vlan 10' — dead noise, clean at Phase B cutover.
 #           HTTP/HTTPS servers enabled — disable at Phase B cutover (hardening task).

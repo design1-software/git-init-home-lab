@@ -8,7 +8,7 @@ algorithm incompatibility between cisco.ios 11.x and IOS XE 16.10.
 
 Devices:
   - JLM-LAB-R1: C1111-4PWB, IOS XE 16.10, 192.168.199.1 (TRANSIT port — post-Phase B)
-  - JLM-LAB-SW1: 3560CX, IOS 15.2(7)E2, 192.168.99.2 (MGMT SVI)
+  - JLM-LAB-SW1: 3560CX, IOS 15.2(7)E2, 192.168.199.2 (TRANSIT SVI — post-Phase B)
 
 Usage:
   CISCO_PASSWORD=yourpassword python3 backup-netmiko.py

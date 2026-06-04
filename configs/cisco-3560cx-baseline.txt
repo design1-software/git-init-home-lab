@@ -3,6 +3,8 @@
 # Hostname: JLM-LAB-SW1
 # Serial:   FOC2418L4T2
 # Captured: May 19, 2026
+# STALE: pre-Phase B — does not include HSRP, OSPFv2, TRANSIT Gi0/1, active trunk state, or Gi0/4/Gi0/5 port configs
+# Run: CISCO_PASSWORD=secret python3 scripts/netmiko_backup.py --update-configs
 # Status:   PHASE A COMPLETE — staged offline, ready for Phase B cutover
 # Notes:    Passwords redacted. RTU perpetual licensing — no Smart Licensing needed.
 #           Model suffix '-S' = IP Base perpetual license unlocked at hardware level.
