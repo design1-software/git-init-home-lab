@@ -198,7 +198,7 @@
 - [x] Install Proxmox VE bare metal — live at 192.168.100.10 :8006
 - [x] Set PPT power cap in motherboard BIOS settings for server efficiency
 - [ ] Assign static IP on VLAN 70 (SERVER, 192.168.70.0/24) — pending Phase B cable cutover
-- [ ] Trunk both NICs to GS308EP — management on VLAN 70, VM traffic on VLANs 60/70
+- [ ] Cable ARIA nic1 (Intel I225V) to 3560CX Gi0/4 as VLAN 70 trunk — management NIC; nic0 (Realtek RTL8125) reserved for future VM trunk
 - [x] Add to Tailscale mesh — pve (100.71.239.21) ✅ online
 - [ ] Enable Tailscale subnet routing for VLAN 60 (LAB) → Ohio schoolmate access
 - [ ] Deploy Wazuh SIEM as LXC container on Proxmox
@@ -231,7 +231,7 @@
 ### Phase D — VLAN 60 schoolmate lab ❌
 - [ ] Build VLAN 60 (LAB, 192.168.60.0/24) on 3560CX
 - [ ] Deploy Active Directory VM on Proxmox — forest: jlm.lab
-- [ ] Deploy osTicket help desk VM on Proxmox (VLAN 60)
+- [ ] Deploy Zammad help desk VM on Proxmox — replaces osTicket; serves as the AI Mentor ticketing platform for both Phase D training and Phase AI
 - [ ] Deploy M365 admin sandbox (VLAN 60)
 - [ ] Configure Tailscale subnet routing for Ohio schoolmate access
 

@@ -329,8 +329,9 @@ WoL cannot recover from: frozen kernel, hung motherboard, NIC lockup, hard crash
 - Netdata
 - NetAlertX
 - ntfy
-- Active Directory lab VM
-- osTicket lab VM
+- Active Directory lab VM (forest: jlm.lab)
+- Zammad help desk VM (replaces osTicket — AI Mentor ticketing platform)
+- AI Mentor backend (FastAPI + ChromaDB vector store)
 
 ## Rollback Plan
 
