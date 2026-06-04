@@ -262,10 +262,10 @@
 - [x] Design vector database structure (ChromaDB or similar) — defined in plan
 - [x] Define update workflow — rebuild on doc commits, no live crawl
 
-### Phase AI-3 — Ticketing Integration Design 🔲
-- [ ] Design Zammad instance for lab — user roles, ticket categories, SLA levels
-- [ ] Define AI Mentor → Zammad event hooks
-- [ ] Create ticket template structure matching `labs/helpdesk/` scenarios
+### Phase AI-3 — Ticketing Integration Design ✅ COMPLETE (Jun 4, 2026)
+- [x] Create `docs/ai-mentor-ticketing-integration.md` — Zammad role, ticket lifecycle (12-step), AI interaction points, student/instructor workflows, ticket metadata fields, AI response format, escalation rules, what AI can/cannot write to Zammad, v1 draft panel model vs v2 webhook model, deployment architecture, security notes
+- [x] v1 decision: AI does not auto-post into tickets — draft panel model; no auto-close, no priority changes, no system actions
+- [x] Future v2 webhook plan documented — gated on v1 validation
 
 ### Phase AI-4 — Model & Architecture Decision 🔲
 - [ ] Finalize API-based vs local LLM for MVP (recommendation: API-based first)
@@ -284,7 +284,8 @@
 - [x] `labs/helpdesk/ticket-003-proxmox-apt-egress-failure.md` (based on real ARIA incident)
 - [x] `labs/helpdesk/ticket-004-ssh-legacy-kex.md` (based on real Phase B incident)
 - [x] `labs/helpdesk/ticket-005-vlan1-return-path-failure.md` (asymmetric routing — real ARIA incident)
-- [ ] Tickets 006–010 — access point offline, printer unreachable, MQTT ACL, Proxmox recovery, Wazuh alert, AD login
+- [x] `labs/helpdesk/ticket-006-proxmox-repo-hygiene.md` (layered apt failure — L3/L4/L7 auth/L7 config/policy)
+- [ ] Tickets 007–010 — access point offline, printer unreachable, MQTT ACL, Proxmox recovery, Wazuh alert, AD login
 
 ### Deployment Gate 🔲
 - [ ] ATX control board installed and hard reset validated
@@ -415,4 +416,4 @@ Live configurations:
 
 ---
 
-*Last updated: Jun 4, 2026 (Phase AI-2 complete — knowledge base plan + ticket-005 asymmetric routing)*
+*Last updated: Jun 4, 2026 (Phase AI-3 complete — ticketing integration design + ticket-006 layered apt failure)*
