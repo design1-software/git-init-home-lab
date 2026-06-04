@@ -16,6 +16,13 @@ Dedicated hypervisor node for SERVER and LAB workloads in the home lab. Hostname
 - OS Drive: Samsung 860 EVO (Proxmox OS)
 - Backup Vault: Samsung 860 EVO 458GB
 
+## OS / Software
+
+- **OS:** Debian 13 (trixie)
+- **Proxmox VE:** 9.x (trixie-based — PVE 8.x was bookworm/Debian 12)
+- **Repository:** `pve-no-subscription` — free community repo, correct for homelab; enterprise repo removed
+- **Tailscale:** stable channel, trixie packages
+
 ## BIOS / Power Tuning
 
 - BIOS PPT power cap completed in motherboard settings.
@@ -263,19 +270,17 @@ Comet Wake-on-LAN power-on path for ARIA: PASS ✅
 
 WoL cannot recover from: frozen kernel, hung motherboard, NIC lockup, hard crash, or OS-level deadlock. The ATX control board is still required for hard power cycle and reset relay.
 
-## Known Issues
+## System Fixes (Jun 4, 2026)
 
-### IPv6 / apt Update
+| Issue | Status |
+|---|---|
+| Internet egress | ✅ Fixed |
+| apt IPv4 preference | ✅ Fixed — `/etc/apt/apt.conf.d/99force-ipv4` |
+| Proxmox repo mismatch | ✅ Fixed — corrected to `pve-no-subscription` on trixie |
+| Enterprise repo 401 errors | ✅ Fixed — enterprise repo entry removed |
+| Package upgrades | ⏳ Deferred — intentional; hold until ATX control board is installed and hard reset path is validated |
 
-During `apt update`, Proxmox attempted IPv6 connections and produced `Network is unreachable` errors. ARIA does not have working IPv6 internet routing.
-
-Fix:
-```bash
-echo 'Acquire::ForceIPv4 "true";' > /etc/apt/apt.conf.d/99force-ipv4
-apt update
-```
-
-`ethtool` was already installed so this was not blocking for WoL setup.
+> Package upgrades are deferred because a kernel or Proxmox update could render ARIA unreachable and WoL cannot recover from a mid-upgrade kernel panic or boot failure. The ATX board's hard reset relay is the required safety net before running `apt upgrade`.
 
 ## Cutover Checklist
 
