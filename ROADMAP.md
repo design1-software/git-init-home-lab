@@ -291,7 +291,11 @@
 - [x] `labs/helpdesk/ticket-004-ssh-legacy-kex.md` (based on real Phase B incident)
 - [x] `labs/helpdesk/ticket-005-vlan1-return-path-failure.md` (asymmetric routing — real ARIA incident)
 - [x] `labs/helpdesk/ticket-006-proxmox-repo-hygiene.md` (layered apt failure — L3/L4/L7 auth/L7 config/policy)
-- [ ] Tickets 007–010 — access point offline, printer unreachable, MQTT ACL, Proxmox recovery, Wazuh alert, AD login
+- [x] `labs/helpdesk/ticket-007-proxmox-vlan70-migration.md` (advanced — ARIA VLAN 70 cutover with 3-path recovery)
+- [x] `labs/helpdesk/ticket-008-comet-atx-hard-reset-validation.md` (hardware validation — 8-step ATX board acceptance test)
+- [x] `labs/helpdesk/ticket-009-zammad-ticket-triage.md` (beginner ITSM — P1–P4 triage with 6 training tickets)
+- [x] `labs/helpdesk/ticket-010-wazuh-alert-investigation.md` (security — SIEM alert investigation, true/false positive determination)
+- *All tickets 007–010: documented only — live validation pending ARIA VLAN 70 and workload deployment*
 
 ### Deployment Gate 🔲
 - [ ] ATX control board installed and hard reset validated
@@ -422,4 +426,4 @@ Live configurations:
 
 ---
 
-*Last updated: Jun 4, 2026 (Phase AI-4 + AI-5 complete — model decision locked, guardrails fully specified)*
+*Last updated: Jun 4, 2026 (Phase AI-6 documented — tickets 007–010 written, live validation pending ARIA VLAN 70)*
