@@ -25,11 +25,25 @@ Run from Mac on VLAN 20 (TRUSTED) or any VLAN with routing to 192.168.199.0/30.
 
 ---
 
+## Credentials
+
+Each device has its own password. Always wrap passwords in **single quotes** —
+single quotes prevent bash from interpreting special characters (`!`, `$`, `&`, etc.).
+
+| Variable | Device | Notes |
+|---|---|---|
+| `R1_PASSWORD` | C1111 (JLM-LAB-R1) | Per-device, takes precedence |
+| `SW1_PASSWORD` | 3560CX (JLM-LAB-SW1) | Per-device, takes precedence |
+| `R1_USERNAME` | C1111 | Optional, defaults to `admin` |
+| `SW1_USERNAME` | 3560CX | Optional, defaults to `admin` |
+| `CISCO_PASSWORD` | Both | Fallback if per-device vars not set |
+
+---
+
 ## Run a Backup (timestamped, no git change)
 
 ```bash
-cd /path/to/git-init-home-lab
-CISCO_PASSWORD=yourpassword python3 scripts/netmiko_backup.py
+R1_PASSWORD='c1111password' SW1_PASSWORD='switchpassword' python3 scripts/netmiko_backup.py
 ```
 
 Output lands in `backups/network-configs/`:
@@ -47,7 +61,7 @@ These files are gitignored — they are local-only archives.
 Use `--update-configs` to also overwrite the committed files in `configs/`:
 
 ```bash
-CISCO_PASSWORD=yourpassword python3 scripts/netmiko_backup.py --update-configs
+R1_PASSWORD='c1111password' SW1_PASSWORD='switchpassword' python3 scripts/netmiko_backup.py --update-configs
 ```
 
 Then review and commit:
