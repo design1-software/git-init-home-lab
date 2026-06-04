@@ -1,18 +1,15 @@
-# cisco-3560cx-baseline.txt
-# Device:   Cisco Catalyst WS-C3560CX-8PC-S
-# Hostname: JLM-LAB-SW1
-# Serial:   FOC2418L4T2
-# Captured: May 19, 2026
-# STALE: pre-Phase B — does not include HSRP, OSPFv2, TRANSIT Gi0/1, active trunk state, or Gi0/4/Gi0/5 port configs
-# Run: CISCO_PASSWORD=secret python3 scripts/netmiko_backup.py --update-configs
-# Status:   PHASE A COMPLETE — staged offline, ready for Phase B cutover
-# Notes:    Passwords redacted. RTU perpetual licensing — no Smart Licensing needed.
-#           Model suffix '-S' = IP Base perpetual license unlocked at hardware level.
-#           Do NOT accept IP Services EULA — starts unnecessary 90-day eval countdown.
-#           Vlan199 SVI removed — TRANSIT subnet handled by Gi0/1 as routed L3 port.
-#           Default route via 192.168.199.1 inactive until Phase B TRANSIT link cabled.
-# ============================================================================
+! Backup: JLM-LAB-SW1
+! Host:   192.168.199.2
+! Time:   20260604-181322
+! ==========================================================
 
+Building configuration...
+
+Current configuration : 9666 bytes
+!
+! Last configuration change at 16:52:19 UTC Thu Jun 4 2026 by admin
+! NVRAM config last updated at 16:53:38 UTC Thu Jun 4 2026 by admin
+!
 version 15.2
 no service pad
 service timestamps debug datetime msec localtime
@@ -25,13 +22,17 @@ boot-start-marker
 boot-end-marker
 !
 logging buffered 16384
-enable secret 9 <REDACTED>
+enable secret 9 $9$zOrkVWVs561gmD$CmIli6f2kOZxjfykYvkKteeNkZzOI4QschoKKOPBTeM
 !
-username admin privilege 15 secret 9 <REDACTED>
+username admin privilege 15 secret 9 $9$XsUtnq9NrRGP1.$9IqNIGcmr9bhzsbzO/3RV.hFzZXRtsUs3xWD7wgT3uU
 no aaa new-model
 system mtu routing 1500
 !
+!
+!
+!
 ip routing
+ip arp inspection vlan 30-31,40,50,60
 ip dhcp excluded-address 192.168.100.1 192.168.100.10
 ip dhcp excluded-address 192.168.10.1 192.168.10.10
 ip dhcp excluded-address 192.168.20.1 192.168.20.10
@@ -46,79 +47,94 @@ ip dhcp excluded-address 192.168.30.50 192.168.30.60
 !
 ip dhcp pool VLAN1
  network 192.168.100.0 255.255.255.0
- default-router 192.168.100.2
- dns-server 192.168.10.16 1.1.1.1
+ default-router 192.168.100.1 
+ dns-server 192.168.10.16 1.1.1.1 
  lease 7
 !
 ip dhcp pool MGMT
  network 192.168.10.0 255.255.255.0
- default-router 192.168.10.2
- dns-server 192.168.10.16 1.1.1.1
+ default-router 192.168.10.1 
+ dns-server 192.168.10.16 1.1.1.1 
  lease 7
 !
 ip dhcp pool TRUSTED
  network 192.168.20.0 255.255.255.0
- default-router 192.168.20.2
- dns-server 192.168.10.16 1.1.1.1
+ default-router 192.168.20.1 
+ dns-server 192.168.10.16 1.1.1.1 
  lease 7
 !
 ip dhcp pool IOT
  network 192.168.30.0 255.255.255.0
- default-router 192.168.30.2
- dns-server 192.168.10.16 1.1.1.1
+ default-router 192.168.30.1 
+ dns-server 192.168.10.16 1.1.1.1 
  lease 7
 !
 ip dhcp pool IOT-AUTO
  network 192.168.31.0 255.255.255.0
- default-router 192.168.31.2
- dns-server 192.168.10.16 1.1.1.1
+ default-router 192.168.31.1 
+ dns-server 192.168.10.16 1.1.1.1 
 !
 ip dhcp pool HOUSEHOLD
  network 192.168.40.0 255.255.255.0
- default-router 192.168.40.2
- dns-server 192.168.10.16 1.1.1.1
+ default-router 192.168.40.1 
+ dns-server 192.168.10.16 1.1.1.1 
  lease 7
 !
 ip dhcp pool GUEST
  network 192.168.50.0 255.255.255.0
- default-router 192.168.50.2
- dns-server 192.168.10.16 1.1.1.1
+ default-router 192.168.50.1 
+ dns-server 192.168.10.16 1.1.1.1 
  lease 7
 !
 ip dhcp pool LAB
  network 192.168.60.0 255.255.255.0
- default-router 192.168.60.1
- dns-server 192.168.10.16 1.1.1.1
+ default-router 192.168.60.1 
+ dns-server 192.168.10.16 1.1.1.1 
  lease 7
 !
 ip dhcp pool SERVER
  network 192.168.70.0 255.255.255.0
- default-router 192.168.70.1
- dns-server 192.168.10.16 1.1.1.1
+ default-router 192.168.70.1 
+ dns-server 192.168.10.16 1.1.1.1 
  lease 7
 !
 ip dhcp pool MGMT-NATIVE
  network 192.168.99.0 255.255.255.0
- default-router 192.168.99.2
- dns-server 192.168.10.16 1.1.1.1
+ default-router 192.168.99.1 
+ dns-server 192.168.10.16 1.1.1.1 
  lease 7
 !
 ip dhcp pool GS308EP
  host 192.168.100.100 255.255.255.0
  client-identifier 2894.0184.2d8a
- default-router 192.168.100.2
- dns-server 192.168.10.16 1.1.1.1
+ default-router 192.168.100.1 
+ dns-server 192.168.10.16 1.1.1.1 
 !
 ip dhcp pool PI-HOLE
  client-identifier 0188.a29e.a833.c6
  client-name jlm-lab-pi
 !
+!
+ip dhcp snooping vlan 30-31,40,50,60
+no ip dhcp snooping information option
+ip dhcp snooping
 no ip domain-lookup
 ip domain-name lab.local
 vtp mode transparent
 !
+!
+!
+!
+!
+!
+!
+!
+!
 spanning-tree mode rapid-pvst
 spanning-tree extend system-id
+!
+!
+!
 !
 vlan internal allocation policy ascending
 !
@@ -152,6 +168,16 @@ vlan 99
 vlan 199
  name TRANSIT
 !
+!
+! 
+!
+!
+!
+!
+!
+!
+!
+!
 interface GigabitEthernet0/1
  description TRUNK-TO-C1111-TRANSIT
  no switchport
@@ -162,44 +188,43 @@ interface GigabitEthernet0/2
  switchport trunk allowed vlan 1,10,20,30,31,40,50,60,70,99
  switchport trunk native vlan 99
  switchport mode trunk
- ip dhcp snooping trust
  ip arp inspection trust
+ ip dhcp snooping trust
 !
 interface GigabitEthernet0/3
  description TRUNK-TO-GS316EP
  switchport trunk allowed vlan 1,10,20,30,31,40,50,99
  switchport trunk native vlan 99
  switchport mode trunk
- ip dhcp snooping trust
  ip arp inspection trust
+ ip dhcp snooping trust
 !
 interface GigabitEthernet0/4
- description PROXMOX-SERVER-VLAN70
- switchport trunk allowed vlan 60,70
- switchport trunk native vlan 70
- switchport mode trunk
- ip dhcp snooping trust
- ip arp inspection trust
+ description ARIA-PROXMOX-TEMP-VLAN1
+ switchport mode access
+ spanning-tree portfast edge
+ spanning-tree bpduguard enable
 !
 interface GigabitEthernet0/5
- description SPARE-
- ip verify source
- shutdown
+ description COMET-KVM-TEMP-VLAN1-POE
+ switchport mode access
+ spanning-tree portfast edge
+ spanning-tree bpduguard enable
 !
 interface GigabitEthernet0/6
  description SPARE-POE
- ip verify source
  shutdown
+ ip verify source
 !
 interface GigabitEthernet0/7
  description SPARE-POE
- ip verify source
  shutdown
+ ip verify source
 !
 interface GigabitEthernet0/8
  description SPARE-POE
- ip verify source
  shutdown
+ ip verify source
 !
 interface GigabitEthernet0/9
  description SPARE-UPLINK
@@ -219,28 +244,49 @@ interface GigabitEthernet0/12
 !
 interface Vlan1
  ip address 192.168.100.2 255.255.255.0
+ standby 1 ip 192.168.100.1
+ standby 1 priority 110
+ standby 1 preempt
 !
 interface Vlan10
  ip address 192.168.10.2 255.255.255.0
+ standby 10 ip 192.168.10.1
+ standby 10 priority 110
+ standby 10 preempt
 !
 interface Vlan20
  ip address 192.168.20.2 255.255.255.0
+ standby 20 ip 192.168.20.1
+ standby 20 priority 110
+ standby 20 preempt
 !
 interface Vlan30
  ip address 192.168.30.2 255.255.255.0
  ip access-group IOT-ACL in
+ standby 30 ip 192.168.30.1
+ standby 30 priority 110
+ standby 30 preempt
 !
 interface Vlan31
  ip address 192.168.31.2 255.255.255.0
  ip access-group IOT-AUTO-ACL in
+ standby 31 ip 192.168.31.1
+ standby 31 priority 110
+ standby 31 preempt
 !
 interface Vlan40
  ip address 192.168.40.2 255.255.255.0
  ip access-group HOUSEHOLD-ACL in
+ standby 40 ip 192.168.40.1
+ standby 40 priority 110
+ standby 40 preempt
 !
 interface Vlan50
  ip address 192.168.50.2 255.255.255.0
  ip access-group GUEST-ACL in
+ standby 50 ip 192.168.50.1
+ standby 50 priority 110
+ standby 50 preempt
 !
 interface Vlan60
  ip address 192.168.60.1 255.255.255.0
@@ -251,21 +297,31 @@ interface Vlan70
 !
 interface Vlan99
  ip address 192.168.99.2 255.255.255.0
+ standby 99 ip 192.168.99.1
+ standby 99 priority 110
+ standby 99 preempt
+!
+router ospf 1
+ router-id 2.2.2.2
+ passive-interface default
+ no passive-interface GigabitEthernet0/1
+ network 192.168.10.0 0.0.0.255 area 0
+ network 192.168.20.0 0.0.0.255 area 0
+ network 192.168.30.0 0.0.0.255 area 0
+ network 192.168.31.0 0.0.0.255 area 0
+ network 192.168.40.0 0.0.0.255 area 0
+ network 192.168.50.0 0.0.0.255 area 0
+ network 192.168.60.0 0.0.0.255 area 0
+ network 192.168.70.0 0.0.0.255 area 0
+ network 192.168.99.0 0.0.0.255 area 0
+ network 192.168.100.0 0.0.0.255 area 0
+ network 192.168.199.0 0.0.0.3 area 0
 !
 ip forward-protocol nd
 !
 no ip http server
 no ip http secure-server
 ip route 0.0.0.0 0.0.0.0 192.168.199.1
-ip dhcp snooping
-ip dhcp snooping vlan 30,31,40,50,60
-no ip dhcp snooping information option
-!
-ip arp inspection vlan 30,31,40,50,60
-!
-! IP Source Guard configured on access ports Gi0/5-Gi0/8
-! Status: inactive-no-snooping-vlan until Phase B devices connect
-! Activates automatically when DHCP snooping binding table populates
 ip ssh time-out 60
 ip ssh version 2
 !
@@ -283,7 +339,6 @@ ip access-list extended GUEST-ACL
  deny   ip any 192.168.99.0 0.0.0.255
  deny   ip any 192.168.100.0 0.0.0.255
  permit ip any any
-!
 ip access-list extended HOUSEHOLD-ACL
  permit udp any host 192.168.10.16 eq domain
  permit tcp any host 192.168.10.16 eq domain
@@ -298,7 +353,6 @@ ip access-list extended HOUSEHOLD-ACL
  deny   ip any 192.168.99.0 0.0.0.255
  deny   ip any 192.168.100.0 0.0.0.255
  permit ip any any
-!
 ip access-list extended IOT-ACL
  permit udp any host 192.168.10.16 eq domain
  permit tcp any host 192.168.10.16 eq domain
@@ -313,7 +367,6 @@ ip access-list extended IOT-ACL
  deny   ip any 192.168.99.0 0.0.0.255
  deny   ip any 192.168.100.0 0.0.0.255
  permit ip any any
-!
 ip access-list extended IOT-AUTO-ACL
  permit udp any host 192.168.10.16 eq domain
  permit tcp any host 192.168.10.16 eq domain
@@ -322,7 +375,6 @@ ip access-list extended IOT-AUTO-ACL
  permit udp any any eq bootps
  permit udp any any eq bootpc
  deny   ip any any
-!
 ip access-list extended LAB-ACL
  permit udp any host 192.168.10.16 eq domain
  permit tcp any host 192.168.10.16 eq domain
@@ -338,6 +390,8 @@ ip access-list extended LAB-ACL
  deny   ip any 192.168.100.0 0.0.0.255
  permit ip any any
 !
+!
+!
 banner motd ^C
 *******************************************************
 * JLM-LAB-SW1 - Authorized Access Only                 *
@@ -350,39 +404,15 @@ line con 0
  exec-timeout 15 0
  logging synchronous
  login local
-!
 line vty 0 4
  exec-timeout 15 0
  login local
  transport input ssh
-!
 line vty 5 15
  exec-timeout 15 0
  login local
  transport input ssh
 !
-ntp server 216.239.35.0
+ntp server 192.168.10.1
 !
 end
-
-! ============================================================================
-! LICENSING NOTES
-! ============================================================================
-! RTU perpetual licensing — NOT Smart Licensing. IP Base unlocked at hardware
-! level via '-S' model suffix. No token registration needed.
-! Contrast with C1111-4PWB which uses Smart Licensing (EngageMea.com).
-!
-! ============================================================================
-! PHASE B CUTOVER CHECKLIST
-! ============================================================================
-! 1. Cable Gi0/1 to C1111 GE0/1/0 (TRANSIT link — 192.168.199.0/30)
-! 2. Cable Gi0/2 to GS308EP Port 1 (replace existing C1111 trunk)
-! 3. Cable Gi0/3 to GS316EP Port 15 (replace existing C1111 trunk)
-! 4. On C1111: reconfigure GE0/1/0 as routed port (192.168.199.1/30)
-! 5. On C1111: remove old VLAN SVIs and DHCP pools
-! 6. On C1111: add static route to 3560CX for all internal subnets
-! 7. Verify all VLANs routing through 3560CX before cutting DHCP
-! 8. Verify internet access on all VLANs after cutover
-! 9. Disable C1111 VLAN SVIs one at a time, verify no breakage
-! 10. Update NAT-INSIDE ACL on C1111 to permit 192.168.199.0/30
-! ============================================================================
