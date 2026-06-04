@@ -151,7 +151,7 @@
 - [x] Rapid-PVST+ configured, STP documented (May 21, 2026)
 - [x] NTP client configured — syncing from C1111 (May 21, 2026)
 - [x] Config saved and committed to repo
-- [x] IP Source Guard configured on Gi0/5-Gi0/8 — activates at Phase B (May 25, 2026)
+- [x] IP Source Guard configured on Gi0/5-Gi0/8 — activates at Phase B (May 25, 2026) — `ip verify source` removed from Gi0/5 in Phase C.1 (Jun 4, 2026) to allow Comet KVM on that port
 
 
 ### Phase B — Light cutover (~5 min WiFi outage, schedule off-peak) 🔄 In Progress
@@ -206,14 +206,27 @@
 - [ ] Deploy Netdata, NetAlertX, ntfy (completing Phase 4)
 
 
-### Phase C.1 — Out-of-Band KVM Management 🔄 PLANNED
+### Phase C.1 — Out-of-Band KVM Management 🔄 IN PROGRESS (Jun 4, 2026)
 
-- [ ] Add Comet GL-RM1PE KVM
-- [ ] Install ATX board integration for custom Proxmox server
-- [ ] Validate BIOS-level remote console access
-- [ ] Validate Proxmox console access through KVM
-- [ ] Document recovery workflow for failed VLAN cutover or unreachable Proxmox host
-- [ ] Add KVM access notes to the custom Proxmox server build writeup
+> **ATX board status:** Original GL-ATXPC defective — returned for replacement. Temporary WoL-based power-on is active. Hard power/reset relay pending ATX board replacement.
+
+- [x] Configure 3560CX Gi0/4 as temporary ARIA VLAN 1 access port (Jun 4, 2026)
+- [x] Configure 3560CX Gi0/5 as temporary Comet PoE VLAN 1 access port (Jun 4, 2026)
+- [x] Power Comet GL-RM1PE from 3560CX PoE — 15.4W confirmed (Jun 4, 2026)
+- [x] Confirm Comet dashboard at `192.168.100.11` (HTTP + HTTPS) (Jun 4, 2026)
+- [x] Confirm Comet KVM video, keyboard, and BIOS/UEFI access to ARIA (Jun 4, 2026)
+- [x] Confirm ARIA reachable at `192.168.100.10` on correct NIC — `nic1` (Intel I225V, `00:1B:41:0A:05:09`) (Jun 4, 2026)
+- [x] Enable persistent Wake-on-LAN via systemd `wol.service` on ARIA (Jun 4, 2026)
+- [x] Confirm BIOS ErP Disabled — required for WoL standby power (Jun 4, 2026)
+- [x] Wake-on-LAN power-on from Comet: PASS (Jun 4, 2026)
+- [x] Document Gigabyte B650 BIOS findings — PCIe bifurcation supported (contrary to prior info) (Jun 4, 2026)
+- [ ] Install replacement GL-ATXPC / ATX control board
+- [ ] Connect ATX board to B650 F_PANEL header + SAMA V40 front panel
+- [ ] Connect Comet USB-C to ATX board
+- [ ] Validate Comet hard power action
+- [ ] Validate Comet reset action
+- [ ] Move Comet from VLAN 1 to VLAN 10 MGMT
+- [ ] Move ARIA from VLAN 1 to VLAN 70 SERVER
 
 ### Phase D — VLAN 60 schoolmate lab ❌
 - [ ] Build VLAN 60 (LAB, 192.168.60.0/24) on 3560CX
@@ -299,9 +312,9 @@ Live configurations:
 - [x] AAA — aaa new-model, local auth + exec authorization, console + vty hardened, login on-success log
 - [x] NTP — C1111 stratum 2, all devices stratum 3
 - [x] RESTCONF — enabled on C1111, Python queries verified
-- [ ] OSPFv2 adjacency C1111 ↔ 3560CX — pending Phase B
-- [ ] HSRP — pending Phase B
-- [ ] EtherChannel — pending Phase B
+- [x] OSPFv2 adjacency C1111 ↔ 3560CX — FULL both ways (Jun 1, 2026)
+- [x] HSRP — staged on 3560CX for VLANs 1,10,20,30,31,40,50,99 (Jun 1, 2026)
+- [ ] EtherChannel — pending
 - [x] STP root bridge — 3560CX confirmed root (Jun 1, 2026)
 - [ ] PortFast + BPDU Guard on access ports — pending
 
@@ -324,13 +337,14 @@ Live configurations:
 | Device | Status | Notes |
 |---|---|---|
 | Cisco C1111-4PWB (JLM-LAB-R1) | ✅ Production | OSPF, IPv6, NTP, RESTCONF live |
-| Catalyst 3560CX-8PC-S (JLM-LAB-SW1) | 🔄 Phase A complete | VLANs, SVIs, ACLs, DHCP snooping, DAI staged |
+| Catalyst 3560CX-8PC-S (JLM-LAB-SW1) | ✅ Production | Active L3 core — Phase B complete Jun 1, 2026 · VLAN gateways, HSRP VIPs, OSPFv2, STP root, trunks to GS308EP + GS316EP |
 | NETGEAR GS308EP | ✅ Production | VLAN 50 corrected, mgmt IP locked |
 | NETGEAR GS316EP | ✅ Production | VLAN 50 added May 19 |
 | UniFi U6+ APs (×2) | ✅ Production | 5 SSIDs, desk-mounted pending ceiling mount |
 | Raspberry Pi 4B | ✅ Production | Pi-hole, UniFi, Mosquitto, CUPS, NTP client |
 | Acer Server | ✅ Production | Docker: MCP + Ngrok, Streamlit, NTP client |
-| Proxmox Server (pve) | ✅ Live | Proxmox VE · 192.168.100.10 · SN770 2TB NVMe vmstore · Samsung 860 EVO OS + backup vault · Tailscale 100.71.239.21 · VLAN 70 cabling pending |
+| Proxmox Server / ARIA (pve) | ✅ Live | Proxmox VE · 192.168.100.10 · nic1 Intel I225V · SN770 2TB NVMe vmstore · Tailscale 100.71.239.21 · Comet KVM + WoL active · VLAN 70 cutover pending |
+| Comet GL-RM1PE KVM | ✅ Temporary active | VLAN 1 · 192.168.100.11 · PoE from 3560CX Gi0/5 · KVM + WoL PASS · ATX board pending (defective returned) |
 
 ---
 
@@ -350,4 +364,4 @@ Live configurations:
 
 ---
 
-*Last updated: May 30, 2026 (SX950U added)*
+*Last updated: Jun 4, 2026 (Phase C.1 — Comet KVM + WoL active)*

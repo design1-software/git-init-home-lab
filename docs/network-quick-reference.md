@@ -23,7 +23,8 @@
 | UniFi AP #2 | 192.168.99.11 | 99 (MGMT/NATIVE) | 6C:63:F8:A5:73:AD | Via UniFi Controller |
 | XB8 (bridge mode) | Not routable (modem only) | — | — | Physical access only. Factory reset: hold reset 30 sec |
 | Catalyst 3560CX (JLM-LAB-SW1) | 192.168.10.1 (HSRP VIP) / 192.168.199.2 (SSH) | All production VLANs | — | `ssh -oKexAlgorithms=+diffie-hellman-group14-sha1,diffie-hellman-group-exchange-sha1 -oHostKeyAlgorithms=+ssh-rsa admin@192.168.199.2` |
-| Proxmox Server (pve) | 192.168.100.10 :8006 (web UI) | 1 (VLAN 70 cabling pending) | — | `https://192.168.100.10:8006` · Tailscale 100.71.239.21 |
+| Proxmox Server (ARIA / pve) | 192.168.100.10 :8006 (web UI) | 1 (temp — VLAN 70 pending) | 00:1B:41:0A:05:09 (nic1 Intel) | `https://192.168.100.10:8006` · Tailscale 100.71.239.21 · 3560CX Gi0/4 |
+| Comet GL-RM1PE KVM | 192.168.100.11 (web UI) | 1 (temp — VLAN 10 pending) | 94:83:C4:D0:C7:BF | `http://192.168.100.11` · PoE from 3560CX Gi0/5 (15.4W) |
 
 ---
 
@@ -67,7 +68,8 @@
 | Gi0/1 | C1111 GE0/1/0 | Routed (no switchport) | TRANSIT — 192.168.199.2/30 |
 | Gi0/2 | GS308EP Port 1 | Trunk | Production access-layer switch |
 | Gi0/3 | GS316EP Port 15 | Trunk | Household access-layer switch |
-| Gi0/4 | Proxmox Server | Trunk (reserved) | Currently down — Proxmox VLAN 70 cabling pending |
+| Gi0/4 | ARIA Proxmox Server (nic1, Intel I225V) | Access (temp VLAN 1) | Temporary — VLAN 70 pending Phase C |
+| Gi0/5 | Comet GL-RM1PE KVM (PoE) | Access (temp VLAN 1) | Temporary — VLAN 10 MGMT pending Phase C.1 |
 
 ---
 
@@ -205,8 +207,10 @@
 
 - **GS308EP and GS316EP web UIs** are on VLAN 1 (192.168.100.0/24). The C1111 routes between VLAN 20 and VLAN 1 — reach them directly at `http://192.168.100.95` (GS308EP) and `http://192.168.100.96` (GS316EP) from any routed VLAN. No static IP workaround needed.
 - **Cisco HTTP management UI** is accessible at `http://192.168.99.1` — disable this at Phase B cutover (hardening task).
-- **3560CX** (JLM-LAB-SW1) — Active L3 core. SSH at `192.168.199.2` (TRANSIT SVI). Gi0/1 = routed TRANSIT to C1111 · Gi0/2 = trunk to GS308EP · Gi0/3 = trunk to GS316EP · Gi0/4 = reserved for Proxmox (currently down).
+- **3560CX** (JLM-LAB-SW1) — Active L3 core. SSH at `192.168.199.2` (TRANSIT SVI). Gi0/1 = routed TRANSIT to C1111 · Gi0/2 = trunk to GS308EP · Gi0/3 = trunk to GS316EP · Gi0/4 = ARIA Proxmox (temp VLAN 1 access) · Gi0/5 = Comet KVM (temp VLAN 1 PoE).
+- **ARIA Proxmox (pve)** — temporary VLAN 1, `192.168.100.10`. Management NIC = `nic1` (Intel I225V, MAC `00:1B:41:0A:05:09`). Tailscale: `pve / 100.71.239.21`. Target: VLAN 70, `192.168.70.10`.
+- **Comet GL-RM1PE KVM** — temporary VLAN 1, `192.168.100.11`. PoE from 3560CX Gi0/5. KVM video + keyboard + BIOS access confirmed PASS. WoL power-on PASS. ATX control board pending (defective original returned).
 
 ---
 
-*Last verified: May 31, 2026*
+*Last verified: Jun 4, 2026*
