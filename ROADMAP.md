@@ -246,6 +246,55 @@
 
 ---
 
+## Phase AI: IT Enterprise Training Platform 🔄 DESIGN PHASE
+
+> ARIA's mission is not just to host VMs. ARIA is an **IT Enterprise Training Platform**. The AI Mentor is the intelligence layer that helps students learn by guiding them through real infrastructure tasks without giving away answers. No deployment until ATX board installed and ARIA is on VLAN 70.
+
+### Phase AI-1 — Mentor Design ✅ COMPLETE (Jun 4, 2026)
+- [x] Create `docs/ai-mentor-architecture.md` — purpose, behavior, guardrails, MVP architecture, phase roadmap
+- [x] Define mentor behavior model and operating flow
+- [x] Define first 10 training ticket scenarios
+- [x] Choose ticketing platform direction — **Zammad** (modern UI, closer to real-world service desks)
+
+### Phase AI-2 — Knowledge Base Design 🔲
+- [ ] Define source curation — which repo docs feed the mentor
+- [ ] Design vector database structure (ChromaDB or similar)
+- [ ] Define update workflow — how mentor knowledge stays current with repo
+
+### Phase AI-3 — Ticketing Integration Design 🔲
+- [ ] Design Zammad instance for lab — user roles, ticket categories, SLA levels
+- [ ] Define AI Mentor → Zammad event hooks
+- [ ] Create ticket template structure matching `labs/helpdesk/` scenarios
+
+### Phase AI-4 — Model & Architecture Decision 🔲
+- [ ] Finalize API-based vs local LLM for MVP (recommendation: API-based first)
+- [ ] Define backend framework — FastAPI (Python) recommended
+- [ ] Define session logging schema — every response tied to ticket ID + student ID
+
+### Phase AI-5 — Guardrails & Prompt Engineering 🔲 (pending ARIA VLAN 70)
+- [ ] Write and test system prompt — mentor persona, scope limits, escalation behavior
+- [ ] Validate no destructive-command behavior
+- [ ] Validate evidence-first enforcement
+- [ ] Test Cisco-specific rules: show → explain risk → rollback → confirm → config
+
+### Phase AI-6 — First Lab Use Cases 🔲 (pending ARIA VLAN 70)
+- [x] `labs/helpdesk/ticket-001-dns-failure.md`
+- [x] `labs/helpdesk/ticket-002-vlan-misassignment.md`
+- [x] `labs/helpdesk/ticket-003-proxmox-apt-egress-failure.md` (based on real ARIA incident)
+- [x] `labs/helpdesk/ticket-004-ssh-legacy-kex.md` (based on real Phase B incident)
+- [ ] Tickets 005–010 — access point offline, printer unreachable, MQTT ACL, Proxmox recovery, Wazuh alert, AD login
+
+### Deployment Gate 🔲
+- [ ] ATX control board installed and hard reset validated
+- [ ] ARIA on VLAN 70 (192.168.70.10/24)
+- [ ] Proxmox `vmbr0` bridge configured
+- [ ] Deploy Zammad LXC on ARIA
+- [ ] Deploy AI Mentor backend LXC on ARIA
+- [ ] Deploy vector DB + knowledge base on ARIA
+- [ ] Connect Zammad → AI Mentor → LLM API
+
+---
+
 ## Phase 6: Security Audit & SIEM ❌ NOT STARTED
 
 - [ ] Wazuh log sources: Cisco syslog, Pi-hole query log, Mosquitto, Docker, CUPS
@@ -364,4 +413,4 @@ Live configurations:
 
 ---
 
-*Last updated: Jun 4, 2026 (Phase C.1 — Comet KVM + WoL active)*
+*Last updated: Jun 4, 2026 (Phase AI-1 complete — AI Mentor design + first 4 helpdesk tickets)*
