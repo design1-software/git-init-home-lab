@@ -261,6 +261,12 @@ Four distinct telemetry tiers — each scoped to a specific purpose with no over
 - [x] Physical SAMA V40 power button still functional — PASS (Jun 5, 2026)
 - [ ] Validate Comet reset action — **NOT WIRED**: SAMA V40 has no physical reset button; reset circuit not connected to B650 reset pins. Recovery path: force power-off + power-on via Comet. Not a blocker.
 - **ATX Gate: PASSED WITH NOTE ✅ (Jun 5, 2026)**
+
+**Pre-VLAN 70 migration recovery paths — all confirmed ✅ (Jun 5, 2026)**
+- Comet KVM video/keyboard — PASS
+- Comet ATX remote power-on — PASS
+- Tailscale SSH to `pve` (100.71.239.21) — PASS · 0% packet loss · SSH successful from Mac
+
 - [ ] Move Comet from VLAN 1 to VLAN 10 MGMT
 - [ ] Move ARIA from VLAN 1 to VLAN 70 SERVER
 
@@ -462,4 +468,4 @@ Live configurations:
 
 ---
 
-*Last updated: Jun 5, 2026 (Phase C.1 — ATX Gate PASSED WITH NOTE; remote power control PASS, remote reset not wired / SAMA V40 no reset button; ARIA cleared for VLAN 70 migration and package upgrades)*
+*Last updated: Jun 5, 2026 (Phase C.1 — ATX Gate PASSED; pre-VLAN 70 recovery paths all confirmed: Comet KVM + Comet ATX power + Tailscale SSH)*

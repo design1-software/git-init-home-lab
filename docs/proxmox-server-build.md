@@ -327,6 +327,11 @@ WoL cannot recover from: frozen kernel, hung motherboard, NIC lockup, hard crash
 
 ### VLAN 70 Cutover (Phase C)
 
+**Pre-migration recovery paths — all confirmed (Jun 5, 2026):**
+- [x] Comet KVM video/keyboard — PASS
+- [x] Comet ATX remote power-on — PASS
+- [x] Tailscale SSH to `pve` (100.71.239.21) — PASS · 0% packet loss · SSH successful from Mac
+
 - [ ] Configure Proxmox VLAN-aware `vmbr0` bridge on nic1
 - [ ] Move ARIA from VLAN 1 (`192.168.100.10`) to VLAN 70 (`192.168.70.10/24`)
 - [ ] Move Comet from VLAN 1 to VLAN 10 MGMT
