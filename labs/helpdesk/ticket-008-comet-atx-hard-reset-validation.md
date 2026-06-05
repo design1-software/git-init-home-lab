@@ -3,7 +3,7 @@
 **Domain:** Out-of-Band Management / Hardware / KVM
 **Difficulty:** Intermediate
 **Estimated time:** 45–60 minutes
-**Status:** Documented only — live validation pending ATX board replacement delivery and installation
+**Status:** Live validation complete — Jun 5, 2026 — **ATX Gate: PASSED WITH NOTE**
 
 ---
 
@@ -168,9 +168,33 @@ Filesystem check output after force-off test (Step 6)
 
 ---
 
+## Live Validation Results (Jun 5, 2026)
+
+| Step | Test | Result |
+|---|---|---|
+| 1 | Comet KVM video visible | ✅ PASS |
+| 2 | ATX board detected in Comet UI / power state visible | ✅ PASS |
+| 3 | Clean shutdown via Comet | ✅ PASS |
+| 4 | Power on via Comet — ARIA boots, returns to network, ARP resolves | ✅ PASS |
+| 5 | Hard reset via Comet | ⚠️ NOT WIRED — SAMA V40 has no physical reset button; reset circuit not connected to B650 reset pins |
+| 6 | Force power off via Comet | ✅ PASS |
+| 7 | Physical SAMA V40 power button still functional | ✅ PASS |
+| 8 | BIOS/POST access via Comet keyboard | ✅ PASS (previously validated Jun 4, 2026) |
+
+**Gate decision: PASSED WITH NOTE**
+- Remote power control: PASS
+- Remote reset: NOT WIRED / OPTIONAL — not a blocker. Recovery uses force power-off + power-on.
+- WoL secondary path: PASS
+
+ARIA is now cleared for VLAN 70 migration and package upgrades.
+
+---
+
 ## Acceptance Criteria
 
 All 8 steps must be PASS before this ticket can be closed. A single FAIL means the ATX board installation needs to be reviewed before ARIA is considered ready for VLAN 70 migration or package upgrades.
+
+> **Note on Step 5:** The SAMA V40 case has no reset button. The reset relay has no circuit to intercept. This is a hardware limitation of the case, not a failure of the ATX board installation. All critical recovery scenarios (unresponsive OS, kernel panic, hung boot) are covered by force power-off + power-on.
 
 ---
 

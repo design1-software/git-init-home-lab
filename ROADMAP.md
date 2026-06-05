@@ -118,6 +118,23 @@
 
 **Already in production:** The [closet-monitor](https://github.com/design1-software/closet-monitor) project is a production IoT monitoring pipeline — ESP32 + BME280 → MQTT → Pi → SQLite → Streamlit dashboard.
 
+### Monitoring Architecture
+
+Four distinct telemetry tiers — each scoped to a specific purpose with no overlap:
+
+| Tier | Stack | Host | Scope |
+|---|---|---|---|
+| Physical telemetry | ESP32 · BME280 · MQTT · SQLite · Streamlit | Acer (:8501) | Temperature, humidity, pressure, RSSI, uptime alerts |
+| Infrastructure telemetry | Prometheus · Grafana · snmp_exporter · node_exporter | ARIA VLAN 70 | Cisco CPU/memory/interface/PoE · Proxmox host · Pi system metrics |
+| Security telemetry | Wazuh | ARIA VLAN 70 | Endpoint alerts · log events · file integrity · suspicious activity |
+| Network presence | NetAlertX | Pi | Device discovery · new/unknown device alerts |
+
+**Notification layer:** ntfy — self-hosted on Pi. Future routing from Closet Monitor alerts, Prometheus alertmanager, and Wazuh webhook triggers into a single push notification channel.
+
+> **Design decision:** Prometheus/Grafana does not duplicate the Streamlit closet dashboard. Physical environment telemetry (temperature, humidity, RSSI) stays in the closet-monitor pipeline. Prometheus focuses on infrastructure metrics: Cisco SNMP (C1111 + 3560CX), Proxmox host, and Pi/Acer system metrics via node_exporter. The two stacks will share the ntfy notification layer in a later phase.
+
+### Physical Telemetry — closet-monitor ✅ Production
+
 - [x] ESP32 closet sensor deployed on Gorgeous-Auto (VLAN 31), publishing MQTT
 - [x] Mosquitto broker migrated to Pi (192.168.10.16)
 - [x] SQLite persistence + Streamlit dashboard operational on Acer (:8501)
@@ -126,10 +143,24 @@
 - [x] PoE HAT reinstalled, GPIO fan configured (55°C threshold)
 - [x] IoT devices migrated to Gorgeous-IoT (Ring, Alexa, Ecobee, Somfy, Samsung TV)
 - [x] Health check scripts (PowerShell) written
-- [ ] Netdata on Pi — system + container metrics, per-host dashboards
-- [ ] NetAlertX on Pi — network device presence, new-device alerts
-- [ ] Alert routing via ntfy (self-hosted)
-- [ ] 30-day uptime tracking
+
+### Network Presence + Notifications — Pi (No ARIA dependency)
+
+- [ ] NetAlertX on Pi — device discovery, new/unknown device alerts
+- [ ] ntfy on Pi — self-hosted push notifications; future unified alert routing from Closet Monitor, Prometheus alertmanager, and Wazuh
+
+### Infrastructure Telemetry — ARIA VLAN 70 (Pending ARIA cutover)
+
+- [ ] Prometheus LXC on ARIA
+- [ ] Grafana LXC on ARIA
+- [ ] snmp_exporter — Cisco C1111 + 3560CX: interface throughput/errors, CPU, memory, PoE draw
+- [ ] node_exporter on ARIA host, Pi, and Acer — system metrics (CPU, memory, disk, network)
+- [ ] 30-day uptime tracking via Grafana dashboards
+
+### Security Telemetry — ARIA VLAN 70 (Pending ARIA cutover)
+
+- [ ] Wazuh SIEM LXC on ARIA (also tracked in Phase C and Phase 6)
+- [ ] Wazuh agents on Acer, Pi, ARIA host
 
 ---
 
@@ -208,7 +239,7 @@
 
 ### Phase C.1 — Out-of-Band KVM Management 🔄 IN PROGRESS (Jun 4, 2026)
 
-> **ATX board status:** Original GL-ATXPC defective — returned for replacement. Temporary WoL-based power-on is active. Hard power/reset relay pending ATX board replacement.
+> **ATX board status:** Replacement GL-ATXPC installed Jun 5, 2026. **ATX Gate: PASSED WITH NOTE** — remote power control PASS · remote reset NOT WIRED (SAMA V40 has no physical reset button; reset circuit not connected to B650 reset pins — not a blocker).
 
 - [x] Configure 3560CX Gi0/4 as temporary ARIA VLAN 1 access port (Jun 4, 2026)
 - [x] Configure 3560CX Gi0/5 as temporary Comet PoE VLAN 1 access port (Jun 4, 2026)
@@ -220,11 +251,16 @@
 - [x] Confirm BIOS ErP Disabled — required for WoL standby power (Jun 4, 2026)
 - [x] Wake-on-LAN power-on from Comet: PASS (Jun 4, 2026)
 - [x] Document Gigabyte B650 BIOS findings — PCIe bifurcation supported (contrary to prior info) (Jun 4, 2026)
-- [ ] Install replacement GL-ATXPC / ATX control board
-- [ ] Connect ATX board to B650 F_PANEL header + SAMA V40 front panel
-- [ ] Connect Comet USB-C to ATX board
-- [ ] Validate Comet hard power action
-- [ ] Validate Comet reset action
+- [x] Install replacement GL-ATXPC / ATX control board (Jun 5, 2026)
+- [x] Connect ATX board to B650 F_PANEL header + SAMA V40 front panel (Jun 5, 2026)
+- [x] Connect Comet USB-C to ATX board (Jun 5, 2026)
+- [x] ATX board detected in Comet UI (Jun 5, 2026)
+- [x] Comet power-on ARIA via ATX board — PASS (Jun 5, 2026)
+- [x] Comet viewer shows ARIA booting — PASS (Jun 5, 2026)
+- [x] ARIA returns to network after Comet power-on — PASS · ARP 192.168.100.10 → 001b.410a.0509 (Jun 5, 2026)
+- [x] Physical SAMA V40 power button still functional — PASS (Jun 5, 2026)
+- [ ] Validate Comet reset action — **NOT WIRED**: SAMA V40 has no physical reset button; reset circuit not connected to B650 reset pins. Recovery path: force power-off + power-on via Comet. Not a blocker.
+- **ATX Gate: PASSED WITH NOTE ✅ (Jun 5, 2026)**
 - [ ] Move Comet from VLAN 1 to VLAN 10 MGMT
 - [ ] Move ARIA from VLAN 1 to VLAN 70 SERVER
 
@@ -417,7 +453,7 @@ Live configurations:
 | Phase 1 | Document complex systems clearly |
 | Phase 2 | Design and implement enterprise network segmentation: Cisco IOS XE routing, 802.1Q trunking, VLANs, ACLs, DHCP, NAT, UniFi WiFi, DNS filtering |
 | Phase 3 | Containerize production services, deploy print infrastructure, harden service access, write operational runbooks |
-| Phase 4 | Build end-to-end IoT monitoring pipelines and production observability |
+| Phase 4 | Build end-to-end IoT monitoring pipelines; deploy Prometheus + Grafana for infrastructure telemetry, Wazuh for security monitoring, and NetAlertX for network presence — four distinct monitoring tiers with a unified ntfy notification layer |
 | Phase 5 | Execute a zero-downtime L3 network cutover and deploy a hypervisor platform |
 | Phase 6 | Deploy and operate a SIEM for continuous security monitoring |
 | Phase 7 | Implement Infrastructure as Code — Ansible, Netmiko, RESTCONF Python API |
@@ -426,4 +462,4 @@ Live configurations:
 
 ---
 
-*Last updated: Jun 4, 2026 (Phase AI-6 documented — tickets 007–010 written, live validation pending ARIA VLAN 70)*
+*Last updated: Jun 5, 2026 (Phase C.1 — ATX Gate PASSED WITH NOTE; remote power control PASS, remote reset not wired / SAMA V40 no reset button; ARIA cleared for VLAN 70 migration and package upgrades)*

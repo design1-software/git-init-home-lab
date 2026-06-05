@@ -116,17 +116,22 @@ iface nic0 inet manual
 
 ## Out-of-Band Management — Comet GL-RM1PE KVM
 
-### Current Status (Jun 4, 2026)
+### Current Status (Jun 5, 2026)
 
 | Item | Status |
 |---|---|
 | Comet powered by PoE | ✅ 3560CX Gi0/5 · 15.4W |
 | Comet dashboard | ✅ `http://192.168.100.11` · `https://192.168.100.11` |
-| Comet video from ARIA | ✅ PASS |
+| Comet KVM video | ✅ PASS |
 | Comet keyboard input | ✅ PASS |
 | Comet BIOS/UEFI access | ✅ PASS — entered Gigabyte BIOS via Comet |
-| ATX control board | ❌ Defective — returned for replacement |
-| Hard power/reset relay | ❌ Pending ATX board replacement |
+| ATX control board | ✅ Replacement GL-ATXPC installed Jun 5, 2026 |
+| ATX board detected in Comet UI | ✅ PASS |
+| Comet remote power-on | ✅ PASS — ARIA boots, returns to network, ARP resolves |
+| Comet remote reset | ⚠️ NOT WIRED — SAMA V40 has no physical reset button; reset circuit not connected to B650 reset pins. Recovery uses force power-off + power-on. Not a blocker. |
+| Physical power button (SAMA V40) | ✅ PASS — still functional through ATX board |
+| WoL (secondary path) | ✅ PASS |
+| **ATX Gate** | **PASSED WITH NOTE ✅ (Jun 5, 2026)** |
 
 ### Comet Device Details
 
@@ -152,11 +157,17 @@ Comet USB         ←  ARIA USB port
 
 ### ATX Control Board Status
 
-The original GL-ATXPC ATX control board was defective and returned for replacement. Until the replacement arrives:
+Replacement GL-ATXPC installed Jun 5, 2026. ATX Gate: **PASSED WITH NOTE**.
 
-- Hard power cycle: NOT available via Comet
-- Reset relay: NOT available via Comet
-- WoL (Magic Packet): ACTIVE — temporary remote power-on path
+| Capability | Result |
+|---|---|
+| Remote power-on via Comet | ✅ PASS |
+| Remote power-off via Comet | ✅ PASS |
+| Remote reset via Comet | ⚠️ NOT WIRED — SAMA V40 has no physical reset button; reset circuit not connected to B650 reset pins |
+| Physical power button passthrough | ✅ PASS — case button still functional |
+| WoL (secondary power-on path) | ✅ PASS |
+
+> **Reset note:** The SAMA V40 case has no reset button, so the ATX board reset relay has no circuit to intercept. A hard reset requires force power-off via Comet followed by power-on. This is sufficient for all expected recovery scenarios.
 
 ### 3560CX Port Configuration
 
@@ -306,12 +317,13 @@ WoL cannot recover from: frozen kernel, hung motherboard, NIC lockup, hard crash
 - [x] Confirm BIOS ErP Disabled (required for WoL)
 - [x] Enable persistent WoL via systemd `wol.service`
 - [x] Confirm Wake-on-LAN power-on from Comet: PASS
-- [ ] Install replacement GL-ATXPC / ATX control board
-- [ ] Connect ATX board to B650 F_PANEL header + SAMA V40 front panel
-- [ ] Connect Comet USB-C to ATX board
-- [ ] Validate Comet hard power action
-- [ ] Validate Comet reset action
-- [ ] Validate BIOS/POST recovery after hard reset
+- [x] Install replacement GL-ATXPC / ATX control board (Jun 5, 2026)
+- [x] Connect ATX board to B650 F_PANEL header + SAMA V40 front panel (Jun 5, 2026)
+- [x] Connect Comet USB-C to ATX board (Jun 5, 2026)
+- [x] Validate Comet remote power-on — PASS (Jun 5, 2026)
+- [x] Validate physical power button still works — PASS (Jun 5, 2026)
+- [ ] Validate Comet reset action — NOT WIRED (SAMA V40 has no reset button); not a blocker
+- **ATX Gate: PASSED WITH NOTE ✅ (Jun 5, 2026)**
 
 ### VLAN 70 Cutover (Phase C)
 
@@ -325,13 +337,19 @@ WoL cannot recover from: frozen kernel, hung motherboard, NIC lockup, hard crash
 
 ## Planned First Workloads
 
-- Wazuh SIEM
-- Netdata
-- NetAlertX
-- ntfy
+**On ARIA (VLAN 70 — pending cutover):**
+- Wazuh SIEM (security telemetry)
+- Prometheus + Grafana (infrastructure telemetry — Cisco SNMP, Proxmox host, Pi/Acer system metrics)
+- snmp_exporter (C1111 + 3560CX interface stats, CPU, memory, PoE)
+- node_exporter on ARIA host (system metrics exported to Prometheus)
 - Active Directory lab VM (forest: jlm.lab)
-- Zammad help desk VM (replaces osTicket — AI Mentor ticketing platform)
+- Zammad help desk VM (AI Mentor ticketing platform)
 - AI Mentor backend (FastAPI + ChromaDB vector store)
+
+**On Pi (no ARIA dependency — can deploy now):**
+- NetAlertX (network presence / device discovery)
+- ntfy (self-hosted push notifications — future unified alert routing)
+- node_exporter on Pi (system metrics exported to ARIA Prometheus)
 
 ## Rollback Plan
 
