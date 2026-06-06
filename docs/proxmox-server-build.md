@@ -368,7 +368,7 @@ Student containers (cloned from `lab-linux-01`) are accessed via student account
 
 | CT ID | Name | IP | Purpose |
 |---|---|---|---|
-| 102 | student-linux-01 | 192.168.70.12 | First student Linux troubleshooting endpoint · SSH running |
+| 102 | student-linux-01 | 192.168.70.12 | First student Linux troubleshooting endpoint · named trainee account created · SSH + controlled sudo validated · student workflow confirmed |
 
 **Template approach:** baseline template contains only the OS and minimal configuration. Troubleshooting tools, lab-specific packages, and any scenario setup are added to clones after deployment — not to the template itself. Future template rebuilds may include a curated baseline toolset before conversion.
 

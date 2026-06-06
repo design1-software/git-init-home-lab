@@ -233,7 +233,12 @@ Four distinct telemetry tiers — each scoped to a specific purpose with no over
 - [x] Add to Tailscale mesh — pve (100.71.239.21) ✅ online
 - [ ] Enable Tailscale subnet routing for VLAN 60 (LAB) → Ohio schoolmate access
 - [x] First LXC container deployed — CT 101 `lab-linux-01` · 192.168.70.11/24 · VLAN 70 · internet PASS · vmbr0 bridge validated (Jun 5, 2026)
-- [x] CT 101 converted to Debian 13 baseline LXC template after network validation — student containers cloned from template, troubleshooting tools added to clones only (Jun 5, 2026)
+- [x] CT 101 converted to Debian 13 baseline LXC template — student containers cloned from template; troubleshooting tools added to clones, not to template (Jun 5, 2026)
+- [x] CT 102 `student-linux-01` deployed from template — 192.168.70.12/24 · VLAN 70 · SSH running (Jun 5, 2026)
+- [x] First named trainee account created on CT 102 (Jun 5, 2026)
+- [x] Student SSH access to CT 102 validated (Jun 5, 2026)
+- [x] Controlled sudo escalation validated — student account, scoped permissions (Jun 5, 2026)
+- [x] Realistic student workflow confirmed on CT 102 (Jun 5, 2026)
 - [ ] Deploy Wazuh SIEM as LXC container on Proxmox
 - [ ] Install Wazuh agents on Acer, Pi 4B, and Proxmox host
 - [ ] Deploy Netdata, NetAlertX, ntfy (completing Phase 4)
