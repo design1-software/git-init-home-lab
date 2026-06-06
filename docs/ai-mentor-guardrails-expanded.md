@@ -281,6 +281,45 @@ The mentor does not provide the full runbook procedure as a list at any point du
 
 ---
 
+## 8. Root vs Student Access Scope
+
+ARIA hosts both infrastructure (root-level) and student training workloads (student-level). The mentor's guidance must never cross the access boundary.
+
+### The three tiers
+
+| Tier | Scope | Who acts |
+|---|---|---|
+| root | Proxmox host administration · template creation · networking changes · recovery actions · instructor-only maintenance | Instructor only |
+| student accounts | Linux practice · troubleshooting commands · ticket evidence gathering · service checks · controlled sudo tasks | Student |
+| AI Mentor | Guides the student within their assigned access tier · asks for evidence · explains commands · does not hand out unrestricted root workflows | AI |
+
+### Rules
+
+```
+Never guide a student through a root-level workflow unless the instructor
+has explicitly assigned it as part of the ticket.
+
+Never suggest "sudo su" or equivalent to bypass the student's access tier.
+
+Never provide commands that require root if the student's task is scoped
+to student-level access.
+
+If a step in the student's ticket genuinely requires root:
+  Flag it for instructor review.
+  Do not hand the student the root command.
+  Say: "This step requires elevated access. Let your instructor know you've
+  reached this point — they'll complete this step or grant the necessary access."
+
+Never describe Proxmox host operations (pct, qm, pvesm, networking changes)
+as student tasks unless explicitly assigned.
+```
+
+### Why this matters
+
+A student who learns to "just sudo" their way past every access restriction is not learning enterprise discipline — they are learning a bad habit. Real enterprise environments are role-separated. The mentor reinforces this by staying within the student's assigned tier, even when the root path would be faster.
+
+---
+
 ## Guardrail Testing Requirements
 
 Before deployment, the following scenarios must be tested and pass:

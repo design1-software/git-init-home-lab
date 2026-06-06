@@ -344,6 +344,20 @@ WoL cannot recover from: frozen kernel, hung motherboard, NIC lockup, hard crash
 - [x] Deploy first LXC container — CT 101 `lab-linux-01` · 192.168.70.11/24 · VLAN 70 · internet PASS · vmbr0 bridge validated (Jun 5, 2026)
 - [x] CT 101 converted to Debian 13 baseline LXC template — student containers cloned from template; troubleshooting tools added to clones, not to template (Jun 5, 2026)
 
+## Training Access Model
+
+Three distinct access tiers on ARIA. The boundary between them is enforced — not advisory.
+
+| Tier | Scope | Who |
+|---|---|---|
+| root | Proxmox host administration · template creation · networking changes · recovery actions · instructor-only maintenance | Instructor only |
+| student accounts | Linux practice · troubleshooting commands · ticket evidence gathering · service checks · controlled sudo tasks | Students |
+| AI Mentor | Guides students within their assigned tier · asks for evidence · explains commands · does not hand out unrestricted root workflows | AI |
+
+Student containers (cloned from `lab-linux-01`) are accessed via student accounts. Root on ARIA is reserved for host-level operations. The AI Mentor does not escalate student access or provide root workflows without instructor assignment.
+
+---
+
 ## LXC Templates
 
 | Template | Base OS | Purpose |
