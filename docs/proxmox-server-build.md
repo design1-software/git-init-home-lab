@@ -341,7 +341,18 @@ WoL cannot recover from: frozen kernel, hung motherboard, NIC lockup, hard crash
 - [x] Move Comet from VLAN 1 to VLAN 10 MGMT — 192.168.10.12 · PoE + KVM + ATX UI all PASS (Jun 5, 2026)
 - [x] Verify Proxmox UI at `https://192.168.70.10:8006` — PASS (Jun 5, 2026)
 - [x] Verify Tailscale online after VLAN 70 cutover — PASS (Jun 5, 2026)
-- [x] Deploy first LXC container — CT 101 `lab-linux-01` · 192.168.70.11/24 · VLAN 70 · internet PASS (0% packet loss) · vmbr0 bridge validated for container networking (Jun 5, 2026)
+- [x] Deploy first LXC container — CT 101 `lab-linux-01` · 192.168.70.11/24 · VLAN 70 · internet PASS · vmbr0 bridge validated (Jun 5, 2026)
+- [x] CT 101 converted to Debian 13 baseline LXC template — student containers cloned from template; troubleshooting tools added to clones, not to template (Jun 5, 2026)
+
+## LXC Templates
+
+| Template | Base OS | Purpose |
+|---|---|---|
+| lab-linux-01 | Debian 13 (trixie) | Baseline student LXC — clone to deploy lab containers |
+
+**Template approach:** baseline template contains only the OS and minimal configuration. Troubleshooting tools, lab-specific packages, and any scenario setup are added to clones after deployment — not to the template itself. Future template rebuilds may include a curated baseline toolset before conversion.
+
+---
 
 ## Planned First Workloads
 
