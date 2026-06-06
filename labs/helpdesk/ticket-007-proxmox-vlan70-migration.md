@@ -3,7 +3,7 @@
 **Domain:** Proxmox / Networking / VLAN
 **Difficulty:** Advanced
 **Estimated time:** 60–90 minutes
-**Status:** Documented only — live validation pending ARIA VLAN 70 and workload deployment
+**Status:** Live validation complete — Jun 5, 2026 — ARIA on VLAN 70 · 192.168.70.10 · vmbr0 bridge active · ping + ARP + web UI all PASS
 
 ---
 

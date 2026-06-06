@@ -64,18 +64,17 @@ Dedicated hypervisor node for SERVER and LAB workloads in the home lab. Hostname
 
 ## Network
 
-### Current Temporary State (Jun 4, 2026)
-
-ARIA is temporarily on VLAN 1 while Comet KVM and WoL are being validated.
+### Current State (Jun 5, 2026) — VLAN 70 Active
 
 ```
 Hostname: pve
-IP:       192.168.100.10/24
-Gateway:  192.168.100.1 (3560CX VLAN 1 SVI)
+IP:       192.168.70.10/24
+Gateway:  192.168.70.1 (3560CX HSRP VIP, VLAN 70)
 DNS:      192.168.10.16 (Pi-hole, VLAN 10)
-NIC:      nic1 (Intel I225V — active management NIC)
+NIC:      nic1 (Intel I225V — physical uplink, no IP)
+Bridge:   vmbr0 (Proxmox management bridge)
 MAC:      00:1B:41:0A:05:09
-Port:     3560CX Gi0/4 (temporary VLAN 1 access port)
+Port:     3560CX Gi0/4 (access VLAN 70)
 ```
 
 ARIA `/etc/network/interfaces`:
@@ -85,16 +84,20 @@ auto lo
 iface lo inet loopback
 
 auto nic1
-iface nic1 inet static
-    address 192.168.100.10/24
-    gateway 192.168.100.1
+iface nic1 inet manual
+
+auto vmbr0
+iface vmbr0 inet static
+    address 192.168.70.10/24
+    gateway 192.168.70.1
     dns-nameservers 192.168.10.16
+    bridge-ports nic1
+    bridge-stp off
+    bridge-fd 0
 
 auto nic0
 iface nic0 inet manual
 ```
-
-> ARIA currently has its IP directly on `nic1`. It is not yet using a standard Proxmox `vmbr0` bridge. This should be corrected during the VLAN 70 migration.
 
 ### NIC Identification
 
@@ -137,12 +140,12 @@ iface nic0 inet manual
 
 ```
 Device:    Comet GL-RM1PE
-IP:        192.168.100.11
+IP:        192.168.10.12
 MAC:       94:83:C4:D0:C7:BF
-Switchport: 3560CX Gi0/5
-VLAN:      1 (temporary — target VLAN 10 MGMT)
+Switchport: 3560CX Gi0/5 (access VLAN 10)
+VLAN:      10 (MGMT — permanent)
 Power:     PoE from 3560CX (15.4W, IEEE PD)
-Access:    http://192.168.100.11 or https://192.168.100.11
+Access:    http://192.168.10.12 or https://192.168.10.12
 ```
 
 ### Cabling
@@ -206,13 +209,13 @@ end
 
 > `ip verify source` was removed from Gi0/5 to prevent IP Source Guard from blocking the Comet during DHCP/WoL testing.
 
-### Target Architecture (After ATX Board Replacement)
+### Final Architecture (Jun 5, 2026) ✅
 
 ```
-Comet → VLAN 10 MGMT (permanent)
-ARIA  → VLAN 70 SERVER (permanent)
+Comet → VLAN 10 MGMT · 192.168.10.12 · 3560CX Gi0/5 (PoE)
+ARIA  → VLAN 70 SERVER · 192.168.70.10 · 3560CX Gi0/4
 ATX board → Gigabyte B650 F_PANEL header + SAMA V40 front-panel wiring
-Comet USB-C → ATX board (power/reset relay)
+Comet USB-C → ATX board (power relay active · reset not wired — SAMA V40 has no reset button)
 ```
 
 ## Wake-on-LAN Configuration
@@ -332,12 +335,12 @@ WoL cannot recover from: frozen kernel, hung motherboard, NIC lockup, hard crash
 - [x] Comet ATX remote power-on — PASS
 - [x] Tailscale SSH to `pve` (100.71.239.21) — PASS · 0% packet loss · SSH successful from Mac
 
-- [ ] Configure Proxmox VLAN-aware `vmbr0` bridge on nic1
-- [ ] Move ARIA from VLAN 1 (`192.168.100.10`) to VLAN 70 (`192.168.70.10/24`)
-- [ ] Move Comet from VLAN 1 to VLAN 10 MGMT
-- [ ] Reserve permanent Comet management IP on VLAN 10
-- [ ] Verify Proxmox UI at `https://192.168.70.10:8006`
-- [ ] Verify Tailscale fallback after VLAN 70 cutover
+- [x] Configure Proxmox `vmbr0` bridge — nic1 = physical uplink (no IP), vmbr0 = management bridge (Jun 5, 2026)
+- [x] Move ARIA from VLAN 1 to VLAN 70 — 192.168.70.10/24 · ping + ARP + internet PASS (Jun 5, 2026)
+- [x] C1111 NAT ACL updated — 192.168.70.0/24 added to PAT overload rule (Jun 5, 2026)
+- [x] Move Comet from VLAN 1 to VLAN 10 MGMT — 192.168.10.12 · PoE + KVM + ATX UI all PASS (Jun 5, 2026)
+- [x] Verify Proxmox UI at `https://192.168.70.10:8006` — PASS (Jun 5, 2026)
+- [x] Verify Tailscale online after VLAN 70 cutover — PASS (Jun 5, 2026)
 - [ ] Deploy first VM or LXC workload
 
 ## Planned First Workloads

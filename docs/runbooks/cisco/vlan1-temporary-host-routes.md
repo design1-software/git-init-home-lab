@@ -1,6 +1,6 @@
 # Runbook — VLAN 1 Temporary Host Routes on C1111
 
-**Status:** Active intentional technical debt — do not remove until removal conditions are met.
+**Status:** Two of three removal conditions met (Jun 5, 2026) — pending C1111 Vlan1 SVI removal only.
 
 ---
 
@@ -77,11 +77,13 @@ Both should succeed. If either fails, check that the routes are present and that
 **Remove ALL three routes only when ALL of the following are true:**
 
 ```
-[ ] ARIA has moved from VLAN 1 (192.168.100.10) to VLAN 70 (192.168.70.10)
-[ ] Comet has moved from VLAN 1 (192.168.100.11) to VLAN 10 MGMT
-[ ] C1111 Vlan1 SVI has been removed (post-cutover cleanup complete)
+[x] ARIA has moved from VLAN 1 (192.168.100.10) to VLAN 70 (192.168.70.10) — DONE Jun 5, 2026
+[x] Comet has moved from VLAN 1 (192.168.100.11) to VLAN 10 MGMT (192.168.10.12) — DONE Jun 5, 2026
+[ ] C1111 Vlan1 SVI has been removed (post-cutover cleanup complete) — PENDING
 [ ] No remaining devices on VLAN 1 require internet egress through C1111 NAT
 ```
+
+> **One condition remaining.** The `/32` routes stay until the C1111 Vlan1 SVI is removed. At that point the directly-connected `192.168.100.0/24` route disappears from C1111's table and all three `/32` overrides can be removed together.
 
 Do not remove individual routes piecemeal as devices move. Remove all three together after the C1111 VLAN 1 SVI is gone — at that point the directly-connected `/24` route disappears from C1111's table and the `/32` overrides are no longer needed.
 

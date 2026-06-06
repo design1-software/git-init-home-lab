@@ -168,7 +168,7 @@ Four distinct telemetry tiers — each scoped to a specific purpose with no over
 
 **Goal:** Promote 3560CX to L3 core, retire C1111 as edge-only, bring up custom Proxmox server on VLAN 70.
 
-> Proxmox server ✅ live (192.168.100.10, Tailscale pve 100.71.239.21) — Phase C base install complete. VLAN 70 cabling and VM workloads pending Phase B/C cutover.
+> Proxmox server ✅ live (192.168.70.10, Tailscale pve 100.71.239.21) — Phase C complete (Jun 5, 2026). ARIA on VLAN 70 · vmbr0 bridge active · C1111 NAT updated · internet egress PASS. VM workloads next.
 
 ### Phase A — Pre-stage 3560CX offline ✅ COMPLETE (May 19, 2026)
 - [x] Build VLAN database on 3560CX (VLANs 1,10,20,30,31,40,50,60,70,99,199)
@@ -222,14 +222,14 @@ Four distinct telemetry tiers — each scoped to a specific purpose with no over
 - [ ] Remove 3560CX static default once OSPF-learned `O*E2 0.0.0.0/0` is stable
 - [ ] True HSRP redundancy (future): requires a second L3-capable device L2-adjacent to production VLANs — not achievable with current topology post-cutover
 
-### Phase C — Proxmox server bring-up 🔄 IN PROGRESS
+### Phase C — Proxmox server bring-up ✅ COMPLETE (Jun 5, 2026)
 - [x] Assemble custom ATX server (Ryzen 9 7900X, B650, PA120 SE, SAMA V40, SL-650G)
   - [x] RAM (DDR5 UDIMM 64GB) — installed
   - [x] NVMe (WD Black SN770 2TB) — installed
 - [x] Install Proxmox VE bare metal — live at 192.168.100.10 :8006
 - [x] Set PPT power cap in motherboard BIOS settings for server efficiency
-- [ ] Assign static IP on VLAN 70 (SERVER, 192.168.70.0/24) — pending Phase B cable cutover
-- [ ] Cable ARIA nic1 (Intel I225V) to 3560CX Gi0/4 as VLAN 70 trunk — management NIC; nic0 (Realtek RTL8125) reserved for future VM trunk
+- [x] Assign static IP on VLAN 70 (SERVER, 192.168.70.10/24) — COMPLETE (Jun 5, 2026)
+- [x] Configure 3560CX Gi0/4 as VLAN 70 access port for ARIA — nic1 = physical uplink (no IP), vmbr0 = management bridge, 192.168.70.10/24 (Jun 5, 2026) · nic0 (Realtek RTL8125) reserved for future VM trunk
 - [x] Add to Tailscale mesh — pve (100.71.239.21) ✅ online
 - [ ] Enable Tailscale subnet routing for VLAN 60 (LAB) → Ohio schoolmate access
 - [ ] Deploy Wazuh SIEM as LXC container on Proxmox
@@ -237,7 +237,7 @@ Four distinct telemetry tiers — each scoped to a specific purpose with no over
 - [ ] Deploy Netdata, NetAlertX, ntfy (completing Phase 4)
 
 
-### Phase C.1 — Out-of-Band KVM Management 🔄 IN PROGRESS (Jun 4, 2026)
+### Phase C.1 — Out-of-Band KVM Management ✅ COMPLETE (Jun 5, 2026)
 
 > **ATX board status:** Replacement GL-ATXPC installed Jun 5, 2026. **ATX Gate: PASSED WITH NOTE** — remote power control PASS · remote reset NOT WIRED (SAMA V40 has no physical reset button; reset circuit not connected to B650 reset pins — not a blocker).
 
@@ -267,8 +267,11 @@ Four distinct telemetry tiers — each scoped to a specific purpose with no over
 - Comet ATX remote power-on — PASS
 - Tailscale SSH to `pve` (100.71.239.21) — PASS · 0% packet loss · SSH successful from Mac
 
-- [ ] Move Comet from VLAN 1 to VLAN 10 MGMT
-- [ ] Move ARIA from VLAN 1 to VLAN 70 SERVER
+- [x] Move ARIA from VLAN 1 to VLAN 70 SERVER — 192.168.70.10 · vmbr0 bridge active (Jun 5, 2026)
+- [x] C1111 NAT ACL updated — 192.168.70.0/24 added to PAT overload rule · VLAN 70 internet egress PASS (Jun 5, 2026)
+- [x] WoL still enabled after VLAN 70 migration (Jun 5, 2026)
+- [x] Tailscale online after VLAN 70 migration (Jun 5, 2026)
+- [x] Move Comet from VLAN 1 to VLAN 10 MGMT — 192.168.10.12 · PoE active · KVM + ATX UI confirmed (Jun 5, 2026)
 
 ### Phase D — VLAN 60 schoolmate lab ❌
 - [ ] Build VLAN 60 (LAB, 192.168.60.0/24) on 3560CX
@@ -447,8 +450,8 @@ Live configurations:
 | UniFi U6+ APs (×2) | ✅ Production | 5 SSIDs, desk-mounted pending ceiling mount |
 | Raspberry Pi 4B | ✅ Production | Pi-hole, UniFi, Mosquitto, CUPS, NTP client |
 | Acer Server | ✅ Production | Docker: MCP + Ngrok, Streamlit, NTP client |
-| Proxmox Server / ARIA (pve) | ✅ Live | Proxmox VE · 192.168.100.10 · nic1 Intel I225V · SN770 2TB NVMe vmstore · Tailscale 100.71.239.21 · Comet KVM + WoL active · VLAN 70 cutover pending |
-| Comet GL-RM1PE KVM | ✅ Temporary active | VLAN 1 · 192.168.100.11 · PoE from 3560CX Gi0/5 · KVM + WoL PASS · ATX board pending (defective returned) |
+| Proxmox Server / ARIA (pve) | ✅ Production | Proxmox VE · 192.168.70.10 · VLAN 70 SERVER · vmbr0 bridge on nic1 Intel I225V · SN770 2TB NVMe vmstore · Tailscale 100.71.239.21 · Phase C complete Jun 5, 2026 |
+| Comet GL-RM1PE KVM | ✅ Production | VLAN 10 MGMT · 192.168.10.12 · PoE from 3560CX Gi0/5 · KVM + ATX power control PASS · Remote reset not wired (SAMA V40 no reset button) |
 
 ---
 
@@ -468,4 +471,4 @@ Live configurations:
 
 ---
 
-*Last updated: Jun 5, 2026 (Phase C.1 — ATX Gate PASSED; pre-VLAN 70 recovery paths all confirmed: Comet KVM + Comet ATX power + Tailscale SSH)*
+*Last updated: Jun 5, 2026 (Phase C + C.1 COMPLETE — ARIA on VLAN 70 · 192.168.70.10 · vmbr0 bridge · Comet on VLAN 10 MGMT · 192.168.10.12 · VLAN 1 host route removal pending C1111 SVI cleanup only)*
