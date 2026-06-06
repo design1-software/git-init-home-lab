@@ -232,6 +232,7 @@ Four distinct telemetry tiers — each scoped to a specific purpose with no over
 - [x] Configure 3560CX Gi0/4 as VLAN 70 access port for ARIA — nic1 = physical uplink (no IP), vmbr0 = management bridge, 192.168.70.10/24 (Jun 5, 2026) · nic0 (Realtek RTL8125) reserved for future VM trunk
 - [x] Add to Tailscale mesh — pve (100.71.239.21) ✅ online
 - [ ] Enable Tailscale subnet routing for VLAN 60 (LAB) → Ohio schoolmate access
+- [x] First LXC container deployed — CT 101 `lab-linux-01` · 192.168.70.11/24 · VLAN 70 · internet PASS · vmbr0 bridge validated for container networking (Jun 5, 2026)
 - [ ] Deploy Wazuh SIEM as LXC container on Proxmox
 - [ ] Install Wazuh agents on Acer, Pi 4B, and Proxmox host
 - [ ] Deploy Netdata, NetAlertX, ntfy (completing Phase 4)
@@ -471,4 +472,4 @@ Live configurations:
 
 ---
 
-*Last updated: Jun 5, 2026 (Phase C + C.1 COMPLETE — ARIA on VLAN 70 · 192.168.70.10 · vmbr0 bridge · Comet on VLAN 10 MGMT · 192.168.10.12 · VLAN 1 host route removal pending C1111 SVI cleanup only)*
+*Last updated: Jun 5, 2026 (Phase C + C.1 COMPLETE · first LXC deployed: CT 101 lab-linux-01 192.168.70.11 · vmbr0 bridge validated for container networking)*

@@ -341,7 +341,7 @@ WoL cannot recover from: frozen kernel, hung motherboard, NIC lockup, hard crash
 - [x] Move Comet from VLAN 1 to VLAN 10 MGMT — 192.168.10.12 · PoE + KVM + ATX UI all PASS (Jun 5, 2026)
 - [x] Verify Proxmox UI at `https://192.168.70.10:8006` — PASS (Jun 5, 2026)
 - [x] Verify Tailscale online after VLAN 70 cutover — PASS (Jun 5, 2026)
-- [ ] Deploy first VM or LXC workload
+- [x] Deploy first LXC container — CT 101 `lab-linux-01` · 192.168.70.11/24 · VLAN 70 · internet PASS (0% packet loss) · vmbr0 bridge validated for container networking (Jun 5, 2026)
 
 ## Planned First Workloads
 
