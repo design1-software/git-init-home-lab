@@ -350,6 +350,12 @@ WoL cannot recover from: frozen kernel, hung motherboard, NIC lockup, hard crash
 |---|---|---|
 | lab-linux-01 | Debian 13 (trixie) | Baseline student LXC — clone to deploy lab containers |
 
+## Active LXC Containers
+
+| CT ID | Name | IP | Purpose |
+|---|---|---|---|
+| 102 | student-linux-01 | 192.168.70.12 | First student Linux troubleshooting endpoint · SSH running |
+
 **Template approach:** baseline template contains only the OS and minimal configuration. Troubleshooting tools, lab-specific packages, and any scenario setup are added to clones after deployment — not to the template itself. Future template rebuilds may include a curated baseline toolset before conversion.
 
 ---
