@@ -39,5 +39,6 @@
 
 | Lab | Status |
 |---|---|
-| 001 | ✅ Lab file ready — first session scheduled |
-| 002–010 | Not yet written |
+| 001 | ✅ Lab file ready — first session complete |
+| 002 | ✅ Lab file ready |
+| 003–010 | Not yet written |
