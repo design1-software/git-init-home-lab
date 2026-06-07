@@ -1,6 +1,8 @@
 # AI Mentor — Architecture & Design
 
-> **Status:** Design phase only. No deployment until ARIA VLAN 70 cutover and ATX control board are complete.
+> **Status:** Design phase — ARIA VLAN 70 and ATX gate complete. Zammad deployment is the next required step before v1 goes live.
+
+> **Scope:** The AI Mentor is the coaching layer for **all ARIA training**, not just help desk ticketing. It supports every lab track: Field Tech Foundation, Help Desk Documentation, Linux & Security Foundation, Network Troubleshooting, and Cybersecurity Readiness Labs. The interaction model is ticket-based (Zammad), but the content spans every domain a student works in.
 
 ---
 
@@ -59,16 +61,30 @@ Professional, direct, encouraging. Not sarcastic or condescending. Not overly fr
 
 ## Supported Domains
 
+The AI Mentor covers all active and planned ARIA lab tracks. The coaching approach is identical across all domains: ask before explaining, require evidence, guide step-by-step, never give the answer directly.
+
+### ARIA Field-to-Cyber Lab Series
+
+| Lab Track | AI Mentor Role |
+|---|---|
+| Field Tech Foundation Labs | Coaches endpoint verification, health checks, field documentation discipline |
+| Help Desk Documentation Labs | Coaches ticket quality, triage decisions, damage documentation, escalation |
+| Linux & Security Foundation Labs | Coaches filesystem navigation, permissions, user management, log reading |
+| Network Troubleshooting Labs | Coaches systematic diagnosis of connectivity, DNS, VLAN, and routing issues |
+| Cybersecurity Readiness Labs | Coaches alert investigation, incident documentation, KB article structure |
+
+### Technical Domains
+
 | Domain | Examples |
 |---|---|
 | Help desk triage | Categorize tickets, identify urgency, route to correct team |
 | Network troubleshooting | VLAN issues, routing failures, DNS, DHCP, SSH access problems |
 | Cisco / switching | Interface status, VLAN membership, trunk verification, ACL testing |
-| Linux administration | Service status, disk, networking, logs, user permissions |
+| Linux administration | Service status, disk, networking, logs, user permissions, health checks |
 | Proxmox / hypervisor | Host connectivity, VM/LXC state, storage, console access |
 | Active Directory | User/group issues, GPO, DNS, domain join failures |
 | Security / SIEM | Wazuh alerts, log interpretation, anomaly investigation |
-| Documentation coaching | Runbook structure, incident writeups, post-mortems |
+| Documentation coaching | Lab writeups, findings summaries, KB articles, portfolio artifacts |
 | Interview prep | Scenario-based questions, concept explanations, methodology defense |
 
 ---
@@ -85,7 +101,10 @@ The AI Mentor is grounded in curated documentation from this repository. It does
 | `docs/network-quick-reference.md` | Device IPs, port maps, access commands |
 | `docs/proxmox-server-build.md` | ARIA hardware, OS, network, WoL, Comet KVM |
 | `docs/ai-mentor-architecture.md` | This document — mentor self-reference |
-| `labs/helpdesk/` | Training ticket scenarios with expected outcomes |
+| `labs/helpdesk/` | Help desk training ticket scenarios with expected outcomes |
+| `labs/field-tech/**/instructor-notes.md` | Field-to-Cyber lab instructor notes — expected outputs, coaching questions, common mistakes (student guides on `student-labs` branch are excluded — mentor must not read student-facing content that spoils discovery) |
+| `labs/field-tech/sha-neal-roadmap.md` | Student lab progression and portfolio outputs |
+| `docs/runbooks/aria-student-container-provisioning.md` | Student container provisioning standard — account model, Tailscale rules, security policy |
 | `labs/lab-*.md` | CCNA lab documentation |
 | `docs/runbooks/` | Operational runbooks for known failure modes |
 | Cisco configs | Switch and router running configs (when committed) |
