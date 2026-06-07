@@ -1,7 +1,10 @@
-# Instructor Notes — Ticket 001
+# Field Tech Lab 001 — Instructor Notes
 
-## Ticket
-Verify Linux System Identity and Network Connectivity
+**Lab Series:** ARIA Field-to-Cyber Lab Series
+**Track:** Field Tech Foundation Labs
+
+## Lab
+Field Tech Lab 001: Verify Endpoint Identity and Network Connectivity
 
 ## Student
 Sha-Neal Prather
