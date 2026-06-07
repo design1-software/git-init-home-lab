@@ -1,6 +1,6 @@
-# JLM Lab Training — Ticket 001
+# ARIA Field-to-Cyber Lab Series
 
-## Verify Linux System Identity and Network Connectivity
+## Field Tech Lab 001: Verify Endpoint Identity and Network Connectivity
 
 **Student:** Sha-Neal Prather
 **Lab Account:** `sprather`
@@ -457,7 +457,7 @@ If you cannot copy and paste, take screenshots.
 Use this format when submitting your completed lab:
 
 ```text
-Ticket 001 — Linux Identity and Network Connectivity
+Field Tech Lab 001 — Verify Endpoint Identity and Network Connectivity
 
 Student Name:
 Date:
