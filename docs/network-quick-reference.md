@@ -193,6 +193,24 @@
 | Restart Docker stack | `docker compose restart` |
 | Rebuild after code change | `docker compose down && docker compose build && docker compose up -d` |
 
+### ARIA Training Containers (Instructor Access)
+
+Add to `~/.ssh/config` on the instructor machine:
+
+```text
+Host aria-student-linux-01
+    HostName 100.125.65.78
+    User julius
+    IdentityFile ~/.ssh/aria_julius_ed25519
+    IdentitiesOnly yes
+```
+
+Connect: `ssh aria-student-linux-01`
+
+> Every training container gets a `julius` instructor account (SSH key) and the assigned student account. Add a new `Host` block for each container deployed.
+
+---
+
 ### Network Troubleshooting
 
 | Task | Command |

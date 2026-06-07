@@ -350,11 +350,26 @@ Three distinct access tiers on ARIA. The boundary between them is enforced — n
 
 | Tier | Scope | Who |
 |---|---|---|
-| root | Proxmox host administration · template creation · networking changes · recovery actions · instructor-only maintenance | Instructor only |
+| root | Proxmox host administration · template creation · networking changes · recovery actions · instructor-only maintenance | Julius only (host level) |
+| julius (per container) | Instructor access inside each container · observe student work · assist or demonstrate · SSH key auth | Julius (container level) |
 | student accounts | Linux practice · troubleshooting commands · ticket evidence gathering · service checks · controlled sudo tasks | Students |
 | AI Mentor | Guides students within their assigned tier · asks for evidence · explains commands · does not hand out unrestricted root workflows | AI |
 
-Student containers (cloned from `lab-linux-01`) are accessed via student accounts. Root on ARIA is reserved for host-level operations. The AI Mentor does not escalate student access or provide root workflows without instructor assignment.
+**Rule:** Every training container must have both a `julius` instructor account and the assigned student account created at deployment. The `julius` account uses SSH key authentication (`~/.ssh/aria_julius_ed25519`). The `root` account on the Proxmox host is separate and reserved for host-level operations only.
+
+### Instructor SSH Config Pattern
+
+Add to `~/.ssh/config` on the instructor machine for each container:
+
+```text
+Host aria-student-linux-01
+    HostName 100.125.65.78
+    User julius
+    IdentityFile ~/.ssh/aria_julius_ed25519
+    IdentitiesOnly yes
+```
+
+Connect with: `ssh aria-student-linux-01`
 
 ---
 
@@ -366,9 +381,9 @@ Student containers (cloned from `lab-linux-01`) are accessed via student account
 
 ## Active LXC Containers
 
-| CT ID | Name | IP | Purpose |
-|---|---|---|---|
-| 102 | student-linux-01 | 192.168.70.12 | First student Linux troubleshooting endpoint · named trainee account created · SSH + controlled sudo validated · student workflow confirmed |
+| CT ID | Name | IP | Accounts | Purpose |
+|---|---|---|---|---|
+| 102 | student-linux-01 | 192.168.70.12 | sprather (student) · julius (instructor) | First student Linux troubleshooting endpoint · SSH + sudo validated · Field Tech Lab 001 complete |
 
 **Template approach:** baseline template contains only the OS and minimal configuration. Troubleshooting tools, lab-specific packages, and any scenario setup are added to clones after deployment — not to the template itself. Future template rebuilds may include a curated baseline toolset before conversion.
 
