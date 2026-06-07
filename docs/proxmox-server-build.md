@@ -355,7 +355,7 @@ Three distinct access tiers on ARIA. The boundary between them is enforced — n
 | student accounts | Linux practice · troubleshooting commands · ticket evidence gathering · service checks · controlled sudo tasks | Students |
 | AI Mentor | Guides students within their assigned tier · asks for evidence · explains commands · does not hand out unrestricted root workflows | AI |
 
-**Rule:** Every training container must have both a `julius` instructor account and the assigned student account created at deployment. The `julius` account uses SSH key authentication (`~/.ssh/aria_julius_ed25519`). The `root` account on the Proxmox host is separate and reserved for host-level operations only.
+**Rule:** Every training container must have both a `julius` instructor account and the assigned student account created at deployment. See `docs/runbooks/aria-student-container-provisioning.md` for the full provisioning checklist. The `julius` account uses SSH key authentication (`~/.ssh/aria_julius_ed25519`). The `root` account on the Proxmox host is separate and reserved for host-level operations only.
 
 ### Instructor SSH Config Pattern
 
