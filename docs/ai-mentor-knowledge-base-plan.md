@@ -67,6 +67,20 @@ These files feed the AI Mentor knowledge base. All are from this repository.
 | `docs/runbooks/disaster-recovery.md` | Bare-metal recovery procedure | Recovery reference |
 | `docs/runbooks/server-restart.md` | Docker/MCP server restart procedure | Runbook |
 | `docs/runbooks/ngrok-recovery.md` | Ngrok tunnel recovery | Runbook |
+| `docs/runbooks/config-backup.md` | Netmiko backup procedure, per-device credentials | Runbook |
+| `docs/runbooks/cisco/vlan1-temporary-host-routes.md` | VLAN 1 /32 host route rationale and removal conditions | Cisco runbook |
+
+### ARIA Training Platform
+
+| File | Content | Purpose |
+|---|---|---|
+| `docs/runbooks/aria-student-container-provisioning.md` | 21-step student container provisioning standard — one student per container, account model, Tailscale sharing rules, student registry, security rules | Instructor operations reference |
+| `docs/monitoring-architecture.md` | Four-tier monitoring architecture — physical/infrastructure/security/network presence | Platform context |
+| `labs/field-tech/sha-neal-roadmap.md` | Student lab progression (10 labs, portfolio outputs) | Training context |
+| `labs/field-tech/lab-001-endpoint-identity/instructor-notes.md` | Lab 001 instructor notes — expected outputs, coaching notes, common mistakes | Instructor reference |
+| `labs/field-tech/lab-002-endpoint-health-check/instructor-notes.md` | Lab 002 instructor notes — health check commands, expected outputs, security framing | Instructor reference |
+
+> **Note on student PII:** The provisioning standard contains student name, email, GitHub, and LinkedIn fields as templates. The AI Mentor must never surface individual student personal data (email addresses, LinkedIn URLs) in responses. It may reference the process and the account model, not the filled-in personal records.
 
 ### AI Mentor Self-Reference
 
