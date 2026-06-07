@@ -62,8 +62,8 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 │     │    Port 15: Trunk to 3560CX Gi0/3                    │           │
 │     │    Mgmt IP: 192.168.100.96                           │           │
 │     │                                                       │           │
-│     │  Gi0/4 → ARIA Proxmox (temp VLAN 1 — VLAN 70 pending)│           │
-│     │  Gi0/5 → Comet GL-RM1PE KVM (PoE, temp VLAN 1)      │           │
+│     │  Gi0/4 → ARIA Proxmox (VLAN 70, 192.168.70.10)        │           │
+│     │  Gi0/5 → Comet GL-RM1PE KVM (PoE, VLAN 10 MGMT)     │           │
 │     └───────────────────────────────────────────────────────┘           │
 │                                                                         │
 │   WiFi SSIDs (5 active):                                                │
@@ -126,8 +126,8 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 | Xfinity bridge mode | ✅ Active | Cisco sole router, public IP via DHCP from Comcast |
 | Tailscale | ✅ Connected | 8 nodes on mesh VPN (see table below) |
 | closet-monitor | ✅ Production | ESP32 → MQTT → Pi → SQLite → Streamlit dashboard |
-| Proxmox Server (pve) | ✅ Live | Proxmox VE · 192.168.100.10 · web UI :8006 · Tailscale: pve / 100.71.239.21 · BIOS PPT power cap completed in motherboard settings · VLAN 70 cabling/static IP pending Phase C |
-| Comet GL-RM1PE KVM | ✅ Temporary active | VLAN 1 · 192.168.100.11 · PoE from 3560CX Gi0/5 (15.4W) · KVM video + keyboard + BIOS access PASS · WoL power-on PASS · ATX control board pending (defective returned) |
+| Proxmox Server (pve) | ✅ Production | Proxmox VE · 192.168.70.10 · web UI :8006 · Tailscale: pve / 100.71.239.21 · BIOS PPT power cap completed in motherboard settings · VLAN 70 active |
+| Comet GL-RM1PE KVM | ✅ Active | VLAN 10 MGMT · 192.168.10.12 · PoE from 3560CX Gi0/5 (15.4W) · KVM video + keyboard + BIOS access PASS · WoL power-on PASS · ATX control board pending (defective returned) |
 | IoT device migration | 🔄 Mostly done | Ring, Alexa, Ecobee, Somfy, Samsung TV migrated · Kasa plugs pending |
 
 ---
@@ -170,8 +170,8 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 |---|---|---|---|
 | Home Server | Acer Aspire 3 15 | Docker: MCP Server + Ngrok (24/7) · VLAN 10 | ✅ Active |
 | Network Services | Raspberry Pi 4B + PoE HAT | Pi-hole, UniFi, MQTT, CUPS · VLAN 10 | ✅ Active |
-| Proxmox Server | Custom ATX (Ryzen 9 7900X) | Hypervisor — Proxmox VE · BIOS PPT power cap completed in motherboard settings · OS: Samsung 860 EVO (/dev/sda) · vmstore: WD Black SN770 2TB NVMe (LVM-thin, 1.8TB) · backup vault: Samsung 860 EVO (458GB) · NICs: Intel I225V (mgmt) · Realtek RTL8125 (future VM trunk) · current IP: 192.168.100.10 · web :8006 · Tailscale: pve / 100.71.239.21 · VLAN 70 cabling/static IP pending Phase C | ✅ Live |
-| Out-of-Band KVM | Comet GL-RM1PE KVM | KVM-over-IP — temporary VLAN 1 · 192.168.100.11 · PoE from 3560CX Gi0/5 · video + keyboard + BIOS access PASS · WoL power-on PASS · ATX control board pending (defective returned) | ✅ Temporary active |
+| Proxmox Server | Custom ATX (Ryzen 9 7900X) | Hypervisor — Proxmox VE · BIOS PPT power cap completed in motherboard settings · OS: Samsung 860 EVO (/dev/sda) · vmstore: WD Black SN770 2TB NVMe (LVM-thin, 1.8TB) · backup vault: Samsung 860 EVO (458GB) · NICs: Intel I225V (mgmt) · Realtek RTL8125 (future VM trunk) · IP: 192.168.70.10 · web :8006 · Tailscale: pve / 100.71.239.21 · VLAN 70 active | ✅ Production |
+| Out-of-Band KVM | Comet GL-RM1PE KVM | KVM-over-IP — VLAN 10 MGMT · 192.168.10.12 · PoE from 3560CX Gi0/5 · video + keyboard + BIOS access PASS · WoL power-on PASS · ATX control board pending (defective returned) | ✅ Active |
 | Printer | HP ENVY Inspire 7200e | USB to Pi (CUPS) · WiFi on VLAN 30 | ✅ Active |
 | Laptop | MacBook Pro | Development + fb-content-system | ✅ Active |
 
@@ -190,7 +190,7 @@ The platform spans **3 interconnected repositories**, a **self-hosted MCP server
 | 50 | JM&G-GUEST | 192.168.50.0/24 | JM&G-GUEST | GUEST-ACL | ✅ Active |
 | 99 | MGMT/NATIVE | 192.168.99.0/24 | — | None | ✅ Active (native on trunks) |
 | 60 | LAB | 192.168.60.0/24 | — | TBD | ❌ Pending Phase D |
-| 70 | SERVER | 192.168.70.0/24 | — | TBD | ❌ Pending Phase C |
+| 70 | SERVER | 192.168.70.0/24 | — | TBD | ✅ Active |
 | 199 | TRANSIT | 192.168.199.0/30 | — | None | ✅ Active Phase B |
 
 > 📄 See [docs/vlan-design.md](docs/vlan-design.md) for the full VLAN design with ACL rules, switch configs, and lessons learned.
@@ -249,7 +249,7 @@ Produces 182 posts per week per page across 3 Facebook pages.
 | **Containerization** | Docker multi-stage builds, Docker Compose with health checks, Ngrok sidecar, auto-restart, log rotation |
 | **Software Engineering** | 78K+ lines across 3 repos; MCP protocol server; multi-API orchestration |
 | **IoT / Automation** | ESP32 sensor pipeline (BME280 → MQTT → SQLite → Streamlit), VLAN-isolated IoT network |
-| **Hypervisor Platform** | Proxmox VE live (Ryzen 9 7900X) — BIOS PPT power cap completed · 192.168.100.10 · Tailscale reachable as pve / 100.71.239.21 · SN770 2TB NVMe vmstore — Wazuh SIEM, AD lab, schoolmate remote lab planned |
+| **Hypervisor Platform** | Proxmox VE live (Ryzen 9 7900X) — BIOS PPT power cap completed · 192.168.70.10 · Tailscale reachable as pve / 100.71.239.21 · SN770 2TB NVMe vmstore — Wazuh SIEM, AD lab, schoolmate remote lab planned |
 | **Out-of-Band Management** | Comet GL-RM1PE KVM active — PoE from 3560CX Gi0/5 · KVM video + keyboard + BIOS access confirmed · WoL power-on path via Magic Packet · ATX board pending for hard power/reset relay |
 | **Remote Access** | Tailscale mesh VPN (8 nodes), Ngrok fixed-domain tunnel, zero port forwarding |
 | **Security** | Zero port forwarding; VLAN isolation with ACLs; CUPS access control; credential encryption; DNS filtering |

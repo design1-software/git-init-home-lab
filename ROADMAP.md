@@ -349,11 +349,15 @@ Four distinct telemetry tiers — each scoped to a specific purpose with no over
 - [x] `labs/helpdesk/ticket-010-wazuh-alert-investigation.md` (security — SIEM alert investigation, true/false positive determination)
 - *All tickets 007–010: documented only — live validation pending ARIA VLAN 70 and workload deployment*
 
-### Deployment Gate 🔲
-- [ ] ATX control board installed and hard reset validated
-- [ ] ARIA on VLAN 70 (192.168.70.10/24)
-- [ ] Proxmox `vmbr0` bridge configured
-- [ ] Deploy Zammad LXC on ARIA
+### Deployment Gate 🔄 IN PROGRESS
+
+Infrastructure gates — complete:
+- [x] ATX control board installed and hard reset validated (Jun 5, 2026)
+- [x] ARIA on VLAN 70 (192.168.70.10/24) (Jun 5, 2026)
+- [x] Proxmox `vmbr0` bridge configured (Jun 5, 2026)
+
+Workload deployment — next:
+- [ ] Deploy Zammad LXC on ARIA — next required step
 - [ ] Deploy AI Mentor backend LXC on ARIA
 - [ ] Deploy vector DB + knowledge base on ARIA
 - [ ] Connect Zammad → AI Mentor → LLM API

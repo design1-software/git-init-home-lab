@@ -241,12 +241,12 @@ Start API-based. Migrate to local only if:
 | Phase | Description | Status |
 |---|---|---|
 | AI-1 | Mentor design document and behavior definition | ✅ This document |
-| AI-2 | Knowledge base design — source curation and vector DB plan | 🔲 Next |
-| AI-3 | Ticketing integration design — Zammad + mentor workflow | 🔲 Next |
-| AI-4 | Local AI vs API decision — finalize MVP model choice | 🔲 Next |
-| AI-5 | Guardrails — prompt engineering and behavioral testing | 🔲 Pending ARIA VLAN 70 |
-| AI-6 | First lab use cases — 10 training tickets deployed | 🔲 Pending ARIA VLAN 70 |
-| Deploy | Backend + knowledge base live on ARIA VLAN 70 | 🔲 Pending ATX board + VLAN 70 cutover |
+| AI-2 | Knowledge base design — source curation and vector DB plan | ✅ Complete (Jun 4, 2026) |
+| AI-3 | Ticketing integration design — Zammad + mentor workflow | ✅ Complete (Jun 4, 2026) |
+| AI-4 | Local AI vs API decision — finalize MVP model choice | ✅ Complete (Jun 4, 2026) |
+| AI-5 | Guardrails — prompt engineering and behavioral testing | ✅ Complete (Jun 4, 2026) |
+| AI-6 | First lab use cases — 10 training tickets deployed | ✅ Complete (Jun 4, 2026) |
+| Deploy | Backend + knowledge base live on ARIA VLAN 70 | 🔲 Pending — next step: Zammad deployment |
 
 ---
 
