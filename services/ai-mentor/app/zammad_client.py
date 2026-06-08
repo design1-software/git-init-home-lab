@@ -80,6 +80,50 @@ def get_ticket(ticket_id: int) -> Dict[str, Any]:
     return zammad_get(f"/api/v1/tickets/{ticket_id}", params={"expand": "true"})
 
 
+def search_ticket_by_number(ticket_number: str) -> List[Dict[str, Any]]:
+    result = zammad_get(
+        "/api/v1/tickets/search",
+        params={
+            "query": f"number:{ticket_number}",
+            "expand": "true",
+        },
+    )
+
+    if isinstance(result, list):
+        return result
+
+    if isinstance(result, dict):
+        if isinstance(result.get("tickets"), list):
+            return result["tickets"]
+        if isinstance(result.get("assets"), dict):
+            tickets = result["assets"].get("Ticket")
+            if isinstance(tickets, dict):
+                return list(tickets.values())
+
+    return []
+
+
+def get_ticket_by_number(ticket_number: str) -> Dict[str, Any]:
+    matches = search_ticket_by_number(ticket_number)
+
+    exact_matches = [
+        ticket for ticket in matches
+        if str(ticket.get("number")) == str(ticket_number)
+    ]
+
+    if not exact_matches:
+        raise ZammadClientError(f"No Zammad ticket found for ticket number {ticket_number}.")
+
+    if len(exact_matches) > 1:
+        raise ZammadClientError(f"Multiple Zammad tickets found for ticket number {ticket_number}.")
+
+    ticket_id = exact_matches[0].get("id")
+    if ticket_id is None:
+        raise ZammadClientError(f"Ticket number {ticket_number} was found but has no internal ID.")
+
+    return get_ticket(int(ticket_id))
+
+
 def get_ticket_articles(ticket_id: int) -> List[Dict[str, Any]]:
     result = zammad_get(f"/api/v1/ticket_articles/by_ticket/{ticket_id}")
 
