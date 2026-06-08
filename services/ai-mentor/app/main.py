@@ -4,6 +4,7 @@ import socket
 import subprocess
 
 from fastapi import FastAPI, HTTPException, Query
+from fastapi.responses import HTMLResponse
 
 from app.logging_store import load_session, save_session
 from app.mentor_engine import analyze_ticket
@@ -28,7 +29,7 @@ from app.zammad_client import (
 app = FastAPI(
     title="ARIA AI Mentor Backend",
     description="Evidence-first AI mentor backend for the ARIA training platform.",
-    version="0.6.0",
+    version="0.6.1",
 )
 
 
@@ -50,6 +51,7 @@ def root() -> dict:
         "status": "running",
         "docs": "/docs",
         "health": "/health",
+        "instructor_panel": "/instructor",
         "mentor_endpoint": "/mentor/analyze-ticket",
         "zammad_health": "/zammad/health",
         "zammad_ticket": "/zammad/tickets/{ticket_id}",
@@ -59,7 +61,7 @@ def root() -> dict:
         "zammad_draft_guidance_by_number": "/mentor/zammad/ticket-number/{ticket_number}/draft-guidance",
         "kb_status": "/kb/status",
         "kb_search": "/kb/search?q=ticket-009",
-        "version": "0.6.0",
+        "version": "0.6.1",
     }
 
 
@@ -155,6 +157,13 @@ def build_zammad_draft_guidance_response(ticket: dict, articles: list[dict]) -> 
         zammad_ticket=ticket_context,
         timestamp_utc=timestamp,
     )
+
+
+@app.get("/instructor", response_class=HTMLResponse)
+def instructor_panel() -> HTMLResponse:
+    html_path = "/opt/aria-ai-mentor/app/static/instructor.html"
+    with open(html_path, "r", encoding="utf-8") as file:
+        return HTMLResponse(content=file.read())
 
 
 @app.post("/mentor/analyze-ticket", response_model=AnalyzeTicketResponse)
