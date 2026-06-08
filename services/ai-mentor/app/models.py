@@ -12,12 +12,21 @@ class AnalyzeTicketRequest(BaseModel):
     student_evidence: Optional[str] = None
 
 
+class RetrievedContextItem(BaseModel):
+    score: int
+    source_path: str
+    category: str
+    chunk_index: int
+    preview: str
+
+
 class AnalyzeTicketResponse(BaseModel):
     session_id: str
     mentor_response: str
     risk_level: str
     next_action: str
     retrieved_sources: List[str]
+    retrieved_context: List[RetrievedContextItem] = []
     timestamp_utc: str
 
 
