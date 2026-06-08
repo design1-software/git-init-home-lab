@@ -1,0 +1,36 @@
+from typing import List, Optional
+from pydantic import BaseModel, Field
+
+
+class AnalyzeTicketRequest(BaseModel):
+    ticket_id: str = Field(..., examples=["009"])
+    student: str = Field(..., examples=["sprather"])
+    domain: str = Field(default="helpdesk", examples=["helpdesk"])
+    difficulty: str = Field(default="beginner", examples=["beginner"])
+    ticket_title: str
+    ticket_body: str
+    student_evidence: Optional[str] = None
+
+
+class AnalyzeTicketResponse(BaseModel):
+    session_id: str
+    mentor_response: str
+    risk_level: str
+    next_action: str
+    retrieved_sources: List[str]
+    timestamp_utc: str
+
+
+class SessionRecord(BaseModel):
+    session_id: str
+    timestamp_utc: str
+    request: AnalyzeTicketRequest
+    response: AnalyzeTicketResponse
+
+
+class HealthResponse(BaseModel):
+    status: str
+    service: str
+    hostname: str
+    timestamp_utc: str
+    mode: str
