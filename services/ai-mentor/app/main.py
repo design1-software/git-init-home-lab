@@ -3,9 +3,20 @@ from uuid import uuid4
 import socket
 import subprocess
 
-from fastapi import FastAPI, HTTPException, Query
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, HTTPException, Query, Request, Response, Depends
+from fastapi.responses import HTMLResponse, RedirectResponse
 
+from app.auth import (
+    COOKIE_NAME,
+    LoginRequest,
+    auth_status,
+    authenticate_user,
+    create_session_token,
+    get_current_user,
+    get_optional_user,
+    require_roles,
+    session_ttl_seconds,
+)
 from app.logging_store import load_session, save_session
 from app.mentor_engine import analyze_ticket
 from app.models import (
@@ -30,7 +41,7 @@ from app.zammad_client import (
 app = FastAPI(
     title="ARIA AI Mentor Backend",
     description="Evidence-first AI mentor backend for the ARIA training platform.",
-    version="0.7.0",
+    version="0.8.0",
 )
 
 
@@ -52,6 +63,10 @@ def root() -> dict:
         "status": "running",
         "docs": "/docs",
         "health": "/health",
+        "login": "/login",
+        "logout": "/auth/logout",
+        "auth_me": "/auth/me",
+        "auth_status": "/auth/status",
         "instructor_panel": "/instructor",
         "llm_status": "/llm/status",
         "mentor_endpoint": "/mentor/analyze-ticket",
@@ -64,7 +79,7 @@ def root() -> dict:
         "llm_zammad_guidance_by_number": "/mentor/zammad/ticket-number/{ticket_number}/llm-guidance",
         "kb_status": "/kb/status",
         "kb_search": "/kb/search?q=ticket-009",
-        "version": "0.7.0",
+        "version": "0.8.0",
     }
 
 
@@ -162,8 +177,176 @@ def build_zammad_draft_guidance_response(ticket: dict, articles: list[dict]) -> 
     )
 
 
+@app.get("/login", response_class=HTMLResponse)
+def login_page() -> HTMLResponse:
+    html = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ARIA Mentor Login</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+    .card {
+      width: min(420px, 92vw);
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 14px;
+      padding: 26px;
+    }
+    h1 { margin: 0 0 8px; }
+    p { color: #9ca3af; }
+    label {
+      display: block;
+      margin-top: 14px;
+      margin-bottom: 6px;
+      font-weight: bold;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      margin-top: 18px;
+      padding: 12px;
+      border: 0;
+      border-radius: 8px;
+      background: #38bdf8;
+      color: #020617;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .error {
+      margin-top: 14px;
+      color: #fecaca;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      padding: 10px;
+      border-radius: 8px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>ARIA Mentor Login</h1>
+    <p>Sign in to access the instructor panel.</p>
+
+    <label for="username">Username</label>
+    <input id="username" autocomplete="username" />
+
+    <label for="password">Password</label>
+    <input id="password" type="password" autocomplete="current-password" />
+
+    <button onclick="login()">Sign In</button>
+    <div id="error" class="error"></div>
+  </div>
+
+  <script>
+    async function login() {
+      const errorBox = document.getElementById('error');
+      errorBox.style.display = 'none';
+      errorBox.textContent = '';
+
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+
+      try {
+        const response = await fetch('/auth/login', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({username, password})
+        });
+
+        if (!response.ok) {
+          throw new Error('Invalid username or password.');
+        }
+
+        const data = await response.json();
+        window.location.href = data.redirect || '/instructor';
+      } catch (error) {
+        errorBox.textContent = error.message || String(error);
+        errorBox.style.display = 'block';
+      }
+    }
+
+    document.getElementById('password').addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') login();
+    });
+  </script>
+</body>
+</html>
+"""
+    return HTMLResponse(content=html)
+
+
+@app.post("/auth/login")
+def login(payload: LoginRequest, response: Response) -> dict:
+    user = authenticate_user(payload.username, payload.password)
+
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid username or password.")
+
+    token = create_session_token(user)
+    response.set_cookie(
+        key=COOKIE_NAME,
+        value=token,
+        httponly=True,
+        samesite="lax",
+        secure=False,
+        max_age=session_ttl_seconds(),
+        path="/",
+    )
+
+    return {
+        "status": "ok",
+        "user": user,
+        "redirect": "/instructor",
+    }
+
+
+@app.post("/auth/logout")
+def logout(response: Response) -> dict:
+    response.delete_cookie(key=COOKIE_NAME, path="/")
+    return {"status": "logged_out"}
+
+
+@app.get("/auth/me")
+def auth_me(user: dict = Depends(get_current_user)) -> dict:
+    return user
+
+
+@app.get("/auth/status")
+def get_auth_status(user: dict = Depends(require_roles("admin"))) -> dict:
+    return auth_status()
+
+
 @app.get("/instructor", response_class=HTMLResponse)
-def instructor_panel() -> HTMLResponse:
+def instructor_panel(request: Request) -> HTMLResponse:
+    user = get_optional_user(request)
+
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+
+    if user.get("role") not in {"admin", "instructor"}:
+        raise HTTPException(status_code=403, detail="Instructor or admin role required.")
+
     html_path = "/opt/aria-ai-mentor/app/static/instructor.html"
     with open(html_path, "r", encoding="utf-8") as file:
         return HTMLResponse(content=file.read())
@@ -205,7 +388,7 @@ def mentor_analyze_ticket(request: AnalyzeTicketRequest) -> AnalyzeTicketRespons
 
 
 @app.get("/sessions/{session_id}")
-def get_session(session_id: str) -> dict:
+def get_session(session_id: str, user: dict = Depends(require_roles("admin", "instructor"))) -> dict:
     record = load_session(session_id)
     if record is None:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -227,7 +410,7 @@ def search_kb(q: str = Query(..., min_length=2), limit: int = Query(default=5, g
 
 
 @app.post("/kb/rebuild")
-def rebuild_kb() -> dict:
+def rebuild_kb(user: dict = Depends(require_roles("admin"))) -> dict:
     result = subprocess.run(
         [
             "/opt/aria-ai-mentor/.venv/bin/python",
@@ -255,12 +438,15 @@ def rebuild_kb() -> dict:
 
 
 @app.get("/llm/status")
-def get_llm_status() -> dict:
+def get_llm_status(user: dict = Depends(require_roles("admin", "instructor"))) -> dict:
     return llm_status()
 
 
 @app.post("/mentor/analyze-ticket/llm-guidance")
-def mentor_analyze_ticket_llm_guidance(request: AnalyzeTicketRequest) -> dict:
+def mentor_analyze_ticket_llm_guidance(
+    request: AnalyzeTicketRequest,
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> dict:
     deterministic = mentor_analyze_ticket(request)
 
     try:
@@ -287,8 +473,11 @@ def mentor_analyze_ticket_llm_guidance(request: AnalyzeTicketRequest) -> dict:
 
 
 @app.post("/mentor/zammad/ticket-number/{ticket_number}/llm-guidance")
-def mentor_zammad_ticket_number_llm_guidance(ticket_number: str) -> dict:
-    deterministic = mentor_zammad_ticket_number_draft_guidance(ticket_number)
+def mentor_zammad_ticket_number_llm_guidance(
+    ticket_number: str,
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> dict:
+    deterministic = mentor_zammad_ticket_number_draft_guidance(ticket_number, user)
 
     try:
         enhanced = enhance_guidance(
@@ -325,7 +514,10 @@ def zammad_health() -> dict:
 
 
 @app.get("/zammad/tickets/by-number/{ticket_number}")
-def zammad_ticket_by_number(ticket_number: str) -> dict:
+def zammad_ticket_by_number(
+    ticket_number: str,
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> dict:
     try:
         return get_ticket_by_number(ticket_number)
     except ZammadClientError as exc:
@@ -333,7 +525,10 @@ def zammad_ticket_by_number(ticket_number: str) -> dict:
 
 
 @app.get("/zammad/tickets/{ticket_id}")
-def zammad_ticket(ticket_id: int) -> dict:
+def zammad_ticket(
+    ticket_id: int,
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> dict:
     try:
         return get_ticket(ticket_id)
     except ZammadClientError as exc:
@@ -341,7 +536,10 @@ def zammad_ticket(ticket_id: int) -> dict:
 
 
 @app.get("/zammad/tickets/{ticket_id}/articles")
-def zammad_ticket_articles(ticket_id: int) -> dict:
+def zammad_ticket_articles(
+    ticket_id: int,
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> dict:
     try:
         return {
             "ticket_id": ticket_id,
@@ -352,7 +550,10 @@ def zammad_ticket_articles(ticket_id: int) -> dict:
 
 
 @app.post("/mentor/zammad/ticket/{ticket_id}/draft-guidance", response_model=ZammadDraftGuidanceResponse)
-def mentor_zammad_ticket_draft_guidance(ticket_id: int) -> ZammadDraftGuidanceResponse:
+def mentor_zammad_ticket_draft_guidance(
+    ticket_id: int,
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> ZammadDraftGuidanceResponse:
     try:
         ticket = get_ticket(ticket_id)
         articles = get_ticket_articles(ticket_id)
@@ -362,7 +563,10 @@ def mentor_zammad_ticket_draft_guidance(ticket_id: int) -> ZammadDraftGuidanceRe
 
 
 @app.post("/mentor/zammad/ticket-number/{ticket_number}/draft-guidance", response_model=ZammadDraftGuidanceResponse)
-def mentor_zammad_ticket_number_draft_guidance(ticket_number: str) -> ZammadDraftGuidanceResponse:
+def mentor_zammad_ticket_number_draft_guidance(
+    ticket_number: str,
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> ZammadDraftGuidanceResponse:
     try:
         ticket = get_ticket_by_number(ticket_number)
         ticket_id = int(ticket.get("id"))
