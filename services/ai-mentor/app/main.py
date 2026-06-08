@@ -7,13 +7,19 @@ from fastapi import FastAPI, HTTPException, Query
 
 from app.logging_store import load_session, save_session
 from app.mentor_engine import analyze_ticket
-from app.models import AnalyzeTicketRequest, AnalyzeTicketResponse, HealthResponse, SessionRecord
+from app.models import (
+    AnalyzeTicketRequest,
+    AnalyzeTicketResponse,
+    HealthResponse,
+    RetrievedContextItem,
+    SessionRecord,
+)
 from app.retrieval import kb_status, search_chunks
 
 app = FastAPI(
     title="ARIA AI Mentor Backend",
     description="Evidence-first AI mentor backend for the ARIA training platform.",
-    version="0.3.0",
+    version="0.4.0",
 )
 
 
@@ -38,7 +44,37 @@ def root() -> dict:
         "mentor_endpoint": "/mentor/analyze-ticket",
         "kb_status": "/kb/status",
         "kb_search": "/kb/search?q=ticket-009",
+        "version": "0.4.0",
     }
+
+
+def build_kb_query(request: AnalyzeTicketRequest) -> str:
+    parts = [
+        request.ticket_id,
+        request.ticket_title,
+        request.ticket_body,
+        request.student_evidence or "",
+        request.domain,
+        request.difficulty,
+    ]
+    return " ".join(part for part in parts if part).strip()
+
+
+def to_context_items(kb_results: list[dict]) -> list[RetrievedContextItem]:
+    items: list[RetrievedContextItem] = []
+
+    for result in kb_results:
+        items.append(
+            RetrievedContextItem(
+                score=int(result.get("score", 0)),
+                source_path=str(result.get("source_path", "")),
+                category=str(result.get("category", "")),
+                chunk_index=int(result.get("chunk_index", 0)),
+                preview=str(result.get("preview", "")),
+            )
+        )
+
+    return items
 
 
 @app.post("/mentor/analyze-ticket", response_model=AnalyzeTicketResponse)
@@ -46,7 +82,13 @@ def mentor_analyze_ticket(request: AnalyzeTicketRequest) -> AnalyzeTicketRespons
     session_id = str(uuid4())
     timestamp = datetime.now(timezone.utc).isoformat()
 
-    mentor_response, risk_level, next_action, retrieved_sources = analyze_ticket(request)
+    kb_query = build_kb_query(request)
+    kb_results = search_chunks(kb_query, limit=5)
+
+    mentor_response, risk_level, next_action, retrieved_sources = analyze_ticket(
+        request=request,
+        kb_results=kb_results,
+    )
 
     response = AnalyzeTicketResponse(
         session_id=session_id,
@@ -54,6 +96,7 @@ def mentor_analyze_ticket(request: AnalyzeTicketRequest) -> AnalyzeTicketRespons
         risk_level=risk_level,
         next_action=next_action,
         retrieved_sources=retrieved_sources,
+        retrieved_context=to_context_items(kb_results),
         timestamp_utc=timestamp,
     )
 
