@@ -300,70 +300,34 @@ Four distinct telemetry tiers — each scoped to a specific purpose with no over
 
 ## Phase AI: IT Enterprise Training Platform 🔄 IN PROGRESS
 
-> ARIA's mission is not just to host VMs. ARIA is an **IT Enterprise Training Platform**. The AI Mentor is the intelligence layer that helps students learn by guiding them through real infrastructure tasks without giving away answers. Zammad is live. AI Mentor backend is next.
+> ARIA is an **IT Enterprise Training Platform**. The AI Mentor is the coaching layer for all ARIA training — Field Tech Foundation, Help Desk, Linux & Security, Network Troubleshooting, and Cybersecurity Readiness.
+>
+> **Implementation source of truth:** `docs/ai-mentor-implementation-status.md`
 
-### Phase AI-1 — Mentor Design ✅ COMPLETE (Jun 4, 2026)
-- [x] Create `docs/ai-mentor-architecture.md` — purpose, behavior, guardrails, MVP architecture, phase roadmap
-- [x] Define mentor behavior model and operating flow
-- [x] Define first 10 training ticket scenarios
-- [x] Choose ticketing platform direction — **Zammad** (modern UI, closer to real-world service desks)
+### Design Phases — All Complete ✅
 
-### Phase AI-2 — Knowledge Base Design ✅ COMPLETE (Jun 4, 2026)
-- [x] Create `docs/ai-mentor-knowledge-base-plan.md` — approved sources, excluded sources, document categories, metadata tags, retrieval behavior, student-facing vs mentor-only split, ticket-to-runbook mapping, update workflow, deployment gate
-- [x] Define source curation — approved and excluded sources documented
-- [x] Design vector database structure (ChromaDB or similar) — defined in plan
-- [x] Define update workflow — rebuild on doc commits, no live crawl
+| Phase | Document | Status |
+|---|---|---|
+| AI-1 | `docs/ai-mentor-architecture.md` | ✅ Complete (Jun 4, 2026) |
+| AI-2 | `docs/ai-mentor-knowledge-base-plan.md` | ✅ Complete (Jun 4, 2026) |
+| AI-3 | `docs/ai-mentor-ticketing-integration.md` | ✅ Complete (Jun 4, 2026) |
+| AI-4 | `docs/ai-mentor-model-decision.md` | ✅ Complete (Jun 4, 2026) |
+| AI-5 | `docs/ai-mentor-guardrails-expanded.md` | ✅ Complete (Jun 4, 2026) |
+| AI-6 | `labs/helpdesk/ticket-001` through `ticket-010` | ✅ Complete (Jun 4, 2026) |
 
-### Phase AI-3 — Ticketing Integration Design ✅ COMPLETE (Jun 4, 2026)
-- [x] Create `docs/ai-mentor-ticketing-integration.md` — Zammad role, ticket lifecycle (12-step), AI interaction points, student/instructor workflows, ticket metadata fields, AI response format, escalation rules, what AI can/cannot write to Zammad, v1 draft panel model vs v2 webhook model, deployment architecture, security notes
-- [x] v1 decision: AI does not auto-post into tickets — draft panel model; no auto-close, no priority changes, no system actions
-- [x] Future v2 webhook plan documented — gated on v1 validation
+### Deployment Gate — Infrastructure and Service Foundation ✅
 
-### Phase AI-4 — Model & Architecture Decision ✅ COMPLETE (Jun 4, 2026)
-- [x] Create `docs/ai-mentor-model-decision.md` — v1 = API-based locked in; local LLM deferred
-- [x] Provider decision: Claude recommended (instruction following, reasoning quality, refusal behavior)
-- [x] Infrastructure analysis: ARIA hosts app + ChromaDB, external API handles inference
-- [x] Local LLM future path documented with evaluation criteria and candidate models
-
-### Phase AI-5 — Guardrails & Prompt Engineering ✅ COMPLETE (Jun 4, 2026)
-- [x] Create `docs/ai-mentor-guardrails-expanded.md` — 7 guardrail domains fully specified
-- [x] Destructive commands — mandatory warning/rollback/confirmation sequence
-- [x] Cisco config changes — 7-step mandatory sequence (verify → explain → risk → rollback → save timing → config → verify)
-- [x] Student answer leakage — rules, maximum hint level, mentor-only content classification
-- [x] Credential handling — no asking, no storing, placeholder enforcement, leakage response
-- [x] Ticket state changes — permitted/not permitted in v1 and v2, audit rationale
-- [x] Live system access — no direct access to any lab system; evidence comes from student only
-- [x] Mentor-only runbooks — classification table, correct usage model, student-facing limits
-- [x] 8 deployment validation test cases defined — all must pass before v1 goes live
-
-### Phase AI-6 — First Lab Use Cases 🔲 (pending ARIA VLAN 70)
-- [x] `labs/helpdesk/ticket-001-dns-failure.md`
-- [x] `labs/helpdesk/ticket-002-vlan-misassignment.md`
-- [x] `labs/helpdesk/ticket-003-proxmox-apt-egress-failure.md` (based on real ARIA incident)
-- [x] `labs/helpdesk/ticket-004-ssh-legacy-kex.md` (based on real Phase B incident)
-- [x] `labs/helpdesk/ticket-005-vlan1-return-path-failure.md` (asymmetric routing — real ARIA incident)
-- [x] `labs/helpdesk/ticket-006-proxmox-repo-hygiene.md` (layered apt failure — L3/L4/L7 auth/L7 config/policy)
-- [x] `labs/helpdesk/ticket-007-proxmox-vlan70-migration.md` (advanced — ARIA VLAN 70 cutover with 3-path recovery)
-- [x] `labs/helpdesk/ticket-008-comet-atx-hard-reset-validation.md` (hardware validation — 8-step ATX board acceptance test)
-- [x] `labs/helpdesk/ticket-009-zammad-ticket-triage.md` (beginner ITSM — P1–P4 triage with 6 training tickets)
-- [x] `labs/helpdesk/ticket-010-wazuh-alert-investigation.md` (security — SIEM alert investigation, true/false positive determination)
-- *All tickets 007–010: documented only — live validation pending ARIA VLAN 70 and workload deployment*
-
-### Deployment Gate 🔄 IN PROGRESS
-
-Infrastructure gates — complete:
-- [x] ATX control board installed and hard reset validated (Jun 5, 2026)
-- [x] ARIA on VLAN 70 (192.168.70.10/24) (Jun 5, 2026)
+- [x] ATX control board installed and validated (Jun 5, 2026)
+- [x] ARIA on VLAN 70 — 192.168.70.10 (Jun 5, 2026)
 - [x] Proxmox `vmbr0` bridge configured (Jun 5, 2026)
+- [x] Zammad — CT 110 `aria-zammad-01` · Docker Compose · `helpdesk.aria.local` (Jun 7, 2026)
+- [x] AI Mentor backend — CT 120 `aria-ai-mentor-01` · FastAPI · systemd · instructor panel (Jun 7–8, 2026)
+- [x] KB ingestion — `scripts/ingest_docs.py` · JSONL v1 retrieval · ChromaDB deferred (Jun 8, 2026)
+- [x] Auth + role separation v1 (Jun 8, 2026)
+- [ ] Zammad PostgreSQL dump backup
+- [ ] Phase 8: audit/event logging — next implementation phase
 
-Workload deployment:
-- [x] Deploy Zammad LXC on ARIA — CT 110 `aria-zammad-01` · Docker Compose · helpdesk.aria.local · admin/student workflow validated · ticket lifecycle PASS (Jun 7, 2026)
-- [x] Proxmox snapshot backup — `vzdump-lxc-110-2026_06_07-19_50_49.tar.zst` · 2.8G · PASS (Jun 7, 2026)
-- [x] As-built runbook committed — `docs/runbooks/zammad/zammad-lxc-deployment.md` (Jun 7, 2026)
-- [ ] Docker-level backup — PostgreSQL dump for app-level recovery (next)
-- [x] Deploy AI Mentor backend LXC on ARIA — CT 120 `aria-ai-mentor-01` · FastAPI backend · systemd service · Swagger UI · /health + /mentor/analyze-ticket + /sessions endpoints · local JSON session logging · Ticket-009 mentor logic validated (Jun 7, 2026)
-- [ ] Deploy vector DB + knowledge base on ARIA
-- [ ] Connect Zammad → AI Mentor → LLM API
+> Full implementation phase status (Phases 1–15): `docs/ai-mentor-implementation-status.md`
 
 ---
 
