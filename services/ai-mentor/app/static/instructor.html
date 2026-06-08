@@ -191,6 +191,7 @@
       <div class="row">
         <input id="ticketNumber" type="text" value="98002" placeholder="Example: 98002" />
         <button id="fetchButton" onclick="fetchGuidance()">Fetch Mentor Guidance</button>
+        <button id="llmButton" onclick="fetchLlmGuidance()">Fetch Assistive LLM Guidance</button>
       </div>
       <div id="errorBox" class="error hidden"></div>
     </section>
@@ -212,7 +213,15 @@
 
       <section class="section">
         <h2>ARIA Mentor Guidance</h2>
+        <p class="muted">Deterministic ARIA Mentor output. This is the authoritative training decision.</p>
         <div id="mentorResponse" class="mentor-response"></div>
+      </section>
+
+      <section class="section">
+        <h2>Assistive LLM Guidance</h2>
+        <p class="muted">Optional enhanced wording only. Deterministic next_action, risk_level, sources, and Zammad state remain authoritative.</p>
+        <div id="llmStatus" class="muted">No LLM guidance loaded yet.</div>
+        <div id="llmResponse" class="mentor-response" style="margin-top: 12px;"></div>
       </section>
 
       <section class="section">
@@ -291,6 +300,43 @@
         button.disabled = false;
         button.textContent = 'Fetch Mentor Guidance';
       }
+    }
+
+    async function fetchLlmGuidance() {
+      clearError();
+      const button = document.getElementById('llmButton');
+      const ticketNumber = document.getElementById('ticketNumber').value.trim();
+
+      if (!ticketNumber) {
+        showError('Enter a Zammad ticket number.');
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = 'Loading LLM...';
+
+      try {
+        const response = await fetch(`/mentor/zammad/ticket-number/${encodeURIComponent(ticketNumber)}/llm-guidance`, { method: 'POST' });
+        if (!response.ok) {
+          const errorPayload = await response.json().catch(() => ({}));
+          throw new Error(errorPayload.detail || `Request failed with status ${response.status}`);
+        }
+        renderLlmResult(await response.json());
+      } catch (error) {
+        showError(error.message || String(error));
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Fetch Assistive LLM Guidance';
+      }
+    }
+
+    function renderLlmResult(data) {
+      const llm = data.llm || {};
+      const status = document.getElementById('llmStatus');
+      const response = document.getElementById('llmResponse');
+
+      status.textContent = `${llm.provider || 'unknown'} | enabled: ${llm.llm_enabled === true} | model: ${llm.model || '-'} | ${llm.note || ''}`;
+      response.textContent = llm.enhanced_response || data.deterministic_response || '';
     }
 
     function renderResult(data) {
