@@ -1,190 +1,262 @@
-# Helpdesk Ticket 009 — Zammad Ticket Triage
+# Ticket-009: Zammad Ticket Triage
 
-**Domain:** Help Desk / ITSM / Ticket Management
-**Difficulty:** Beginner
-**Estimated time:** 30–45 minutes
-**Status:** Documented only — live validation pending Zammad deployment on ARIA VLAN 70
-
----
-
-## Scenario
-
-A student logs into Zammad and finds a queue of 6 unassigned tickets with no priority or category set. The student must triage each ticket: assign a priority, assign a category, route to the correct team or owner, and write a one-sentence triage note explaining the decision.
-
-This is not a break/fix exercise. It is a service desk workflow exercise. The goal is structured thinking about impact, urgency, and escalation — not technical troubleshooting.
+> **Lab Track:** Help Desk Documentation  
+> **Difficulty:** Beginner  
+> **Status:** Live validation passed 2026-06-07  
+> **Platform:** ARIA Help Desk / Zammad  
+> **Service URL:** `http://helpdesk.aria.local:8080`  
+> **Related Runbook:** `docs/runbooks/zammad/zammad-lxc-deployment.md`
 
 ---
 
-## Ticket Details
+## 1. Scenario
 
-**Reported by:** Lab instructor (queue management task)
-**Affected system:** Zammad ticket queue
-**Priority:** Low (training exercise)
-**Category:** ITSM — Triage / Queue Management
+A student is practicing basic help desk ticket handling inside the ARIA training environment. The goal is not to troubleshoot a broken server or network device yet. The goal is to prove that the student can use the ticketing system correctly.
 
----
+The student must open or respond to a training ticket, describe the issue clearly, add evidence, communicate professionally, and complete a closure summary.
 
-## Why This Ticket Is Valuable
-
-In real enterprise environments, L1 help desk analysts spend a significant portion of their time triaging — not fixing. Incorrect triage (wrong priority, wrong category, wrong owner) delays resolution and distorts SLA metrics. Students who have never done structured triage often underestimate urgency or mis-categorize tickets.
-
-This ticket teaches:
-- The difference between urgency and impact
-- How to assign priority without knowing the full root cause
-- How to write a triage note that helps the next person
-- How ticket routing decisions affect response time
+This ticket validates the Zammad platform before AI Mentor integration.
 
 ---
 
-## AI Mentor Opening Questions
+## 2. Student Objective
 
-```
-1. Do you have access to the Zammad ticket queue?
-2. Can you see the 6 unassigned tickets?
-3. Before we triage anything — what is your definition of a P1 ticket?
-   (The mentor will not proceed until the student demonstrates they understand
-   priority levels. This is not a trick — it's the foundation.)
-```
+By the end of this exercise, the student should be able to:
 
----
-
-## Priority Framework
-
-The student must apply this framework consistently:
-
-| Priority | Definition | SLA target |
-|---|---|---|
-| P1 — Critical | Production down, all users affected, no workaround | Immediate response |
-| P2 — High | Production degraded or major service affected, workaround exists | < 1 hour |
-| P3 — Medium | Non-critical service affected, single user or department impacted | < 4 hours |
-| P4 — Low | Minor issue, cosmetic, or training task | < 24 hours |
+1. Log in to the ARIA Help Desk.
+2. View an assigned training ticket.
+3. Understand the ticket title, description, and requested action.
+4. Add a professional ticket comment.
+5. Provide evidence that they completed the requested step.
+6. Participate in ticket closure.
+7. Write a short closure summary.
 
 ---
 
-## The 6 Training Tickets
+## 3. Environment
 
-These are fictional tickets from a simulated lab environment. The student reads each one and assigns priority, category, and routing.
-
----
-
-### Triage Ticket A
-
-> *"Hi, I can't get on the internet. My laptop says it's connected to Gorgeous WiFi but nothing loads."*
-
-**Expected triage:**
-- Priority: P3 — single user, workaround (switch to wired) exists
-- Category: Network — VLAN / DNS
-- Route to: L1 analyst
-- Note: "Single user, VLAN 20 suspected. Check Pi-hole and DHCP lease before escalating."
+| Item | Value |
+|---|---|
+| Ticketing platform | Zammad |
+| Host container | CT 110 `aria-zammad-01` |
+| Service FQDN | `helpdesk.aria.local` |
+| Service IP | `192.168.70.20` |
+| Port | `8080` |
+| Organization | `JLM Lab Trainees` |
+| Ticket group | `ARIA Help Desk` |
+| Student account model | Email-based Zammad login with Linux username documented separately |
 
 ---
 
-### Triage Ticket B
+## 4. Account Model
 
-> *"Proxmox web UI is down. I can't manage any VMs. The server was online 10 minutes ago."*
+Zammad uses email-based login identifiers in this deployment. ARIA Linux/container usernames are not forced into the Zammad login field.
 
-**Expected triage:**
-- Priority: P2 — infrastructure service affected, no workaround for VM management
-- Category: Proxmox — Host Connectivity
-- Route to: L2 sysadmin
-- Note: "Proxmox UI unreachable. Check ARIA network state and Tailscale fallback before escalating to console."
+Use this mapping standard:
 
----
+| System | Identifier |
+|---|---|
+| Linux/container username | Short username, for example `sprather` |
+| Zammad login | Student email address |
+| Zammad display name | Student real name |
+| Zammad note/reference | Linux/container username |
 
-### Triage Ticket C
+Example:
 
-> *"The printer in the lab isn't printing. I keep getting an error."*
-
-**Expected triage:**
-- Priority: P4 — single device, not critical to operations
-- Category: Printing — CUPS / Network
-- Route to: L1 analyst
-- Note: "CUPS print queue suspected. Check Pi-hole DNS and printer VLAN 30 connectivity."
-
----
-
-### Triage Ticket D
-
-> *"ALL WiFi SSIDs are down. Nobody can connect to anything. Even the guest network."*
-
-**Expected triage:**
-- Priority: P1 — all users affected, all wireless services down, no workaround for wireless users
-- Category: Network — WiFi / UniFi
-- Route to: L2 network engineer, immediate escalation
-- Note: "All SSIDs down simultaneously suggests AP or UniFi controller failure. Check GS308EP Port 4/5 and UniFi controller status immediately."
-
----
-
-### Triage Ticket E
-
-> *"I got a Wazuh alert that says 'Multiple failed SSH login attempts' on the Acer server. Not sure if it's real."*
-
-**Expected triage:**
-- Priority: P2 — potential security incident, requires investigation before determining severity
-- Category: Security — SIEM Alert / SSH
-- Route to: L2 security analyst
-- Note: "Possible brute force or misconfigured automation. Investigate source IP and frequency before closing. Escalate to P1 if source is external."
-
----
-
-### Triage Ticket F
-
-> *"Can you add me to the lab training environment? I just started."*
-
-**Expected triage:**
-- Priority: P4 — no service impact, onboarding request
-- Category: Access — User Provisioning
-- Route to: Lab admin
-- Note: "New user provisioning. No urgency. Verify identity and assign lab credentials."
-
----
-
-## AI Mentor Guidance Notes
-
-The mentor does not give the expected triage answers. It asks questions:
-
-For each ticket:
-```
-"Before you assign a priority — who is affected and is there a workaround?"
-"How many users does this impact?"
-"Is this a production service or a training resource?"
-"What category best describes what's broken?"
-"Who on the team has the skills to handle this?"
-```
-
-If the student assigns P1 to the printer ticket:
-> *"Walk me through your reasoning. A P1 means immediate response — would you page someone at 2am for this?"*
-
-If the student assigns P4 to the all-SSIDs-down ticket:
-> *"All wireless users are affected and there is no workaround for WiFi-only devices. Does that change your priority assessment?"*
-
----
-
-## Documentation Prompt
-
-```
-Complete a triage log for all 6 tickets:
-
-| Ticket | Priority | Category | Assigned To | Triage Note |
-|---|---|---|---|---|
-| A | | | | |
-| B | | | | |
-| C | | | | |
-| D | | | | |
-| E | | | | |
-| F | | | | |
-
-After the table, write two sentences explaining what criteria you used
-to distinguish between P1 and P2 tickets.
+```text
+Linux/container username: sprather
+Zammad login: sprath11@wgu.edu
+Zammad display name: Sha Neal Prather
+Zammad organization: JLM Lab Trainees
+Zammad role: Customer
 ```
 
 ---
 
-## Learning Objectives
+## 5. Ticket Setup
 
-- Apply a structured priority framework (P1–P4) consistently
-- Distinguish between urgency (how fast) and impact (how many)
-- Write a triage note that gives the next person actionable context
-- Recognize when a ticket should be escalated versus handled at L1
-- Understand that a security alert is always at least P2 until investigated
-- Practice the discipline of triaging before troubleshooting
+Create a ticket with the following values:
+
+```text
+Title: Ticket-009: Zammad Ticket Triage
+Group: ARIA Help Desk
+Customer/User: student account
+Priority: Normal
+State: New/Open
+```
+
+Suggested ticket body:
+
+```text
+A student is practicing basic help desk ticket handling in the ARIA training environment.
+
+Objective:
+Confirm that the student can open a ticket, describe an issue, add evidence, update the ticket, and write a closure summary.
+
+This is a platform validation ticket for Zammad before AI Mentor integration.
+```
+
+---
+
+## 6. Required Student Actions
+
+The student must complete the following:
+
+1. Log in to Zammad.
+2. Open Ticket-009.
+3. Read the ticket description.
+4. Add a comment confirming access.
+5. Describe what they can see in the ticket.
+6. Confirm they can add an update.
+7. Provide a short closure statement.
+
+Suggested student comment:
+
+```text
+I can access the ARIA Help Desk ticket, view the original request, and submit an update. This confirms the basic student ticket workflow is functional.
+```
+
+---
+
+## 7. Required Evidence
+
+Acceptable evidence includes:
+
+| Evidence | Required |
+|---|---|
+| Student can log in | Yes |
+| Student can view Ticket-009 | Yes |
+| Student can add a comment | Yes |
+| Instructor/admin can see the comment | Yes |
+| Instructor/admin can close the ticket | Yes |
+| Ticket history shows the workflow | Yes |
+
+The student should not simply say, “It worked.” They must provide a clear update that documents what was verified.
+
+---
+
+## 8. Instructor Workflow
+
+Instructor should verify:
+
+1. Student account exists and is active.
+2. Student belongs to `JLM Lab Trainees`.
+3. Student has customer/student-level permissions only.
+4. Ticket is assigned to `ARIA Help Desk`.
+5. Student can access and comment on the ticket.
+6. Instructor/admin can respond and close the ticket.
+
+Suggested instructor note:
+
+```text
+Ticket received. For this validation test, confirm that you can view the ticket, add a comment, and provide a short closure summary explaining what was tested.
+```
+
+Suggested closure summary:
+
+```text
+Zammad v1 platform validation passed. The ARIA Help Desk is reachable internally at helpdesk.aria.local:8080, the admin account can manage tickets, the student account can access and update tickets, and Ticket-009 confirms the basic training-ticket workflow.
+```
+
+---
+
+## 9. Completion Criteria
+
+This lab is complete when:
+
+- The student successfully logs in.
+- The student views Ticket-009.
+- The student posts a comment.
+- The instructor/admin confirms the comment is visible.
+- The instructor/admin closes the ticket.
+- The ticket contains a short closure summary.
+
+---
+
+## 10. Common Mistakes
+
+| Mistake | Correction |
+|---|---|
+| Student says only “done” | Require a professional status update |
+| Student cannot find the ticket | Confirm customer assignment and organization |
+| Student logs in with Linux username | Zammad uses email-based login in this deployment |
+| Instructor gives admin role to student | Keep student as customer-level user |
+| Ticket is closed without closure notes | Reopen or add closure summary before marking complete |
+
+---
+
+## 11. AI Mentor Behavior Rules
+
+When the AI Mentor is later attached to this ticket type, it should not troubleshoot infrastructure. It should coach ticket discipline.
+
+The AI Mentor should:
+
+1. Ask the student what they see in the ticket.
+2. Require a professional update, not a one-word response.
+3. Explain why evidence matters in help desk work.
+4. Prompt the student to write a closure summary.
+5. Reinforce that ticket history is part of the operational record.
+
+The AI Mentor should not:
+
+1. Close the ticket.
+2. Change ticket priority.
+3. Assign the ticket.
+4. Modify ticket metadata.
+5. Give unrelated technical troubleshooting steps.
+
+Suggested AI Mentor response:
+
+```text
+--- ARIA Mentor ---
+
+Situation Summary:
+You are validating that you can use the ARIA Help Desk ticketing workflow.
+
+What I need to see:
+1. Confirm that you can open this ticket.
+2. Add a comment describing what the ticket is asking you to do.
+3. Add one sentence explaining what evidence proves the workflow is working.
+
+Why this matters:
+In real help desk work, the ticket is the operational record. A good update helps the next technician, the instructor, and the customer understand what happened.
+
+Next Step:
+Post a short professional update in the ticket. Do not just write “done.”
+
+--- End ---
+```
+
+---
+
+## 12. Portfolio Output
+
+The student may document this lab as:
+
+```text
+Completed a basic help desk ticket workflow in Zammad, including ticket review, professional comment updates, evidence-based status reporting, and closure summary.
+```
+
+This is a beginner-level portfolio artifact showing exposure to ITSM workflow fundamentals.
+
+---
+
+## 13. Validation Status
+
+Live validation completed successfully on ARIA:
+
+| Validation Item | Result |
+|---|---|
+| Zammad stack running | PASS |
+| `helpdesk.aria.local:8080` reachable | PASS |
+| Admin login tested | PASS |
+| Student login tested | PASS |
+| Ticket opened | PASS |
+| Comments added | PASS |
+| Ticket closed | PASS |
+| Proxmox baseline backup completed | PASS |
+| Docker-level app backup completed | PASS |
+
+---
+
+*Updated after live Zammad validation: 2026-06-08*
