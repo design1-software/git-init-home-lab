@@ -43,3 +43,15 @@ class HealthResponse(BaseModel):
     hostname: str
     timestamp_utc: str
     mode: str
+
+
+class ZammadDraftGuidanceResponse(BaseModel):
+    ticket_id: int
+    session_id: str
+    mentor_response: str
+    risk_level: str
+    next_action: str
+    retrieved_sources: List[str]
+    retrieved_context: List[RetrievedContextItem] = []
+    zammad_ticket: dict
+    timestamp_utc: str
