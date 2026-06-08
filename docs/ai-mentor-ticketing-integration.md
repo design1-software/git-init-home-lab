@@ -1,53 +1,98 @@
 # AI Mentor — Ticketing Integration Design
 
-> **Status:** Design phase only. No deployment until ATX board installed, Comet hard reset validated, and ARIA on VLAN 70.
+> **Status:** Implemented as read-only instructor-mediated v1 on Jun 8, 2026. Zammad and AI Mentor are connected through read-only API calls and the instructor panel. Webhook automation and Zammad writeback remain deferred.
+
+> **Source of truth for implementation status:** `docs/ai-mentor-implementation-status.md`
 
 ---
 
 ## Zammad Role in the Training Platform
 
-Zammad is the entry point for every student interaction. It is not just a ticket tracker — it is the structured interface through which students report problems, submit evidence, receive guidance, and document resolutions.
+Zammad is the entry point for help desk and ticket-based student interactions. It is not just a ticket tracker — it is the structured interface through which students report problems, submit evidence, and document resolutions.
 
-The AI Mentor does not exist in a chat window. It exists inside the ticket. Every mentor response is attached to a ticket and tied to a session record. This is intentional: it mirrors real enterprise IT support workflows, not a consumer chatbot.
+The AI Mentor is intentionally aligned to ticket workflow because this mirrors real enterprise IT support operations.
 
 **Zammad's role:**
+
 - Receives student-submitted tickets
 - Maintains ticket history, evidence submissions, and resolution notes
-- Surfaces AI Mentor responses as internal notes or draft comments (not auto-posted in v1)
+- Provides instructor/admin visibility into student work
 - Tracks ticket state through the learning workflow
-- Provides instructor/admin visibility into all sessions
+- Serves as the system of record for the help desk/ticketing track
+
+**AI Mentor's current v1 role:**
+
+- Reads Zammad ticket metadata through the API
+- Reads ticket articles/comments through the API
+- Looks up tickets by visible Zammad ticket number
+- Generates deterministic mentor guidance in the instructor panel
+- Optionally displays assistive LLM wording when provider is enabled
+- Logs mentor sessions locally
+- Does not write back to Zammad
+
+---
+
+## Current v1 Integration Model
+
+Current v1 is **read-only and instructor-mediated**.
+
+```text
+Instructor / Admin
+       |
+       v
+/instructor panel
+       |
+       v
+AI Mentor Backend CT 120
+       |
+       | read-only Zammad API
+       v
+Zammad CT 110
+```
+
+Implemented endpoints include:
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /zammad/tickets/by-number/{ticket_number}` | Resolve visible Zammad ticket number to ticket data |
+| `GET /zammad/tickets/{ticket_id}` | Read Zammad ticket by internal ID |
+| `GET /zammad/tickets/{ticket_id}/articles` | Read ticket articles |
+| `POST /mentor/zammad/ticket-number/{ticket_number}/draft-guidance` | Generate deterministic guidance from a Zammad ticket |
+| `POST /mentor/zammad/ticket-number/{ticket_number}/llm-guidance` | Generate assistive LLM-enhanced wording if provider is enabled |
 
 ---
 
 ## Ticket Lifecycle
 
-```
+The target training lifecycle remains:
+
+```text
 [1] Student opens ticket
         ↓
 [2] AI Mentor reads ticket + surfaces relevant repo docs internally
         ↓
 [3] AI Mentor produces clarifying questions + evidence checklist
         ↓
-[4] Mentor response presented in draft panel (not auto-posted in v1)
+[4] Mentor response presented in draft panel / instructor panel
         ↓
-[5] Student reviews, approves, sees guidance
+[5] Student performs work (runs commands, checks systems)
         ↓
-[6] Student performs work (runs commands, checks systems)
+[6] Student updates ticket with evidence output
         ↓
-[7] Student updates ticket with evidence output
+[7] AI Mentor reviews evidence, guides next step or validates fix
         ↓
-[8] AI Mentor reviews evidence, guides next step or validates fix
+[8] Student applies fix or completes lab requirement
         ↓
-[9] Student applies fix, confirms resolution
+[9] Student runs verification commands
         ↓
 [10] AI Mentor prompts documentation writeup
         ↓
 [11] Student writes closure summary
         ↓
-[12] Ticket closed — session log retained
+[12] Instructor validates training completion
 ```
 
-The mentor does not skip steps. If a student attempts to jump from step 6 to step 9 without providing evidence, the mentor redirects at step 8.
+The mentor does not skip steps. If a student attempts to jump to resolution without evidence, the mentor redirects to evidence collection.
 
 ---
 
@@ -55,166 +100,170 @@ The mentor does not skip steps. If a student attempts to jump from step 6 to ste
 
 The AI Mentor acts at four defined points in the lifecycle:
 
-| Point | Trigger | AI Action |
-|---|---|---|
-| Ticket opened | New ticket submitted | Read ticket, surface relevant docs, generate clarifying questions + evidence checklist |
-| Evidence submitted | Student updates ticket with command output | Interpret evidence, guide next step or identify root cause |
-| Fix proposed | Student states intended fix | Validate logic, surface risk warnings, prompt rollback consideration |
-| Ticket closed | Student submits closure summary | Review summary quality, prompt missing sections if incomplete |
+| Point | Trigger | AI Action | v1 Status |
+|---|---|---|---|
+| Ticket opened | New ticket submitted | Read ticket, surface relevant docs, generate clarifying questions + evidence checklist | Manual via instructor panel |
+| Evidence submitted | Student updates ticket with command output | Interpret evidence, guide next step or identify root cause | Manual via instructor panel |
+| Fix proposed | Student states intended fix | Validate logic, surface risk warnings, prompt rollback consideration | Planned |
+| Ticket closed / completed | Student submits closure summary | Review summary quality, prompt missing sections if incomplete | Implemented for Ticket-009 completion detection |
 
-The AI Mentor does not respond unprompted between these points.
+The AI Mentor does not respond unprompted between these points in v1.
 
 ---
 
 ## Student Workflow
 
-```
-1. Open Zammad account (lab credentials)
-2. Submit a ticket describing the reported issue
-   - What is affected
-   - What the symptom is
-   - What has already been tried (if anything)
-3. Read the AI Mentor's clarifying questions
-4. Run the requested commands or checks
-5. Update the ticket with exact command output (not summaries — paste the output)
-6. Read the AI Mentor's interpretation
-7. Propose a fix based on the guidance
-8. Apply the fix
-9. Run verification commands
-10. Update the ticket with verification output
-11. Write the closure summary when prompted
-12. Close the ticket
+Target help desk workflow:
+
+```text
+1. Open Zammad account using lab credentials
+2. Submit or receive a training ticket
+3. Read instructor/mentor guidance when provided
+4. Run requested commands or checks
+5. Update ticket with exact command output or evidence
+6. Read mentor interpretation or instructor feedback
+7. Propose a fix or completion summary
+8. Apply approved fix or complete lab task
+9. Run verification commands/checks
+10. Update ticket with verification output
+11. Write closure summary when prompted
+12. Instructor validates completion
 ```
 
-Students are expected to paste raw command output, not summaries. "It worked" is not evidence. "Success rate is 100 percent (5/5)" is evidence.
+Students are expected to paste raw evidence, not summaries. "It worked" is not evidence. "Success rate is 100 percent (5/5)" is evidence.
 
 ---
 
 ## Instructor / Admin Workflow
 
-| Task | How |
+| Task | Current v1 Method |
 |---|---|
-| Create training tickets | Pre-load from `labs/helpdesk/ticket-*.md` scenarios |
-| Assign tickets to students | Zammad assignment rules or manual |
-| Review session logs | Every AI response stored with ticket ID + timestamp |
-| Monitor mentor behavior | Audit log shows what docs were retrieved and what guidance was given |
-| Override AI guidance | Admin can post a direct comment overriding the mentor response |
-| Mark a ticket as training complete | Separate status field from "resolved" |
-| Export session data | For student progress tracking |
+| Create training tickets | Pre-load or manually create from `labs/helpdesk/ticket-*.md` scenarios |
+| Assign tickets to students | Zammad assignment or manual process |
+| Review mentor guidance | `/instructor` panel |
+| Review session logs | Local session records; audit/event logging pending |
+| Monitor mentor behavior | Retrieved sources and guidance shown in panel |
+| Override AI guidance | Instructor posts direct Zammad comment manually |
+| Mark training complete | Instructor decision; AI Mentor can indicate `validation_complete` |
+| Export progress | Pending instructor review queue / reporting phase |
 
-The instructor has read access to full mentor reasoning — including the internal doc retrieval that the student cannot see.
+The instructor has access to mentor context and retrieved sources. Students should not receive mentor-only diagnostic paths or full runbook answers.
 
 ---
 
 ## Ticket Metadata Fields
 
-Each ticket in Zammad carries structured metadata used by the AI Mentor for retrieval and response scoping.
+The planned structured metadata model remains useful for future workflow expansion.
 
-| Field | Values | Purpose |
-|---|---|---|
-| `ticket_type` | training / incident / lab | Determines AI behavior mode |
-| `domain` | dns / vlan / cisco / linux / proxmox / ad / siem / other | Scopes doc retrieval |
-| `difficulty` | beginner / intermediate / advanced | Adjusts mentor verbosity |
-| `lab_ticket_id` | 001–010+ or null | Links to `labs/helpdesk/ticket-*.md` scenario |
-| `student_id` | lab username | Session scoping |
-| `evidence_submitted` | yes / no | Tracks whether student has provided output |
-| `mentor_session_id` | UUID | Ties all AI responses to one session log |
+| Field | Values | Purpose | v1 Status |
+|---|---|---|---|
+| `ticket_type` | training / incident / lab | Determines AI behavior mode | Planned |
+| `domain` | dns / vlan / cisco / linux / proxmox / ad / siem / other | Scopes doc retrieval | Inferred from content for now |
+| `difficulty` | beginner / intermediate / advanced | Adjusts mentor verbosity | Passed in request model |
+| `lab_ticket_id` | 001–010+ or null | Links to scenario file | Manual/inferred |
+| `student_id` | lab username | Session scoping | Partial |
+| `evidence_submitted` | yes / no | Tracks whether student has provided output | Planned |
+| `mentor_session_id` | UUID | Ties AI responses to a session log | Implemented |
 
 ---
 
 ## AI Response Format
 
-Every AI Mentor response follows a consistent structure. Students learn to read this format quickly.
+Every AI Mentor response follows a consistent structure:
 
-```
---- AI Mentor ---
+```text
+--- ARIA Mentor ---
 
-[Situation summary]
-One sentence confirming what was reported.
+Situation Summary:
+[One sentence confirming what was reported or validated]
 
-[What I need to see]
-Numbered list of commands to run and output to paste.
+Source Context Used:
+[Retrieved docs/chunks]
 
-[Why this matters]
-Brief explanation of what the requested output reveals.
+What I need to see / Validation Observed:
+[Evidence checklist or completion observations]
 
-[Risk notice] (if applicable)
-Any risk the student should know before proceeding.
+Why this matters:
+[Brief explanation if needed]
 
-[Documentation reminder] (at closure)
-Prompt to write the incident summary.
+Next Step:
+[One specific next action]
 
 --- End ---
 ```
 
-The AI Mentor does not write paragraphs of explanation before asking for evidence. It asks first, explains after the student provides output.
+The AI Mentor asks for evidence before explanation. It does not write long explanations before establishing what the student has actually observed.
 
 ---
 
 ## Escalation Rules
 
-The AI Mentor recognizes when a ticket is outside its scope and routes accordingly.
-
 | Condition | AI Response |
 |---|---|
-| Issue involves a system not in the lab | Acknowledge, explain it is out of scope, redirect to the lab boundary |
-| Student is stuck after 3 rounds of guidance | Suggest instructor review; do not give the full answer |
-| Issue requires production change approval | State the approval requirement; do not provide the config |
-| Student reports a safety concern (physical, power, data loss risk) | Escalate immediately to instructor; suspend guidance |
-| Ticket is ambiguous after two clarification rounds | Request a fresh ticket with more specific symptom description |
+| Issue involves a system not in the lab | Acknowledge, explain out of scope, redirect to lab boundary |
+| Student is stuck after repeated guidance | Suggest instructor review; do not give the full answer |
+| Issue requires production change approval | State approval requirement; do not provide unsafe config path |
+| Student reports safety concern | Escalate immediately to instructor; suspend guidance |
+| Ticket is ambiguous after clarification | Request a more specific symptom/evidence update |
 
 ---
 
 ## What the AI Can and Cannot Write Back to Zammad
 
-### v1 — Draft Panel Model (no auto-post)
+### v1 — Read-Only Instructor Panel Model
 
-In v1, the AI Mentor does not post directly into the ticket thread. It produces a response in a mentor draft panel, which the student sees after it has been generated. This prevents unreviewed AI text from becoming part of the official ticket record.
+In v1, the AI Mentor does not post directly into the ticket thread. It produces guidance in the instructor panel. The instructor may manually copy approved guidance into Zammad if appropriate.
 
 | AI can | AI cannot |
 |---|---|
-| Generate clarifying questions | Auto-post into ticket comments |
-| Produce evidence checklists | Change ticket priority |
-| Interpret command output | Close tickets |
-| Surface risk warnings | Assign tickets to other users |
-| Prompt closure summaries | Perform actions on lab systems |
-| Log session data internally | Expose mentor-only solution notes to students |
+| Read ticket data | Auto-post into ticket comments |
+| Read ticket articles | Change ticket priority |
+| Generate clarifying questions | Close tickets |
+| Produce evidence checklists | Assign tickets to users |
+| Interpret evidence | Perform actions on lab systems |
+| Surface risk warnings | Expose mentor-only solution notes to students |
+| Prompt closure summaries | Bypass instructor review |
+| Log session data internally | Write to Zammad without approval/audit |
 
-### Future v2 — Webhook Model
+### Future v2 — Webhook / Writeback Model
 
-After v1 is validated, the AI Mentor can post structured responses directly as internal notes via the Zammad API. Students see the note in the ticket thread. Instructors retain the ability to edit or retract.
+After v1 is validated, the AI Mentor may post structured responses as internal notes through the Zammad API, but only after audit logging, rate limiting, and instructor approval workflow exist.
 
-This requires:
-- Zammad API token scoped to the AI Mentor service account
-- Rate limiting and audit logging on every API write
+Required before v2:
+
+- Audit/event logging
+- Zammad API write token scoped to an AI Mentor service account
+- Rate limiting on every write-capable endpoint
+- Instructor approval flow
 - Rollback procedure for incorrect AI responses
+- Validation against all guardrail deployment tests
 
 ---
 
 ## Deployment Architecture
 
-```
-┌─────────────────────────────────────────────────────┐
-│  ARIA (VLAN 70 — 192.168.70.x)                      │
-│                                                     │
-│  ┌─────────────────┐   ┌─────────────────────────┐  │
-│  │  Zammad LXC     │   │  AI Mentor Backend LXC  │  │
-│  │  Port 443 (TLS) │   │  FastAPI — Port 8080    │  │
-│  │  PostgreSQL     │──►│  ChromaDB vector store  │  │
-│  │  Ticket data    │   │  Session log store      │  │
-│  └─────────────────┘   └──────────┬──────────────┘  │
-│                                   │ API call         │
-└───────────────────────────────────┼─────────────────┘
-                                    ▼
-                         ┌──────────────────────┐
-                         │  LLM API             │
-                         │  (Claude recommended)│
-                         └──────────────────────┘
+Current deployment:
+
+```text
+ARIA VLAN 70
+
+CT 110: Zammad
+  - Docker Compose
+  - PostgreSQL
+  - Internal HTTP v1
+  - helpdesk.aria.local
+
+CT 120: AI Mentor Backend
+  - FastAPI
+  - systemd service
+  - JSONL KB retrieval
+  - Local auth/roles
+  - Session logging
+  - Instructor panel
+  - Assistive LLM layer disabled by default
 ```
 
-Both Zammad and the AI Mentor backend run as separate LXC containers on ARIA VLAN 70. They communicate internally on the ARIA host network. The only external connection is the outbound API call to the LLM provider.
-
-Student access to Zammad is restricted to VLAN 10 (MGMT) and VLAN 60 (LAB) by ACL. No public exposure.
+Zammad and the AI Mentor backend run as separate LXC containers on ARIA VLAN 70. They communicate internally across the ARIA network. No public exposure is intended.
 
 ---
 
@@ -222,46 +271,36 @@ Student access to Zammad is restricted to VLAN 10 (MGMT) and VLAN 60 (LAB) by AC
 
 | Control | Implementation |
 |---|---|
-| Zammad access | Lab credentials only — no public registration |
-| AI Mentor API calls | Outbound only via C1111 NAT — no inbound exposure |
-| LLM API key | Stored in ARIA environment — not in repo, not in knowledge base |
-| Session logs | Stored on ARIA local storage — not synced to cloud |
-| Student cannot see mentor-only content | Enforced at retrieval layer — not just prompt instructions |
-| Zammad DB | Local PostgreSQL on ARIA — no cloud backup of ticket data in v1 |
+| Zammad access | Lab credentials only; internal-only access |
+| AI Mentor panel | Local auth + role separation v1 |
+| AI Mentor API calls | Protected by role dependencies for Zammad/LLM endpoints |
+| LLM API key | Stored in `.env`; not committed; provider disabled until explicitly enabled |
+| Session logs | Stored locally on ARIA |
+| Student cannot see mentor-only content | Enforced by workflow and future retrieval separation; student panel pending |
+| Zammad DB | Local PostgreSQL on ARIA; app-level backup exists separately |
 
 ---
 
-## Future: API/Webhook Plan (v2)
+## Deployment Gate Status
 
-When v1 is validated and the draft panel model has been tested with real students:
+Original gate items have changed status:
 
-1. Enable Zammad webhook on ticket update events
-2. AI Mentor backend subscribes to the webhook
-3. On new evidence submission, AI Mentor generates response and posts via Zammad API as internal note
-4. Instructor review period before student sees response (optional, configurable)
-5. Full audit log of every API write
-
-This eliminates the manual step of students requesting mentor review, making the workflow closer to a real service desk AI assist.
-
----
-
-## Deployment Gate
-
-This design is blocked on the same gates as all ARIA workloads:
-
-```
-[ ] Replacement ATX control board installed
-[ ] Comet hard power/reset validated
-[ ] ARIA migrated to VLAN 70 (192.168.70.10/24)
-[ ] Proxmox vmbr0 bridge configured and stable
-[ ] Baseline package state clean (apt upgrade completed safely)
-[ ] Zammad LXC deployed and accessible from VLAN 10/60
-[ ] AI Mentor backend LXC deployed with ChromaDB
-[ ] Knowledge base ingested and retrieval tested
-[ ] v1 draft panel validated before any webhook integration
+```text
+[x] ATX board installed and validated
+[x] ARIA migrated to VLAN 70
+[x] Proxmox vmbr0 stable
+[x] Zammad LXC deployed
+[x] AI Mentor backend LXC deployed
+[x] KB ingestion tested with JSONL retrieval
+[x] Read-only Zammad integration tested
+[x] Instructor panel deployed
+[x] Auth + role separation v1 deployed
+[ ] Audit/event logging
+[ ] Full 8-test guardrail deployment validation recorded
+[ ] Ticket-001 through Ticket-010 workflows implemented and validated
+[ ] Webhook/writeback approval workflow, if approved later
 ```
 
 ---
 
-*Document created: Jun 4, 2026*
-*Status: Design phase — no deployment*
+*Document reconciled: Jun 8, 2026*
