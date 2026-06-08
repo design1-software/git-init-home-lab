@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ARIA Mentor Instructor Panel</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --card: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #38bdf8;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --border: #374151;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+      background: #020617;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .search-card, .section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    input {
+      flex: 1;
+      min-width: 220px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    button {
+      padding: 12px 18px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #020617;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .metric, .source, details {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .metric .value {
+      font-size: 17px;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: bold;
+      background: var(--card);
+      border: 1px solid var(--border);
+    }
+
+    .badge.success {
+      background: rgba(34, 197, 94, 0.12);
+      color: #86efac;
+      border-color: rgba(34, 197, 94, 0.45);
+    }
+
+    .badge.warning {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fcd34d;
+      border-color: rgba(245, 158, 11, 0.45);
+    }
+
+    .mentor-response {
+      white-space: pre-wrap;
+      background: #020617;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    details { margin-bottom: 10px; }
+    summary { cursor: pointer; font-weight: bold; }
+
+    .article-body {
+      margin-top: 12px;
+      padding: 12px;
+      background: #020617;
+      border-radius: 8px;
+      color: var(--text);
+      overflow-wrap: anywhere;
+    }
+
+    .source { margin-bottom: 10px; }
+    .source small, .muted { color: var(--muted); }
+    .hidden { display: none; }
+
+    .error {
+      color: #fecaca;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ARIA Mentor Instructor Panel</h1>
+    <p>Read-only instructor review for Zammad training tickets. No Zammad writeback, closure, assignment, or priority changes.</p>
+  </header>
+
+  <main>
+    <section class="search-card">
+      <label for="ticketNumber">Zammad Ticket Number</label>
+      <div class="row">
+        <input id="ticketNumber" type="text" value="98002" placeholder="Example: 98002" />
+        <button id="fetchButton" onclick="fetchGuidance()">Fetch Mentor Guidance</button>
+      </div>
+      <div id="errorBox" class="error hidden"></div>
+    </section>
+
+    <section id="resultPanel" class="hidden">
+      <section class="section">
+        <h2>Ticket Overview</h2>
+        <div class="grid">
+          <div class="metric"><div class="label">Visible Ticket Number</div><div class="value" id="ticketNumberValue">-</div></div>
+          <div class="metric"><div class="label">Internal Ticket ID</div><div class="value" id="ticketIdValue">-</div></div>
+          <div class="metric"><div class="label">Title</div><div class="value" id="ticketTitleValue">-</div></div>
+          <div class="metric"><div class="label">Customer</div><div class="value" id="customerValue">-</div></div>
+          <div class="metric"><div class="label">Group / Priority</div><div class="value" id="orgGroupValue">-</div></div>
+          <div class="metric"><div class="label">Zammad Ticket State</div><div class="value" id="zammadStateValue">-</div></div>
+          <div class="metric"><div class="label">ARIA Mentor Status</div><div class="value" id="mentorStatusValue">-</div></div>
+          <div class="metric"><div class="label">Risk Level</div><div class="value" id="riskValue">-</div></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>ARIA Mentor Guidance</h2>
+        <div id="mentorResponse" class="mentor-response"></div>
+      </section>
+
+      <section class="section">
+        <h2>Retrieved Sources</h2>
+        <div id="sourcesList"></div>
+      </section>
+
+      <section class="section">
+        <h2>Ticket Articles</h2>
+        <p class="muted">Displayed for instructor review only. No data is written back to Zammad from this panel.</p>
+        <div id="articlesList"></div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function statusBadge(value) {
+      const normalized = String(value || '').toLowerCase();
+      if (normalized === 'validation_complete' || normalized === 'low') {
+        return '<span class="badge success">' + escapeHtml(value) + '</span>';
+      }
+      if (normalized.includes('required')) {
+        return '<span class="badge warning">' + escapeHtml(value) + '</span>';
+      }
+      return '<span class="badge">' + escapeHtml(value || '-') + '</span>';
+    }
+
+    function setText(id, value) {
+      document.getElementById(id).textContent = value ?? '-';
+    }
+
+    function showError(message) {
+      const box = document.getElementById('errorBox');
+      box.textContent = message;
+      box.classList.remove('hidden');
+    }
+
+    function clearError() {
+      const box = document.getElementById('errorBox');
+      box.textContent = '';
+      box.classList.add('hidden');
+    }
+
+    async function fetchGuidance() {
+      clearError();
+      const button = document.getElementById('fetchButton');
+      const ticketNumber = document.getElementById('ticketNumber').value.trim();
+
+      if (!ticketNumber) {
+        showError('Enter a Zammad ticket number.');
+        return;
+      }
+
+      button.disabled = true;
+      button.textContent = 'Loading...';
+
+      try {
+        const response = await fetch(`/mentor/zammad/ticket-number/${encodeURIComponent(ticketNumber)}/draft-guidance`, { method: 'POST' });
+        if (!response.ok) {
+          const errorPayload = await response.json().catch(() => ({}));
+          throw new Error(errorPayload.detail || `Request failed with status ${response.status}`);
+        }
+        renderResult(await response.json());
+      } catch (error) {
+        showError(error.message || String(error));
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Fetch Mentor Guidance';
+      }
+    }
+
+    function renderResult(data) {
+      document.getElementById('resultPanel').classList.remove('hidden');
+      const ticket = data.zammad_ticket?.ticket || {};
+      const articles = data.zammad_ticket?.articles || [];
+
+      setText('ticketNumberValue', ticket.number);
+      setText('ticketIdValue', data.ticket_id);
+      setText('ticketTitleValue', ticket.title);
+      setText('customerValue', ticket.customer);
+      setText('orgGroupValue', `${ticket.group || '-'} / ${ticket.priority || '-'}`);
+      setText('zammadStateValue', ticket.state);
+      document.getElementById('mentorStatusValue').innerHTML = statusBadge(data.next_action);
+      document.getElementById('riskValue').innerHTML = statusBadge(data.risk_level);
+      document.getElementById('mentorResponse').textContent = data.mentor_response || '';
+      renderSources(data.retrieved_context || [], data.retrieved_sources || []);
+      renderArticles(articles);
+    }
+
+    function renderSources(contextItems, sourcePaths) {
+      const container = document.getElementById('sourcesList');
+      container.innerHTML = '';
+      if (!contextItems.length && !sourcePaths.length) {
+        container.innerHTML = '<p class="muted">No retrieved sources.</p>';
+        return;
+      }
+      if (contextItems.length) {
+        contextItems.forEach((item) => {
+          const div = document.createElement('div');
+          div.className = 'source';
+          div.innerHTML = `
+            <strong>${escapeHtml(item.source_path)}</strong><br />
+            <small>Category: ${escapeHtml(item.category)} | Chunk: ${escapeHtml(item.chunk_index)} | Score: ${escapeHtml(item.score)}</small>
+            <p>${escapeHtml(item.preview)}</p>
+          `;
+          container.appendChild(div);
+        });
+        return;
+      }
+      sourcePaths.forEach((source) => {
+        const div = document.createElement('div');
+        div.className = 'source';
+        div.textContent = source;
+        container.appendChild(div);
+      });
+    }
+
+    function renderArticles(articles) {
+      const container = document.getElementById('articlesList');
+      container.innerHTML = '';
+      if (!articles.length) {
+        container.innerHTML = '<p class="muted">No ticket articles found.</p>';
+        return;
+      }
+      articles.forEach((article, index) => {
+        const detail = document.createElement('details');
+        detail.open = index === 0;
+        detail.innerHTML = `
+          <summary>Article ${index + 1} — ${escapeHtml(article.sender || '-')} — ${escapeHtml(article.from || '-')} — ${escapeHtml(article.created_at || '-')}</summary>
+          <div class="article-body">${article.body || ''}</div>
+        `;
+        container.appendChild(detail);
+      });
+    }
+  </script>
+</body>
+</html>
