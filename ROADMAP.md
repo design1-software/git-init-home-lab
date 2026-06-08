@@ -361,7 +361,7 @@ Workload deployment:
 - [x] Proxmox snapshot backup — `vzdump-lxc-110-2026_06_07-19_50_49.tar.zst` · 2.8G · PASS (Jun 7, 2026)
 - [x] As-built runbook committed — `docs/runbooks/zammad/zammad-lxc-deployment.md` (Jun 7, 2026)
 - [ ] Docker-level backup — PostgreSQL dump for app-level recovery (next)
-- [ ] Deploy AI Mentor backend LXC on ARIA
+- [x] Deploy AI Mentor backend LXC on ARIA — CT 120 `aria-ai-mentor-01` · FastAPI backend · systemd service · Swagger UI · /health + /mentor/analyze-ticket + /sessions endpoints · local JSON session logging · Ticket-009 mentor logic validated (Jun 7, 2026)
 - [ ] Deploy vector DB + knowledge base on ARIA
 - [ ] Connect Zammad → AI Mentor → LLM API
 
