@@ -17,6 +17,7 @@ from app.models import (
     ZammadDraftGuidanceResponse,
 )
 from app.retrieval import kb_status, search_chunks
+from app.llm_client import LLMClientError, enhance_guidance, llm_status
 from app.zammad_client import (
     ZammadClientError,
     get_ticket,
@@ -29,7 +30,7 @@ from app.zammad_client import (
 app = FastAPI(
     title="ARIA AI Mentor Backend",
     description="Evidence-first AI mentor backend for the ARIA training platform.",
-    version="0.6.1",
+    version="0.7.0",
 )
 
 
@@ -52,6 +53,7 @@ def root() -> dict:
         "docs": "/docs",
         "health": "/health",
         "instructor_panel": "/instructor",
+        "llm_status": "/llm/status",
         "mentor_endpoint": "/mentor/analyze-ticket",
         "zammad_health": "/zammad/health",
         "zammad_ticket": "/zammad/tickets/{ticket_id}",
@@ -59,9 +61,10 @@ def root() -> dict:
         "zammad_articles": "/zammad/tickets/{ticket_id}/articles",
         "zammad_draft_guidance": "/mentor/zammad/ticket/{ticket_id}/draft-guidance",
         "zammad_draft_guidance_by_number": "/mentor/zammad/ticket-number/{ticket_number}/draft-guidance",
+        "llm_zammad_guidance_by_number": "/mentor/zammad/ticket-number/{ticket_number}/llm-guidance",
         "kb_status": "/kb/status",
         "kb_search": "/kb/search?q=ticket-009",
-        "version": "0.6.1",
+        "version": "0.7.0",
     }
 
 
@@ -248,6 +251,68 @@ def rebuild_kb() -> dict:
     return {
         "status": "rebuilt",
         "stdout": result.stdout,
+    }
+
+
+@app.get("/llm/status")
+def get_llm_status() -> dict:
+    return llm_status()
+
+
+@app.post("/mentor/analyze-ticket/llm-guidance")
+def mentor_analyze_ticket_llm_guidance(request: AnalyzeTicketRequest) -> dict:
+    deterministic = mentor_analyze_ticket(request)
+
+    try:
+        enhanced = enhance_guidance(
+            deterministic_response=deterministic.mentor_response,
+            next_action=deterministic.next_action,
+            risk_level=deterministic.risk_level,
+            retrieved_sources=deterministic.retrieved_sources,
+            retrieved_context=[item.model_dump() for item in deterministic.retrieved_context],
+        )
+    except LLMClientError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+
+    return {
+        "session_id": deterministic.session_id,
+        "next_action": deterministic.next_action,
+        "risk_level": deterministic.risk_level,
+        "retrieved_sources": deterministic.retrieved_sources,
+        "retrieved_context": deterministic.retrieved_context,
+        "deterministic_response": deterministic.mentor_response,
+        "llm": enhanced,
+        "guardrail": "Deterministic fields are authoritative. LLM output is assistive only.",
+    }
+
+
+@app.post("/mentor/zammad/ticket-number/{ticket_number}/llm-guidance")
+def mentor_zammad_ticket_number_llm_guidance(ticket_number: str) -> dict:
+    deterministic = mentor_zammad_ticket_number_draft_guidance(ticket_number)
+
+    try:
+        enhanced = enhance_guidance(
+            deterministic_response=deterministic.mentor_response,
+            next_action=deterministic.next_action,
+            risk_level=deterministic.risk_level,
+            retrieved_sources=deterministic.retrieved_sources,
+            retrieved_context=[item.model_dump() for item in deterministic.retrieved_context],
+        )
+    except LLMClientError as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+
+    return {
+        "ticket_id": deterministic.ticket_id,
+        "ticket_number": deterministic.zammad_ticket["ticket"].get("number"),
+        "session_id": deterministic.session_id,
+        "next_action": deterministic.next_action,
+        "risk_level": deterministic.risk_level,
+        "zammad_ticket": deterministic.zammad_ticket,
+        "retrieved_sources": deterministic.retrieved_sources,
+        "retrieved_context": deterministic.retrieved_context,
+        "deterministic_response": deterministic.mentor_response,
+        "llm": enhanced,
+        "guardrail": "Deterministic fields are authoritative. LLM output is assistive only.",
     }
 
 
