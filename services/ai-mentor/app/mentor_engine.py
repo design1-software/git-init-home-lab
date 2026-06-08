@@ -1,6 +1,26 @@
 from typing import Any, Dict, List, Tuple
+import re
 
 from app.models import AnalyzeTicketRequest
+
+
+COMPLETION_PHRASES = [
+    "resolution summary",
+    "zammad v1 platform validation passed",
+    "ticket-009 confirms the basic training-ticket workflow",
+]
+
+
+def normalize_for_detection(text: str) -> str:
+    normalized = text.lower()
+    normalized = re.sub(r"<[^>]+>", " ", normalized)
+    normalized = re.sub(r"\s+", " ", normalized)
+    return normalized.strip()
+
+
+def ticket_009_is_complete(text: str) -> bool:
+    normalized = normalize_for_detection(text)
+    return all(phrase in normalized for phrase in COMPLETION_PHRASES)
 
 
 def format_sources(kb_results: List[Dict[str, Any]]) -> str:
@@ -25,6 +45,37 @@ def unique_sources(kb_results: List[Dict[str, Any]]) -> List[str]:
     return sources
 
 
+def build_ticket_009_completion_response(
+    request: AnalyzeTicketRequest,
+    kb_results: List[Dict[str, Any]],
+) -> Tuple[str, str, str, List[str]]:
+    sources_text = format_sources(kb_results)
+    retrieved_sources = unique_sources(kb_results)
+
+    if not retrieved_sources:
+        retrieved_sources = ["labs/helpdesk/ticket-009-zammad-ticket-triage.md"]
+
+    mentor_response = f"""--- ARIA Mentor ---
+
+Situation Summary:
+Ticket-009 appears complete.
+
+Source Context Used:
+{sources_text}
+
+Validation Observed:
+1. Student accessed the ticket.
+2. Student added an update.
+3. Resolution summary is present.
+4. Ticket workflow validation was documented.
+
+Next Step:
+Instructor can mark this lab as complete and capture the portfolio output.
+
+--- End ---"""
+    return mentor_response, "low", "validation_complete", retrieved_sources
+
+
 def build_ticket_009_response(
     request: AnalyzeTicketRequest,
     kb_results: List[Dict[str, Any]],
@@ -35,6 +86,11 @@ def build_ticket_009_response(
 
     if not retrieved_sources:
         retrieved_sources = ["labs/helpdesk/ticket-009-zammad-ticket-triage.md"]
+
+    combined_ticket_text = f"{request.ticket_title}\n{request.ticket_body}\n{evidence}"
+
+    if ticket_009_is_complete(combined_ticket_text):
+        return build_ticket_009_completion_response(request, kb_results)
 
     if not evidence:
         mentor_response = f"""--- ARIA Mentor ---
@@ -99,7 +155,7 @@ def analyze_ticket(
     normalized_title = request.ticket_title.lower()
     retrieved_sources = unique_sources(kb_results)
 
-    if request.ticket_id == "009" or "zammad ticket triage" in normalized_title:
+    if request.ticket_id in {"009", "4"} or "zammad ticket triage" in normalized_title:
         return build_ticket_009_response(request, kb_results)
 
     sources_text = format_sources(kb_results)
