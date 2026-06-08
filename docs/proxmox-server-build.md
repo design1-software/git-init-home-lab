@@ -384,6 +384,7 @@ Connect with: `ssh aria-student-linux-01`
 | CT ID | Name | IP | Accounts | Purpose |
 |---|---|---|---|---|
 | 102 | student-linux-01 | 192.168.70.12 | sprather (student) · julius (instructor) | First student Linux troubleshooting endpoint · SSH + sudo validated · Field Tech Lab 001 complete |
+| 110 | aria-zammad-01 | 192.168.70.XX | admin (Zammad) | Zammad help desk · Docker Compose stack · helpdesk.aria.local · AI Mentor ticketing platform · Proxmox backup PASS (Jun 7, 2026) |
 
 **Template approach:** baseline template contains only the OS and minimal configuration. Troubleshooting tools, lab-specific packages, and any scenario setup are added to clones after deployment — not to the template itself. Future template rebuilds may include a curated baseline toolset before conversion.
 

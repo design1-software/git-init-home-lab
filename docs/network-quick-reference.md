@@ -26,6 +26,7 @@
 | Proxmox Server (ARIA / pve) | 192.168.70.10 :8006 (web UI) | 70 (SERVER) | 00:1B:41:0A:05:09 (nic1 Intel via vmbr0) | `https://192.168.70.10:8006` · Tailscale 100.71.239.21 · 3560CX Gi0/4 |
 | lab-linux-01 (Proxmox template) | — (template, no active IP) | 70 (SERVER) | — | Debian 13 baseline LXC template · clone to deploy student containers |
 | student-linux-01 (CT 102) | 192.168.70.12 | 70 (SERVER) | — (Proxmox vmbr0) | First student Linux troubleshooting endpoint · SSH running · cloned from lab-linux-01 |
+| Zammad (CT 110 / aria-zammad-01) | helpdesk.aria.local | 70 (SERVER) | — (Proxmox vmbr0) | Help desk · Docker Compose stack · AI Mentor ticketing platform · Proxmox backup PASS (Jun 7, 2026) |
 | Comet GL-RM1PE KVM | 192.168.10.12 (web UI) | 10 (MGMT) | 94:83:C4:D0:C7:BF | `http://192.168.10.12` · PoE from 3560CX Gi0/5 (15.4W) |
 
 ---

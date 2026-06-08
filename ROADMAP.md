@@ -283,7 +283,7 @@ Four distinct telemetry tiers — each scoped to a specific purpose with no over
 ### Phase D — VLAN 60 schoolmate lab ❌
 - [ ] Build VLAN 60 (LAB, 192.168.60.0/24) on 3560CX
 - [ ] Deploy Active Directory VM on Proxmox — forest: jlm.lab
-- [ ] Deploy Zammad help desk VM on Proxmox — replaces osTicket; serves as the AI Mentor ticketing platform for both Phase D training and Phase AI
+- [x] Deploy Zammad help desk LXC on Proxmox — CT 110 `aria-zammad-01` · Docker Compose · helpdesk.aria.local · COMPLETE (Jun 7, 2026)
 - [ ] Deploy M365 admin sandbox (VLAN 60)
 - [ ] Configure Tailscale subnet routing for Ohio schoolmate access
 
@@ -298,9 +298,9 @@ Four distinct telemetry tiers — each scoped to a specific purpose with no over
 
 ---
 
-## Phase AI: IT Enterprise Training Platform 🔄 DESIGN PHASE
+## Phase AI: IT Enterprise Training Platform 🔄 IN PROGRESS
 
-> ARIA's mission is not just to host VMs. ARIA is an **IT Enterprise Training Platform**. The AI Mentor is the intelligence layer that helps students learn by guiding them through real infrastructure tasks without giving away answers. No deployment until ATX board installed and ARIA is on VLAN 70.
+> ARIA's mission is not just to host VMs. ARIA is an **IT Enterprise Training Platform**. The AI Mentor is the intelligence layer that helps students learn by guiding them through real infrastructure tasks without giving away answers. Zammad is live. AI Mentor backend is next.
 
 ### Phase AI-1 — Mentor Design ✅ COMPLETE (Jun 4, 2026)
 - [x] Create `docs/ai-mentor-architecture.md` — purpose, behavior, guardrails, MVP architecture, phase roadmap
@@ -356,8 +356,11 @@ Infrastructure gates — complete:
 - [x] ARIA on VLAN 70 (192.168.70.10/24) (Jun 5, 2026)
 - [x] Proxmox `vmbr0` bridge configured (Jun 5, 2026)
 
-Workload deployment — next:
-- [ ] Deploy Zammad LXC on ARIA — next required step
+Workload deployment:
+- [x] Deploy Zammad LXC on ARIA — CT 110 `aria-zammad-01` · Docker Compose · helpdesk.aria.local · admin/student workflow validated · ticket lifecycle PASS (Jun 7, 2026)
+- [x] Proxmox snapshot backup — `vzdump-lxc-110-2026_06_07-19_50_49.tar.zst` · 2.8G · PASS (Jun 7, 2026)
+- [x] As-built runbook committed — `docs/runbooks/zammad/zammad-lxc-deployment.md` (Jun 7, 2026)
+- [ ] Docker-level backup — PostgreSQL dump for app-level recovery (next)
 - [ ] Deploy AI Mentor backend LXC on ARIA
 - [ ] Deploy vector DB + knowledge base on ARIA
 - [ ] Connect Zammad → AI Mentor → LLM API
@@ -482,4 +485,4 @@ Live configurations:
 
 ---
 
-*Last updated: Jun 5, 2026 (Phase C + C.1 COMPLETE · first LXC deployed: CT 101 lab-linux-01 192.168.70.11 · vmbr0 bridge validated for container networking)*
+*Last updated: Jun 7, 2026 (Zammad LXC deployed: CT 110 aria-zammad-01 · Docker Compose · helpdesk.aria.local · Proxmox backup PASS · AI Mentor ticketing platform live)*
