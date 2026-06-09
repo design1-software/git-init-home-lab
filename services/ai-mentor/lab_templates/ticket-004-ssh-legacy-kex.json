@@ -1,0 +1,22 @@
+{
+  "template_id": "ticket-004",
+  "title": "SSH Legacy KEX Negotiation",
+  "domain": "security",
+  "difficulty": "intermediate",
+  "ticket_type": "training",
+  "status": "active",
+  "summary": "Student investigates SSH connection failure related to legacy key exchange algorithms.",
+  "student_goal": "Identify whether an SSH failure is caused by unsupported legacy algorithms and document a safe remediation path.",
+  "mentor_mode": "guided_troubleshooting",
+  "trigger_terms": ["ticket-004", "ssh legacy kex", "key exchange", "kex", "no matching key exchange", "ssh algorithm", "legacy ssh"],
+  "required_evidence": [
+    {"id": "ssh_error", "label": "SSH error message", "description": "Student must provide the exact SSH negotiation error."},
+    {"id": "ssh_verbose_output", "label": "Verbose SSH output", "description": "Student should provide safe verbose SSH evidence such as ssh -v output."},
+    {"id": "risk_statement", "label": "Security risk statement", "description": "Student must acknowledge the risk of enabling legacy algorithms."}
+  ],
+  "opening_questions": ["What exact SSH error appears?", "Does verbose SSH output mention key exchange or host key algorithms?", "Is this a temporary compatibility need or a device that should be upgraded?"],
+  "completion_signals": ["root cause identified as legacy SSH algorithm mismatch", "temporary compatibility workaround documented", "long-term remediation documented"],
+  "mentor_guidance_rules": ["Do not normalize insecure algorithms as a permanent fix.", "Ask for verbose output before naming a specific algorithm.", "Always pair temporary compatibility guidance with a long-term remediation recommendation."],
+  "student_visible": {"allowed": ["student_goal", "opening_questions", "required_evidence labels", "security-risk reminders"], "blocked": ["unsafe permanent weakening of SSH config", "credentials or private keys"]},
+  "next_actions": {"missing_evidence": "request_more_evidence", "complete": "validation_complete", "unclear": "manual_review"}
+}
