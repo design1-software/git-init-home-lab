@@ -357,7 +357,7 @@ No new phase should deepen only one domain at the expense of the others. Any imp
 | Help Desk / Ticketing | Complete v1 | Keep stable. Do not add more Help Desk features until other domains catch up unless the work is shared platform infrastructure. |
 | Networking / Cisco / DNS / VLAN / Switching | Workflow coverage started; infrastructure mature | Add dedicated network lab path with command evidence and Cisco guardrails |
 | Security / SOC / Wazuh / Incident Review | Ticket-010 workflow exists; infrastructure pending | Deploy Wazuh LXC, agents, alert sources, and SOC labs |
-| Automation / SysAdmin / Linux / Proxmox / Field-Tech | Partially live; needs unified lab model | Build non-Zammad lab submission/completion workflow |
+| Automation / SysAdmin / Linux / Proxmox / Field-Tech | Complete v1 | Keep stable. Future expansion should follow `docs/domain-plans/automation-sysadmin-linux-fieldtech-lab-path.md`. |
 | Identity / IAM / Active Directory / GPO / Windows Endpoint Administration | Core domain; not implemented yet | Build simple VM-based AD/GPO lab and mentor evidence templates |
 
 ### Help Desk / Ticketing v1 Closeout
@@ -388,6 +388,33 @@ Guardrail:
 No additional Help Desk-only feature work should begin until the other domains catch up, unless the work is shared platform infrastructure.
 
 
+
+### Automation / SysAdmin / Linux / Field-Tech v1 Closeout
+
+Automation / SysAdmin / Linux / Proxmox / Field-Tech is complete for v1.
+
+Completed:
+
+- Non-Zammad lab submission model
+- Linux lab submission template
+- Field-Tech Lab 001 tracking
+- Field-Tech Lab 002 tracking
+- Automation/IaC mentor workflow submissions
+- Ansible/Netmiko Lab 004 tracking
+- RESTCONF Lab 005 tracking
+- Runbook-writing lab tracking
+- Existing-runbook review tracking
+- Student direct evidence submission
+- Student submission history
+- Instructor review and completion tracking
+- Audit logging for submissions and status updates
+- Domain lab path planning document
+
+Guardrail:
+
+No additional Automation / SysAdmin / Linux / Field-Tech-only feature work should begin until the remaining domains catch up, unless the work is shared platform infrastructure.
+
+
 ### Workflow vs Domain Infrastructure
 
 Workflow implemented does not always mean the full domain is operational.
@@ -398,6 +425,7 @@ Examples:
 - AD/GPO is a required core training domain, but the Windows Server domain controller and Windows client lab are not deployed yet.
 - Ticket workflows provide mentor validation, but domain-specific lab environments still need to be built and tested.
 - Help Desk / Ticketing is complete for v1, including assignment model, instructor review queue, and controlled one-time Zammad writeback.
+- Automation / SysAdmin / Linux / Proxmox / Field-Tech is complete for v1, including non-Zammad lab submissions, Field-Tech tracking, Automation/IaC submissions, Ansible/Netmiko/RESTCONF submissions, and runbook-writing progress tracking.
 
 > Full implementation phase status: `docs/ai-mentor-implementation-status.md`
 

@@ -1,0 +1,49 @@
+{
+  "template_id": "field-tech-lab-002-endpoint-health-check",
+  "title": "Field-Tech Lab 002: Endpoint Health Check",
+  "domain": "automation_sysadmin_linux_fieldtech",
+  "category": "field-tech",
+  "difficulty": "beginner",
+  "source_lab_path": "labs/field-tech/lab-002-endpoint-health-check/",
+  "description": "Submission template for the existing Field-Tech Lab 002 endpoint health check lab.",
+  "required_evidence": [
+    {
+      "id": "endpoint_target",
+      "label": "Endpoint target",
+      "description": "Identify the endpoint or lab system being checked."
+    },
+    {
+      "id": "health_checks",
+      "label": "Health checks performed",
+      "description": "List the checks performed, such as network status, disk, memory, services, updates, or logs as applicable."
+    },
+    {
+      "id": "findings",
+      "label": "Findings",
+      "description": "Explain what was healthy, what needs attention, and what evidence supports your conclusion."
+    },
+    {
+      "id": "validation",
+      "label": "Validation",
+      "description": "Show how you verified the endpoint health status or confirmed the task was complete."
+    },
+    {
+      "id": "professional_summary",
+      "label": "Professional summary",
+      "description": "Write a short field-tech or sysadmin-style summary of the endpoint health result."
+    }
+  ],
+  "completion_signals": [
+    "student identifies the target endpoint",
+    "student performs health checks",
+    "student records findings",
+    "student provides validation",
+    "student gives a professional summary"
+  ],
+  "safety_rules": [
+    "Do not submit passwords, API keys, SSH private keys, session cookies, or tokens.",
+    "Do not run destructive cleanup commands unless the lab explicitly tells you to.",
+    "Separate observations from conclusions.",
+    "Document evidence before requesting completion."
+  ]
+}

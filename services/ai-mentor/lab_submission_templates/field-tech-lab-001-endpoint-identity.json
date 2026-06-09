@@ -1,0 +1,49 @@
+{
+  "template_id": "field-tech-lab-001-endpoint-identity",
+  "title": "Field-Tech Lab 001: Endpoint Identity",
+  "domain": "automation_sysadmin_linux_fieldtech",
+  "category": "field-tech",
+  "difficulty": "beginner",
+  "source_lab_path": "labs/field-tech/lab-001-endpoint-identity/",
+  "description": "Submission template for the existing Field-Tech Lab 001 endpoint identity lab.",
+  "required_evidence": [
+    {
+      "id": "endpoint_identity",
+      "label": "Endpoint identity",
+      "description": "Identify the endpoint, hostname, device/user context, and where the work was performed."
+    },
+    {
+      "id": "access_validation",
+      "label": "Access validation",
+      "description": "Show that you accessed the correct system using the approved student or technician workflow."
+    },
+    {
+      "id": "system_observations",
+      "label": "System observations",
+      "description": "Document what you observed about the endpoint identity, environment, or configuration."
+    },
+    {
+      "id": "evidence_collected",
+      "label": "Evidence collected",
+      "description": "Provide command output, screenshots description, or written evidence. Do not include passwords, tokens, or private keys."
+    },
+    {
+      "id": "professional_summary",
+      "label": "Professional summary",
+      "description": "Write a short field-tech style completion summary explaining what was verified."
+    }
+  ],
+  "completion_signals": [
+    "student identifies the endpoint or lab target",
+    "student validates system identity",
+    "student explains evidence collected",
+    "student avoids submitting secrets",
+    "student provides a professional summary"
+  ],
+  "safety_rules": [
+    "Do not submit passwords, API keys, SSH private keys, session cookies, or tokens.",
+    "Do not collect unrelated personal information.",
+    "Use approved commands and approved lab scope only.",
+    "Document what you observed before claiming completion."
+  ]
+}

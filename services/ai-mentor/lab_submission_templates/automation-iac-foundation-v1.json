@@ -1,0 +1,62 @@
+{
+  "template_id": "automation-iac-foundation-v1",
+  "title": "Automation/IaC Foundation Lab Submission",
+  "domain": "automation_sysadmin_linux_fieldtech",
+  "category": "automation-iac",
+  "difficulty": "beginner",
+  "description": "Evidence template for introductory automation and Infrastructure-as-Code practice in ARIA.",
+  "required_evidence": [
+    {
+      "id": "automation_goal",
+      "label": "Automation goal",
+      "description": "Explain what task the automation or IaC workflow is supposed to perform."
+    },
+    {
+      "id": "files_or_commands",
+      "label": "Files or commands used",
+      "description": "List the script, playbook, config, or commands used. Do not include secrets, tokens, vault passwords, or private keys."
+    },
+    {
+      "id": "dry_run_or_safety_check",
+      "label": "Dry run or safety check",
+      "description": "Show how you checked the automation before trusting it, such as syntax check, dry run, limited scope, or read-only test."
+    },
+    {
+      "id": "execution_result",
+      "label": "Execution result",
+      "description": "Provide output or observations showing what happened when the automation ran."
+    },
+    {
+      "id": "validation",
+      "label": "Validation",
+      "description": "Show how you proved the result was correct."
+    },
+    {
+      "id": "rollback_or_recovery",
+      "label": "Rollback or recovery note",
+      "description": "Explain how you would reverse, recover, or safely stop the change if something went wrong."
+    },
+    {
+      "id": "professional_summary",
+      "label": "Professional summary",
+      "description": "Write a short sysadmin-style summary of the automation task and result."
+    }
+  ],
+  "completion_signals": [
+    "student states the automation goal",
+    "student identifies the files or commands used",
+    "student provides a safety check before execution",
+    "student provides execution evidence",
+    "student validates the result",
+    "student includes rollback or recovery thinking",
+    "student avoids submitting secrets",
+    "student provides a professional summary"
+  ],
+  "safety_rules": [
+    "Do not submit passwords, API keys, SSH private keys, vault passwords, session cookies, or tokens.",
+    "Do not run destructive automation unless the lab explicitly instructs it.",
+    "Prefer dry-run, check mode, or read-only validation before changes.",
+    "Use limited scope before broad execution.",
+    "Explain rollback or recovery before marking the lab complete."
+  ]
+}

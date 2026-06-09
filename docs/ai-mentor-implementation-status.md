@@ -164,7 +164,7 @@ Example:
 | Help Desk / Ticketing | Complete v1 | Zammad, help desk workflow, instructor panel, student panel, Ticket-009 workflow, session logging, audit logging, progress summary API, read-only Zammad integration, student assignment model, instructor review queue, controlled one-time Zammad writeback | Domain complete for v1. Do not add more Help Desk features until other domains catch up unless the work is shared platform infrastructure. |
 | Networking / Cisco / DNS / VLAN / Switching | Workflow coverage started; infrastructure is mature | Ticket-001 DNS, Ticket-002 VLAN, Ticket-004 Cisco SSH, Ticket-005 return path/routing, Ticket-007 VLAN 70 migration | Create dedicated network lab path with show-command evidence, risk, rollback, and Cisco guardrail enforcement |
 | Security / SOC / Wazuh / Incident Review | Workflow prepared; infrastructure pending | Ticket-010 Wazuh Alert Investigation workflow and security-triage evidence model | Deploy Wazuh LXC, agents, alert sources, and real SOC lab events |
-| Automation / SysAdmin / Linux / Proxmox / Field-Tech | Partially live; needs unified lab model | Proxmox, student Linux container, Ticket-003, Ticket-006, Ticket-008, field-tech notes | Build non-Zammad lab submission/completion model for Linux, Proxmox, field-tech, runbooks, and automation labs |
+| Automation / SysAdmin / Linux / Proxmox / Field-Tech | Complete v1 | Proxmox, student Linux container, Ticket-003, Ticket-006, Ticket-008, Linux lab submissions, Field-Tech Lab 001/002 submissions, Automation/IaC submissions, Ansible/Netmiko submissions, RESTCONF submissions, runbook-writing submissions, instructor review, audit logging | Domain complete for v1. Keep stable and avoid adding new scope until the remaining domains catch up. |
 | Identity / IAM / Active Directory / GPO / Windows Endpoint Administration | Core domain; not implemented yet | Planning only; local app roles are not a substitute for AD/GPO training | Build simple VM-based AD/GPO lab: Windows Server DC, Windows client, domain join, users, groups, OUs, GPOs, and troubleshooting labs |
 
 ---
@@ -176,7 +176,7 @@ Example:
 | Help Desk / Zammad | Complete v1 | Keep stable. Controlled writeback is limited to one instructor-approved note. No auto-close, priority change, or ticket-state change by ARIA. |
 | DNS / Pi-hole | Ticket workflow implemented | Add real student lab evidence path and domain-specific progress tracking |
 | VLAN / Switching | Ticket workflow implemented | Add Cisco/switching lab evidence model |
-| Linux / Proxmox | Ticket workflows implemented | Add broader Linux/Proxmox lab submission workflow |
+| Linux / Proxmox | Complete v1 foundation | Non-Zammad Linux lab submission and instructor completion tracking are implemented. Future expansion should follow the documented lab path. |
 | Cisco / SSH / Switching | Ticket workflow implemented | Add strict Cisco config-change guardrail workflow |
 | WiFi / UniFi | Ticket workflow implemented where mapped | Validate AP/SSID evidence model when WiFi labs expand |
 | Proxmox recovery / hardware operations | Ticket workflows implemented | Expand into field-tech and operational recovery labs |
@@ -260,6 +260,57 @@ Help Desk / Ticketing is ahead of the other domains and should not receive anoth
 
 ---
 
+## Automation / SysAdmin / Linux / Proxmox / Field-Tech Domain Closeout
+
+Automation / SysAdmin / Linux / Proxmox / Field-Tech is complete for v1.
+
+Completed capabilities:
+
+- Proxmox host live
+- Student Linux container model exists
+- CT 102 student-linux-01 deployed
+- Student SSH access validated
+- Scoped sudo validated
+- Ticket-003 Proxmox APT workflow
+- Ticket-006 Proxmox repository hygiene workflow
+- Ticket-008 Comet ATX reset validation workflow
+- Non-Zammad lab submission model
+- Linux Foundation lab submission template
+- Field-Tech Lab 001 endpoint identity submission template
+- Field-Tech Lab 002 endpoint health check submission template
+- Automation/IaC foundation submission template
+- Automation script review submission template
+- Network Automation Lab 004 Ansible/Netmiko submission template
+- Network Automation Lab 005 RESTCONF submission template
+- Runbook Writing Foundation submission template
+- Existing Runbook Review submission template
+- Student lab submission endpoint
+- Student personal lab submission history endpoint
+- Instructor lab submission review endpoint
+- Instructor lab completion/status update endpoint
+- Audit events for lab submission creation
+- Audit events for lab submission status updates
+
+Validated v1 submission categories:
+
+- Linux
+- Field-Tech
+- Automation/IaC
+- Network Automation
+- Ansible / Netmiko
+- RESTCONF
+- Runbook-writing
+- Existing runbook review
+
+Completion boundary:
+
+- This domain is complete for v1 because students can submit direct non-Zammad evidence and instructors can review, complete, and audit Linux, Field-Tech, Automation/IaC, Ansible/Netmiko/RESTCONF, and runbook-writing work.
+- Future expansion should add deeper labs from `docs/domain-plans/automation-sysadmin-linux-fieldtech-lab-path.md`.
+- Do not add additional Automation / SysAdmin / Linux / Field-Tech scope until the remaining domains catch up unless the work is shared platform infrastructure.
+
+
+---
+
 ## Current Discrepancy Decisions
 
 ### JSONL Retrieval Instead of ChromaDB
@@ -309,8 +360,9 @@ Recommended next-domain priorities:
    - Connect Ticket-010 workflow to real evidence.
 
 3. Automation / SysAdmin / Linux / Proxmox / Field-Tech
-   - Create non-Zammad lab submission model.
-   - Connect field-tech and Linux labs to progress tracking.
+   - Complete v1.
+   - Non-Zammad lab submission model implemented.
+   - Linux, Field-Tech, Automation/IaC, Ansible/Netmiko/RESTCONF, and runbook-writing submissions are connected to progress tracking.
 
 No next build phase should proceed until the roadmap is reviewed against the Domain Balance Rule.
 

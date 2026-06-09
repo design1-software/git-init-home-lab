@@ -1,0 +1,62 @@
+{
+  "template_id": "network-automation-lab-005-restconf",
+  "title": "Network Automation Lab 005: RESTCONF",
+  "domain": "automation_sysadmin_linux_fieldtech",
+  "category": "network-automation",
+  "difficulty": "beginner",
+  "source_lab_path": "labs/lab-005-restconf.md",
+  "description": "Submission template for the existing RESTCONF lab covering REST API queries, HTTPS safety, read-only validation, and professional API evidence.",
+  "required_evidence": [
+    {
+      "id": "restconf_target",
+      "label": "RESTCONF target",
+      "description": "Identify the device, API endpoint category, or lab target. Do not submit credentials or tokens."
+    },
+    {
+      "id": "api_query_goal",
+      "label": "API query goal",
+      "description": "Explain what the RESTCONF query is intended to retrieve or validate."
+    },
+    {
+      "id": "request_details_safe",
+      "label": "Safe request details",
+      "description": "Document method, endpoint path category, headers used in general terms, or script name. Do not include credentials, bearer tokens, cookies, or private data."
+    },
+    {
+      "id": "response_observations",
+      "label": "Response observations",
+      "description": "Summarize the response, status code, returned fields, or useful observations without leaking sensitive values."
+    },
+    {
+      "id": "validation",
+      "label": "Validation",
+      "description": "Explain how you proved the RESTCONF result was accurate or useful."
+    },
+    {
+      "id": "security_note",
+      "label": "Security note",
+      "description": "Explain how HTTPS, credential handling, scope, and read-only API behavior were handled safely."
+    },
+    {
+      "id": "professional_summary",
+      "label": "Professional summary",
+      "description": "Write a short network automation API summary."
+    }
+  ],
+  "completion_signals": [
+    "student identifies the RESTCONF target",
+    "student explains the API query goal",
+    "student provides safe request details",
+    "student summarizes response observations",
+    "student validates the result",
+    "student includes security awareness",
+    "student avoids submitting secrets"
+  ],
+  "safety_rules": [
+    "Do not submit credentials, API tokens, bearer tokens, cookies, private keys, or secrets.",
+    "Prefer read-only RESTCONF queries for beginner labs.",
+    "Do not change device configuration through RESTCONF unless the lab explicitly requires it.",
+    "Keep HTTP/HTTPS hardening decisions documented.",
+    "Sanitize API output before submission."
+  ]
+}

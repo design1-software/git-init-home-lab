@@ -1,0 +1,54 @@
+{
+  "template_id": "automation-script-review-v1",
+  "title": "Automation Script Review Lab Submission",
+  "domain": "automation_sysadmin_linux_fieldtech",
+  "category": "automation-iac",
+  "difficulty": "beginner",
+  "description": "Evidence template for reviewing a script or automation workflow before execution.",
+  "required_evidence": [
+    {
+      "id": "script_purpose",
+      "label": "Script purpose",
+      "description": "Explain what the script or automation is intended to do."
+    },
+    {
+      "id": "risk_review",
+      "label": "Risk review",
+      "description": "Identify risky commands, assumptions, paths, credentials, or destructive operations."
+    },
+    {
+      "id": "safe_test_plan",
+      "label": "Safe test plan",
+      "description": "Explain how you would test safely before running against a real target."
+    },
+    {
+      "id": "expected_output",
+      "label": "Expected output",
+      "description": "Describe the expected result before execution."
+    },
+    {
+      "id": "validation_plan",
+      "label": "Validation plan",
+      "description": "Explain how you would prove the script worked correctly."
+    },
+    {
+      "id": "professional_summary",
+      "label": "Professional summary",
+      "description": "Write a short professional review summary with approve, revise, or block recommendation."
+    }
+  ],
+  "completion_signals": [
+    "student explains script purpose",
+    "student identifies risks",
+    "student proposes a safe test plan",
+    "student defines expected output",
+    "student defines validation",
+    "student gives a professional recommendation"
+  ],
+  "safety_rules": [
+    "Do not submit secrets or credentials.",
+    "Do not execute unknown scripts blindly.",
+    "Review destructive commands before execution.",
+    "Use test targets or dry runs before production-like systems."
+  ]
+}

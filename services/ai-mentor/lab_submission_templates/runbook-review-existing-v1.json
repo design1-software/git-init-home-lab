@@ -1,0 +1,61 @@
+{
+  "template_id": "runbook-review-existing-v1",
+  "title": "Existing Runbook Review Lab Submission",
+  "domain": "automation_sysadmin_linux_fieldtech",
+  "category": "runbook-writing",
+  "difficulty": "beginner",
+  "source_lab_path": "docs/runbooks/",
+  "description": "Evidence template for reviewing and improving an existing ARIA runbook.",
+  "required_evidence": [
+    {
+      "id": "runbook_selected",
+      "label": "Runbook selected",
+      "description": "Identify the existing runbook reviewed, such as server restart, SSH key collision, backup, disaster recovery, or Zammad deployment."
+    },
+    {
+      "id": "what_it_covers",
+      "label": "What it covers",
+      "description": "Summarize what the runbook is supposed to help someone do."
+    },
+    {
+      "id": "strengths",
+      "label": "Strengths",
+      "description": "Identify what is already clear, useful, or safe in the runbook."
+    },
+    {
+      "id": "gaps_or_risks",
+      "label": "Gaps or risks",
+      "description": "Identify anything unclear, missing, risky, outdated, or hard for a beginner to follow."
+    },
+    {
+      "id": "improvement_recommendations",
+      "label": "Improvement recommendations",
+      "description": "Recommend specific edits or additions that would make the runbook safer or easier to use."
+    },
+    {
+      "id": "validation_plan",
+      "label": "Validation plan",
+      "description": "Explain how the runbook should be tested before being trusted."
+    },
+    {
+      "id": "professional_summary",
+      "label": "Professional summary",
+      "description": "Write a short review summary with approve, revise, or block recommendation."
+    }
+  ],
+  "completion_signals": [
+    "student identifies the runbook reviewed",
+    "student summarizes the runbook purpose",
+    "student identifies strengths",
+    "student identifies gaps or risks",
+    "student recommends improvements",
+    "student explains validation",
+    "student provides a professional recommendation"
+  ],
+  "safety_rules": [
+    "Do not paste secrets from any runbook or system.",
+    "Do not approve unclear operational steps without validation.",
+    "Call out destructive or risky procedures clearly.",
+    "Recommend beginner-friendly improvements when needed."
+  ]
+}

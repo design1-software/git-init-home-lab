@@ -1,0 +1,48 @@
+{
+  "template_id": "linux-foundation-v1",
+  "title": "Linux Foundation Lab Submission",
+  "domain": "automation_sysadmin_linux_fieldtech",
+  "category": "linux",
+  "difficulty": "beginner",
+  "description": "Evidence template for Linux command-line, service, package, permissions, networking, and troubleshooting labs in ARIA.",
+  "required_evidence": [
+    {
+      "id": "identity",
+      "label": "System identity",
+      "description": "Show hostname, current user, working directory, and target container or VM."
+    },
+    {
+      "id": "commands",
+      "label": "Commands used",
+      "description": "List the exact commands used during the lab. Do not include passwords, tokens, or private keys."
+    },
+    {
+      "id": "observations",
+      "label": "Observations",
+      "description": "Explain what the command output showed and why it mattered."
+    },
+    {
+      "id": "change_validation",
+      "label": "Validation",
+      "description": "Show how you proved the issue was fixed or the task was completed."
+    },
+    {
+      "id": "professional_summary",
+      "label": "Professional summary",
+      "description": "Write a short help desk or sysadmin-style summary of the work completed."
+    }
+  ],
+  "completion_signals": [
+    "student identifies the target Linux system",
+    "student provides command output or clear observations",
+    "student explains what changed or what was validated",
+    "student avoids sharing secrets",
+    "student provides a professional final summary"
+  ],
+  "safety_rules": [
+    "Do not submit passwords, API keys, SSH private keys, session cookies, or tokens.",
+    "Do not run destructive commands unless the lab explicitly instructs it.",
+    "Use read-only validation commands before making changes.",
+    "Explain the reasoning behind each command."
+  ]
+}

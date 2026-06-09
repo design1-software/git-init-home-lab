@@ -1,0 +1,68 @@
+{
+  "template_id": "network-automation-lab-004-ansible-netmiko",
+  "title": "Network Automation Lab 004: Ansible and Netmiko",
+  "domain": "automation_sysadmin_linux_fieldtech",
+  "category": "network-automation",
+  "difficulty": "beginner",
+  "source_lab_path": "labs/lab-004-network-automation.md",
+  "description": "Submission template for the existing Network Automation Lab 004 covering Ansible structure, inventory awareness, Netmiko connection logic, and safe network automation evidence.",
+  "required_evidence": [
+    {
+      "id": "automation_target",
+      "label": "Automation target",
+      "description": "Identify the lab target, such as router, switch, inventory group, or test host. Do not submit credentials."
+    },
+    {
+      "id": "ansible_structure",
+      "label": "Ansible project structure",
+      "description": "Describe or show the Ansible files used, such as ansible.cfg, inventory, playbook, roles, or vault placeholders. Do not include secrets."
+    },
+    {
+      "id": "netmiko_workflow",
+      "label": "Netmiko workflow",
+      "description": "Describe the Netmiko script purpose, target, command intent, and expected output. Do not include usernames, passwords, tokens, or private keys."
+    },
+    {
+      "id": "safety_check",
+      "label": "Safety check",
+      "description": "Show how you limited risk before running automation, such as read-only commands, inventory scope, check mode, backup first, or test-only target."
+    },
+    {
+      "id": "execution_or_dry_run_evidence",
+      "label": "Execution or dry-run evidence",
+      "description": "Provide output or observations from a safe run, dry run, syntax check, or read-only automation validation."
+    },
+    {
+      "id": "validation",
+      "label": "Validation",
+      "description": "Explain how you proved the automation result was correct."
+    },
+    {
+      "id": "rollback_or_recovery",
+      "label": "Rollback or recovery",
+      "description": "Explain how you would recover from a bad automation result or restore from backup."
+    },
+    {
+      "id": "professional_summary",
+      "label": "Professional summary",
+      "description": "Write a short network automation handoff summary."
+    }
+  ],
+  "completion_signals": [
+    "student identifies the automation target",
+    "student describes Ansible project structure",
+    "student describes Netmiko workflow",
+    "student includes safety checks",
+    "student provides execution or dry-run evidence",
+    "student validates the result",
+    "student includes rollback or recovery thinking",
+    "student avoids submitting secrets"
+  ],
+  "safety_rules": [
+    "Do not submit router passwords, API keys, vault passwords, private keys, tokens, or session cookies.",
+    "Use read-only commands before configuration changes.",
+    "Back up network configuration before changing network devices.",
+    "Limit automation scope to the approved lab target.",
+    "Do not push configuration changes unless the lab explicitly requires it."
+  ]
+}

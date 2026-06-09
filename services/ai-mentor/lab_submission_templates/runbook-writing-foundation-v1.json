@@ -1,0 +1,60 @@
+{
+  "template_id": "runbook-writing-foundation-v1",
+  "title": "Runbook Writing Foundation Lab Submission",
+  "domain": "automation_sysadmin_linux_fieldtech",
+  "category": "runbook-writing",
+  "difficulty": "beginner",
+  "description": "Evidence template for writing operational runbooks in ARIA.",
+  "required_evidence": [
+    {
+      "id": "runbook_purpose",
+      "label": "Runbook purpose",
+      "description": "Explain what operational task, recovery process, or troubleshooting workflow the runbook covers."
+    },
+    {
+      "id": "scope_and_assumptions",
+      "label": "Scope and assumptions",
+      "description": "Define where the runbook applies, who should use it, and any assumptions or prerequisites."
+    },
+    {
+      "id": "steps",
+      "label": "Procedure steps",
+      "description": "Provide clear numbered steps that another technician or student could follow."
+    },
+    {
+      "id": "validation",
+      "label": "Validation",
+      "description": "Explain how the user proves the runbook worked or the task was completed."
+    },
+    {
+      "id": "rollback_or_recovery",
+      "label": "Rollback or recovery",
+      "description": "Explain what to do if the procedure fails or needs to be reversed."
+    },
+    {
+      "id": "safety_and_secrets",
+      "label": "Safety and secrets handling",
+      "description": "State what information must not be pasted into the runbook, such as passwords, keys, tokens, cookies, or private data."
+    },
+    {
+      "id": "professional_summary",
+      "label": "Professional summary",
+      "description": "Write a short handoff summary explaining the runbook value and readiness."
+    }
+  ],
+  "completion_signals": [
+    "student states the runbook purpose",
+    "student defines scope and assumptions",
+    "student provides clear steps",
+    "student includes validation",
+    "student includes rollback or recovery",
+    "student handles secrets safely",
+    "student provides a professional summary"
+  ],
+  "safety_rules": [
+    "Do not include passwords, API keys, SSH private keys, tokens, cookies, or secrets.",
+    "Do not document destructive steps without warning, validation, and rollback.",
+    "Write steps clearly enough for another person to follow.",
+    "Separate commands, expected results, and troubleshooting notes."
+  ]
+}

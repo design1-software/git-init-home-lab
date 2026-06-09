@@ -42,6 +42,13 @@ from app.models import (
 )
 from app.retrieval import kb_status, search_chunks
 from app.llm_client import LLMClientError, enhance_guidance, llm_status
+from app.lab_submission_store import (
+    create_lab_submission,
+    get_lab_submission_template,
+    list_lab_submission_templates,
+    list_lab_submissions,
+    update_lab_submission_status,
+)
 from app.lab_templates import (
     append_template_guidance,
     build_lab_template_context,
@@ -913,6 +920,173 @@ def approve_review_queue_item(
         "payload_hash": payload_hash,
         "message": "Approved note written to Zammad. Local assignment marked completed. Zammad ticket state was not changed.",
     }
+
+
+
+@app.get("/lab-submission-templates")
+def get_lab_submission_templates(
+    user: dict = Depends(require_roles("admin", "instructor", "student")),
+) -> dict:
+    return {
+        "templates": list_lab_submission_templates(),
+        "count": len(list_lab_submission_templates()),
+    }
+
+
+@app.get("/lab-submission-templates/{template_id}")
+def get_lab_submission_template_endpoint(
+    template_id: str,
+    user: dict = Depends(require_roles("admin", "instructor", "student")),
+) -> dict:
+    template = get_lab_submission_template(template_id)
+
+    if template is None:
+        raise HTTPException(status_code=404, detail="Lab submission template not found.")
+
+    return {"template": template}
+
+
+@app.post("/lab-submissions")
+def create_lab_submission_endpoint(
+    payload: dict,
+    request: Request,
+    user: dict = Depends(require_roles("admin", "instructor", "student")),
+) -> dict:
+    template_id = str(payload.get("template_id", "")).strip()
+    evidence = str(payload.get("evidence", "")).strip()
+
+    if not template_id:
+        raise HTTPException(status_code=400, detail="template_id is required.")
+
+    if not evidence:
+        raise HTTPException(status_code=400, detail="evidence is required.")
+
+    template = get_lab_submission_template(template_id)
+
+    if template is None:
+        raise HTTPException(status_code=404, detail="Lab submission template not found.")
+
+    student = str(payload.get("student") or user.get("username") or "").strip()
+
+    if user.get("role") == "student":
+        student = str(user.get("username") or "").strip()
+
+    if not student:
+        raise HTTPException(status_code=400, detail="student is required.")
+
+    submission = create_lab_submission(
+        student=student,
+        template_id=template_id,
+        title=str(template.get("title") or payload.get("title") or template_id),
+        domain=str(template.get("domain") or payload.get("domain") or "unknown"),
+        category=str(template.get("category") or payload.get("category") or "unknown"),
+        evidence=evidence,
+        reflection=str(payload.get("reflection", "")),
+        commands_used=str(payload.get("commands_used", "")),
+        created_by=str(user.get("username") or student),
+    )
+
+    write_audit_event(
+        event_type="lab_submission.created",
+        request=request,
+        actor=user,
+        outcome="success",
+        target_type="lab_submission",
+        target_id=submission["submission_id"],
+        metadata={
+            "student": submission.get("student"),
+            "template_id": submission.get("template_id"),
+            "domain": submission.get("domain"),
+            "category": submission.get("category"),
+            "status": submission.get("status"),
+        },
+    )
+
+    return {"submission": submission}
+
+
+@app.get("/lab-submissions")
+def get_lab_submissions_endpoint(
+    student: str | None = None,
+    template_id: str | None = None,
+    status: str | None = None,
+    limit: int = Query(default=200, ge=1, le=1000),
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> dict:
+    submissions = list_lab_submissions(
+        student=student,
+        template_id=template_id,
+        status=status,
+        limit=limit,
+    )
+
+    return {
+        "submissions": submissions,
+        "count": len(submissions),
+    }
+
+
+@app.get("/student/lab-submissions")
+def get_current_student_lab_submissions(
+    status: str | None = None,
+    limit: int = Query(default=200, ge=1, le=1000),
+    user: dict = Depends(require_roles("admin", "instructor", "student")),
+) -> dict:
+    student = str(user.get("username") or "").strip()
+
+    submissions = list_lab_submissions(
+        student=student,
+        status=status,
+        limit=limit,
+    )
+
+    return {
+        "student": student,
+        "submissions": submissions,
+        "count": len(submissions),
+    }
+
+
+@app.patch("/lab-submissions/{submission_id}/status")
+def patch_lab_submission_status(
+    submission_id: str,
+    payload: dict,
+    request: Request,
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> dict:
+    status = str(payload.get("status", "")).strip()
+    review_note = str(payload.get("review_note", "")).strip()
+
+    try:
+        submission = update_lab_submission_status(
+            submission_id,
+            status=status,
+            reviewed_by=str(user.get("username") or "unknown"),
+            review_note=review_note,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    if submission is None:
+        raise HTTPException(status_code=404, detail="Lab submission not found.")
+
+    write_audit_event(
+        event_type="lab_submission.status_updated",
+        request=request,
+        actor=user,
+        outcome="success",
+        target_type="lab_submission",
+        target_id=submission_id,
+        metadata={
+            "student": submission.get("student"),
+            "template_id": submission.get("template_id"),
+            "status": submission.get("status"),
+            "domain": submission.get("domain"),
+            "category": submission.get("category"),
+        },
+    )
+
+    return {"submission": submission}
 
 @app.get("/progress/summary")
 def get_progress_summary(
