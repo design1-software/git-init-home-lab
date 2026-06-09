@@ -1,0 +1,22 @@
+{
+  "template_id": "ticket-007",
+  "title": "Proxmox VLAN 70 Migration",
+  "domain": "proxmox",
+  "difficulty": "intermediate",
+  "ticket_type": "training",
+  "status": "active",
+  "summary": "Student validates Proxmox management or service migration to ARIA VLAN 70.",
+  "student_goal": "Confirm the correct VLAN 70 addressing, gateway, bridge, and service reachability after migration.",
+  "mentor_mode": "change_validation",
+  "trigger_terms": ["ticket-007", "vlan 70 migration", "vlan70", "aria vlan 70", "192.168.70", "vmbr0", "proxmox migration"],
+  "required_evidence": [
+    {"id": "ip_addressing", "label": "VLAN 70 IP addressing", "description": "Student must document the expected and actual VLAN 70 IP configuration."},
+    {"id": "gateway_reachability", "label": "Gateway reachability", "description": "Student must confirm the system can reach the VLAN 70 gateway."},
+    {"id": "service_reachability", "label": "Service reachability", "description": "Student must confirm ARIA service access after migration."}
+  ],
+  "opening_questions": ["What system or service was migrated to VLAN 70?", "What IP address and gateway should it use?", "Can it reach the VLAN 70 gateway and required services?"],
+  "completion_signals": ["VLAN 70 addressing confirmed", "gateway reachability confirmed", "service access validated after migration"],
+  "mentor_guidance_rules": ["Do not approve migration without gateway and service reachability evidence.", "Ask for current IP and bridge evidence before troubleshooting.", "Keep rollback considerations visible during network migration work."],
+  "student_visible": {"allowed": ["student_goal", "opening_questions", "required_evidence labels", "rollback reminder"], "blocked": ["blind bridge edits", "unsafe network cutover shortcuts"]},
+  "next_actions": {"missing_evidence": "request_more_evidence", "complete": "validation_complete", "unclear": "manual_review"}
+}
