@@ -6,6 +6,11 @@ import subprocess
 from fastapi import FastAPI, HTTPException, Query, Request, Response, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 
+from app.audit import (
+    audit_status,
+    read_recent_audit_events,
+    write_audit_event,
+)
 from app.auth import (
     COOKIE_NAME,
     LoginRequest,
@@ -41,7 +46,7 @@ from app.zammad_client import (
 app = FastAPI(
     title="ARIA AI Mentor Backend",
     description="Evidence-first AI mentor backend for the ARIA training platform.",
-    version="0.8.0",
+    version="0.6.0",
 )
 
 
@@ -63,12 +68,6 @@ def root() -> dict:
         "status": "running",
         "docs": "/docs",
         "health": "/health",
-        "login": "/login",
-        "logout": "/auth/logout",
-        "auth_me": "/auth/me",
-        "auth_status": "/auth/status",
-        "instructor_panel": "/instructor",
-        "llm_status": "/llm/status",
         "mentor_endpoint": "/mentor/analyze-ticket",
         "zammad_health": "/zammad/health",
         "zammad_ticket": "/zammad/tickets/{ticket_id}",
@@ -76,10 +75,9 @@ def root() -> dict:
         "zammad_articles": "/zammad/tickets/{ticket_id}/articles",
         "zammad_draft_guidance": "/mentor/zammad/ticket/{ticket_id}/draft-guidance",
         "zammad_draft_guidance_by_number": "/mentor/zammad/ticket-number/{ticket_number}/draft-guidance",
-        "llm_zammad_guidance_by_number": "/mentor/zammad/ticket-number/{ticket_number}/llm-guidance",
         "kb_status": "/kb/status",
         "kb_search": "/kb/search?q=ticket-009",
-        "version": "0.8.0",
+        "version": "0.6.0",
     }
 
 
@@ -297,10 +295,19 @@ def login_page() -> HTMLResponse:
 
 
 @app.post("/auth/login")
-def login(payload: LoginRequest, response: Response) -> dict:
+def login(payload: LoginRequest, request: Request, response: Response) -> dict:
     user = authenticate_user(payload.username, payload.password)
 
     if not user:
+        write_audit_event(
+            event_type="auth.login_failed",
+            request=request,
+            actor={"username": payload.username, "display_name": payload.username, "role": "unknown"},
+            outcome="failure",
+            target_type="auth",
+            target_id=payload.username,
+            metadata={"reason": "invalid_credentials"},
+        )
         raise HTTPException(status_code=401, detail="Invalid username or password.")
 
     token = create_session_token(user)
@@ -314,6 +321,16 @@ def login(payload: LoginRequest, response: Response) -> dict:
         path="/",
     )
 
+    write_audit_event(
+        event_type="auth.login_success",
+        request=request,
+        actor=user,
+        outcome="success",
+        target_type="auth",
+        target_id=user.get("username"),
+        metadata={"role": user.get("role")},
+    )
+
     return {
         "status": "ok",
         "user": user,
@@ -322,7 +339,16 @@ def login(payload: LoginRequest, response: Response) -> dict:
 
 
 @app.post("/auth/logout")
-def logout(response: Response) -> dict:
+def logout(request: Request, response: Response) -> dict:
+    user = get_optional_user(request)
+    write_audit_event(
+        event_type="auth.logout",
+        request=request,
+        actor=user,
+        outcome="success",
+        target_type="auth",
+        target_id=user.get("username") if user else "anonymous",
+    )
     response.delete_cookie(key=COOKIE_NAME, path="/")
     return {"status": "logged_out"}
 
@@ -337,15 +363,60 @@ def get_auth_status(user: dict = Depends(require_roles("admin"))) -> dict:
     return auth_status()
 
 
+
+@app.get("/audit/status")
+def get_audit_status(user: dict = Depends(require_roles("admin"))) -> dict:
+    return audit_status()
+
+
+@app.get("/audit/recent")
+def get_recent_audit_events(
+    limit: int = Query(default=50, ge=1, le=500),
+    user: dict = Depends(require_roles("admin")),
+) -> dict:
+    return {
+        "limit": limit,
+        "events": read_recent_audit_events(limit=limit),
+    }
+
+
+
 @app.get("/instructor", response_class=HTMLResponse)
 def instructor_panel(request: Request) -> HTMLResponse:
     user = get_optional_user(request)
 
     if not user:
+        write_audit_event(
+            event_type="panel.instructor_redirect_login",
+            request=request,
+            actor=None,
+            outcome="redirect",
+            target_type="panel",
+            target_id="instructor",
+        )
         return RedirectResponse(url="/login", status_code=303)
 
     if user.get("role") not in {"admin", "instructor"}:
+        write_audit_event(
+            event_type="panel.instructor_access_denied",
+            request=request,
+            actor=user,
+            outcome="forbidden",
+            target_type="panel",
+            target_id="instructor",
+            metadata={"role": user.get("role")},
+        )
         raise HTTPException(status_code=403, detail="Instructor or admin role required.")
+
+    write_audit_event(
+        event_type="panel.instructor_access",
+        request=request,
+        actor=user,
+        outcome="success",
+        target_type="panel",
+        target_id="instructor",
+        metadata={"role": user.get("role")},
+    )
 
     html_path = "/opt/aria-ai-mentor/app/static/instructor.html"
     with open(html_path, "r", encoding="utf-8") as file:
@@ -443,10 +514,7 @@ def get_llm_status(user: dict = Depends(require_roles("admin", "instructor"))) -
 
 
 @app.post("/mentor/analyze-ticket/llm-guidance")
-def mentor_analyze_ticket_llm_guidance(
-    request: AnalyzeTicketRequest,
-    user: dict = Depends(require_roles("admin", "instructor")),
-) -> dict:
+def mentor_analyze_ticket_llm_guidance(request: AnalyzeTicketRequest, user: dict = Depends(require_roles("admin", "instructor"))) -> dict:
     deterministic = mentor_analyze_ticket(request)
 
     try:
@@ -475,9 +543,10 @@ def mentor_analyze_ticket_llm_guidance(
 @app.post("/mentor/zammad/ticket-number/{ticket_number}/llm-guidance")
 def mentor_zammad_ticket_number_llm_guidance(
     ticket_number: str,
+    request: Request,
     user: dict = Depends(require_roles("admin", "instructor")),
 ) -> dict:
-    deterministic = mentor_zammad_ticket_number_draft_guidance(ticket_number, user)
+    deterministic = mentor_zammad_ticket_number_draft_guidance(ticket_number, request, user)
 
     try:
         enhanced = enhance_guidance(
@@ -489,6 +558,24 @@ def mentor_zammad_ticket_number_llm_guidance(
         )
     except LLMClientError as exc:
         raise HTTPException(status_code=502, detail=str(exc))
+
+    write_audit_event(
+        event_type="mentor.llm_guidance_requested",
+        request=request,
+        actor=user,
+        outcome="success",
+        target_type="zammad_ticket",
+        target_id=str(ticket_number),
+        metadata={
+            "internal_ticket_id": deterministic.ticket_id,
+            "ticket_number": deterministic.zammad_ticket["ticket"].get("number"),
+            "next_action": deterministic.next_action,
+            "risk_level": deterministic.risk_level,
+            "llm_enabled": enhanced.get("llm_enabled"),
+            "llm_provider": enhanced.get("provider"),
+            "llm_model": enhanced.get("model"),
+        },
+    )
 
     return {
         "ticket_id": deterministic.ticket_id,
@@ -513,33 +600,52 @@ def zammad_health() -> dict:
         raise HTTPException(status_code=502, detail=str(exc))
 
 
-@app.get("/zammad/tickets/by-number/{ticket_number}")
-def zammad_ticket_by_number(
-    ticket_number: str,
-    user: dict = Depends(require_roles("admin", "instructor")),
-) -> dict:
-    try:
-        return get_ticket_by_number(ticket_number)
-    except ZammadClientError as exc:
-        raise HTTPException(status_code=502, detail=str(exc))
-
-
 @app.get("/zammad/tickets/{ticket_id}")
-def zammad_ticket(
-    ticket_id: int,
-    user: dict = Depends(require_roles("admin", "instructor")),
-) -> dict:
+def zammad_ticket(ticket_id: int, user: dict = Depends(require_roles("admin", "instructor"))) -> dict:
     try:
         return get_ticket(ticket_id)
     except ZammadClientError as exc:
         raise HTTPException(status_code=502, detail=str(exc))
 
 
-@app.get("/zammad/tickets/{ticket_id}/articles")
-def zammad_ticket_articles(
-    ticket_id: int,
+@app.get("/zammad/tickets/by-number/{ticket_number}")
+def zammad_ticket_by_number(
+    ticket_number: str,
+    request: Request,
     user: dict = Depends(require_roles("admin", "instructor")),
 ) -> dict:
+    try:
+        ticket = get_ticket_by_number(ticket_number)
+        write_audit_event(
+            event_type="zammad.ticket_read_by_number",
+            request=request,
+            actor=user,
+            outcome="success",
+            target_type="zammad_ticket",
+            target_id=str(ticket_number),
+            metadata={
+                "internal_ticket_id": ticket.get("id"),
+                "ticket_number": ticket.get("number"),
+                "state": ticket.get("state"),
+                "article_count": ticket.get("article_count"),
+            },
+        )
+        return ticket
+    except ZammadClientError as exc:
+        write_audit_event(
+            event_type="zammad.ticket_read_by_number",
+            request=request,
+            actor=user,
+            outcome="failure",
+            target_type="zammad_ticket",
+            target_id=str(ticket_number),
+            metadata={"error": str(exc)},
+        )
+        raise HTTPException(status_code=502, detail=str(exc))
+
+
+@app.get("/zammad/tickets/{ticket_id}/articles")
+def zammad_ticket_articles(ticket_id: int, user: dict = Depends(require_roles("admin", "instructor"))) -> dict:
     try:
         return {
             "ticket_id": ticket_id,
@@ -550,10 +656,7 @@ def zammad_ticket_articles(
 
 
 @app.post("/mentor/zammad/ticket/{ticket_id}/draft-guidance", response_model=ZammadDraftGuidanceResponse)
-def mentor_zammad_ticket_draft_guidance(
-    ticket_id: int,
-    user: dict = Depends(require_roles("admin", "instructor")),
-) -> ZammadDraftGuidanceResponse:
+def mentor_zammad_ticket_draft_guidance(ticket_id: int, user: dict = Depends(require_roles("admin", "instructor"))) -> ZammadDraftGuidanceResponse:
     try:
         ticket = get_ticket(ticket_id)
         articles = get_ticket_articles(ticket_id)
@@ -565,12 +668,39 @@ def mentor_zammad_ticket_draft_guidance(
 @app.post("/mentor/zammad/ticket-number/{ticket_number}/draft-guidance", response_model=ZammadDraftGuidanceResponse)
 def mentor_zammad_ticket_number_draft_guidance(
     ticket_number: str,
+    request: Request,
     user: dict = Depends(require_roles("admin", "instructor")),
 ) -> ZammadDraftGuidanceResponse:
     try:
         ticket = get_ticket_by_number(ticket_number)
         ticket_id = int(ticket.get("id"))
         articles = get_ticket_articles(ticket_id)
-        return build_zammad_draft_guidance_response(ticket, articles)
+        response = build_zammad_draft_guidance_response(ticket, articles)
+        write_audit_event(
+            event_type="mentor.guidance_requested",
+            request=request,
+            actor=user,
+            outcome="success",
+            target_type="zammad_ticket",
+            target_id=str(ticket_number),
+            metadata={
+                "internal_ticket_id": ticket_id,
+                "ticket_number": ticket.get("number"),
+                "next_action": response.next_action,
+                "risk_level": response.risk_level,
+                "retrieved_sources_count": len(response.retrieved_sources),
+                "llm_provider": "not_used",
+            },
+        )
+        return response
     except ZammadClientError as exc:
+        write_audit_event(
+            event_type="mentor.guidance_requested",
+            request=request,
+            actor=user,
+            outcome="failure",
+            target_type="zammad_ticket",
+            target_id=str(ticket_number),
+            metadata={"error": str(exc)},
+        )
         raise HTTPException(status_code=502, detail=str(exc))
