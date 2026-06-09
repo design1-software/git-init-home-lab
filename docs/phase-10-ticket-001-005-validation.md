@@ -2,7 +2,7 @@
 
 > **Purpose:** Validate that ARIA Mentor correctly supports the first five help desk ticket workflows without losing existing Field-Tech, CCNA, or troubleshooting lab domains.
 >
-> **Status:** Validation runbook created during Phase 10.
+> **Status:** Complete. Validated on CT 120 `aria-ai-mentor-01` on Jun 9, 2026.
 
 ---
 
@@ -10,13 +10,13 @@
 
 Phase 10 validates mentor-supported workflows for:
 
-| Ticket | Lab file | Expected template | Expected primary domain |
-|---|---|---|---|
-| Ticket-001 | `labs/helpdesk/ticket-001-dns-failure.md` | `ticket-001` | DNS |
-| Ticket-002 | `labs/helpdesk/ticket-002-vlan-misassignment.md` | `ticket-002` | Switching |
-| Ticket-003 | `labs/helpdesk/ticket-003-proxmox-apt-egress-failure.md` | `ticket-003` | Linux |
-| Ticket-004 | `labs/helpdesk/ticket-004-ssh-legacy-kex.md` | `ticket-004` | Security |
-| Ticket-005 | `labs/helpdesk/ticket-005-vlan1-return-path-failure.md` | `ticket-005` | Networking |
+| Ticket | Lab file | Expected template | Expected primary domain | Validation status |
+|---|---|---|---|---|
+| Ticket-001 | `labs/helpdesk/ticket-001-dns-failure.md` | `ticket-001` | DNS | Pass |
+| Ticket-002 | `labs/helpdesk/ticket-002-vlan-misassignment.md` | `ticket-002` | Switching | Pass |
+| Ticket-003 | `labs/helpdesk/ticket-003-proxmox-apt-egress-failure.md` | `ticket-003` | Linux | Pass |
+| Ticket-004 | `labs/helpdesk/ticket-004-ssh-legacy-kex.md` | `ticket-004` | Security | Pass |
+| Ticket-005 | `labs/helpdesk/ticket-005-vlan1-return-path-failure.md` | `ticket-005` | Networking | Pass |
 
 ---
 
@@ -40,37 +40,59 @@ docs/aria-training-lab-inventory.md
 
 ---
 
-## Deployment Steps on CT 120
+## Deployment Steps Used on CT 120
 
 Run from CT 120: `aria-ai-mentor-01`.
+
+> Note: CT 120 is accessed as `root`; `sudo` is not installed and is not required.
 
 ```bash
 cd /opt/aria-ai-mentor/source/git-init-home-lab
 git pull origin main
 
-sudo cp services/ai-mentor/app/mentor_engine.py /opt/aria-ai-mentor/app/mentor_engine.py
-sudo cp -r services/ai-mentor/lab_templates /opt/aria-ai-mentor/
+cp services/ai-mentor/app/mentor_engine.py /opt/aria-ai-mentor/app/mentor_engine.py
+cp -r services/ai-mentor/lab_templates /opt/aria-ai-mentor/
 
-sudo systemctl restart aria-ai-mentor
-sudo systemctl status aria-ai-mentor --no-pager
+systemctl restart aria-ai-mentor
+systemctl status aria-ai-mentor --no-pager
 ```
 
-Confirm service health:
+Service health validated:
 
 ```bash
 curl -s http://127.0.0.1:8081/health | jq
 ```
 
-Confirm KB status:
+Observed:
+
+```json
+{
+  "status": "ok",
+  "service": "aria-ai-mentor",
+  "hostname": "aria-ai-mentor-01",
+  "mode": "local-dev"
+}
+```
+
+KB rebuild performed after pulling new docs:
 
 ```bash
+cd /opt/aria-ai-mentor
+/opt/aria-ai-mentor/.venv/bin/python /opt/aria-ai-mentor/scripts/ingest_docs.py
+systemctl restart aria-ai-mentor
 curl -s http://127.0.0.1:8081/kb/status | jq
 ```
 
-Confirm template status using an authenticated browser session or admin token method if required:
+Observed rebuild output:
 
-```bash
-curl -s http://127.0.0.1:8081/lab-templates/status | jq
+```json
+{
+  "repo_root": "/opt/aria-ai-mentor/source/git-init-home-lab",
+  "output_path": "/opt/aria-ai-mentor/data/kb/chunks.jsonl",
+  "files_scanned": 48,
+  "chunks_written": 297,
+  "timestamp_utc": "2026-06-09T04:31:21.094228+00:00"
+}
 ```
 
 ---
@@ -80,15 +102,15 @@ curl -s http://127.0.0.1:8081/lab-templates/status | jq
 Each ticket must pass these checks:
 
 ```text
-[ ] Correct lab template is matched
-[ ] Correct domain is returned in lab_template metadata
-[ ] Mentor response includes template-aware guidance
-[ ] Required evidence is shown
-[ ] Missing evidence returns request_more_evidence
-[ ] Complete evidence returns validation_complete
-[ ] Retrieved sources include the related lab file and/or lab_template source
-[ ] Student is coached without shortcut answers
-[ ] Existing field-tech lab inventory remains untouched
+[x] Correct lab template is matched
+[x] Correct domain is returned in lab_template metadata
+[x] Mentor response includes template-aware guidance
+[x] Required evidence is shown
+[x] Missing evidence returns request_more_evidence where tested
+[x] Complete evidence returns validation_complete
+[x] Retrieved sources include the related lab file and/or lab_template source
+[x] Student is coached without shortcut answers
+[x] Existing field-tech lab inventory remains untouched
 ```
 
 ---
@@ -111,12 +133,15 @@ curl -s -X POST http://127.0.0.1:8081/mentor/analyze-ticket \
   }' | jq
 ```
 
-Expected:
+Observed result:
 
 ```text
+session_id = b09a6c00-c5dc-4b8c-8489-5c80970bf4b8
 lab_template.template_id = ticket-001
 lab_template.domain = dns
 next_action = request_more_evidence
+retrieved_sources includes labs/helpdesk/ticket-001-dns-failure.md
+retrieved_sources includes lab_template:ticket-001
 mentor_response includes Required Evidence
 ```
 
@@ -136,11 +161,21 @@ curl -s -X POST http://127.0.0.1:8081/mentor/analyze-ticket \
   }' | jq
 ```
 
-Expected:
+Observed result:
 
 ```text
+session_id = 0548084a-44b8-4f4e-bb94-63692d230e58
+lab_template.template_id = ticket-001
+lab_template.domain = dns
 next_action = validation_complete
+Evidence Detected:
+1. IP connectivity test
+2. DNS query result
+3. Client DNS configuration
+Evidence Still Needed = No missing evidence detected
 ```
+
+Status: **Pass**
 
 ---
 
@@ -160,13 +195,21 @@ curl -s -X POST http://127.0.0.1:8081/mentor/analyze-ticket \
   }' | jq
 ```
 
-Expected:
+Observed result:
 
 ```text
+session_id = efec15cb-bb62-4078-8241-60c57a80549f
 lab_template.template_id = ticket-002
 lab_template.domain = switching
 next_action = validation_complete
+Evidence Detected:
+1. Switchport or SSID status
+2. Assigned VLAN or observed subnet
+3. Expected VLAN
+Evidence Still Needed = No missing evidence detected
 ```
+
+Status: **Pass**
 
 ---
 
@@ -186,13 +229,21 @@ curl -s -X POST http://127.0.0.1:8081/mentor/analyze-ticket \
   }' | jq
 ```
 
-Expected:
+Observed result:
 
 ```text
+session_id = 1fd6b9f3-b0b3-4e38-af6a-826116531ce9
 lab_template.template_id = ticket-003
 lab_template.domain = linux
 next_action = validation_complete
+Evidence Detected:
+1. APT error output
+2. DNS test
+3. Gateway or internet reachability test
+Evidence Still Needed = No missing evidence detected
 ```
+
+Status: **Pass**
 
 ---
 
@@ -212,13 +263,21 @@ curl -s -X POST http://127.0.0.1:8081/mentor/analyze-ticket \
   }' | jq
 ```
 
-Expected:
+Observed result:
 
 ```text
+session_id = 3b7c856e-0ec2-4684-9791-d507a0496707
 lab_template.template_id = ticket-004
 lab_template.domain = security
 next_action = validation_complete
+Evidence Detected:
+1. SSH error message
+2. Verbose SSH output
+3. Security risk statement
+Evidence Still Needed = No missing evidence detected
 ```
+
+Status: **Pass**
 
 ---
 
@@ -238,50 +297,50 @@ curl -s -X POST http://127.0.0.1:8081/mentor/analyze-ticket \
   }' | jq
 ```
 
-Expected:
+Observed result:
 
 ```text
+session_id = 8fa4cbc6-56d9-4b61-b0df-670da41f1ae5
 lab_template.template_id = ticket-005
 lab_template.domain = networking
 next_action = validation_complete
+Evidence Detected:
+1. Source and destination
+2. Forward path evidence
+3. Return path evidence
+Evidence Still Needed = No missing evidence detected
 ```
+
+Status: **Pass**
 
 ---
 
 ## Audit Validation
 
-After the tests, inspect recent audit events:
+The direct `/mentor/analyze-ticket` endpoint is currently unauthenticated and does not create the same audit footprint as authenticated Zammad guidance routes.
 
-```bash
-curl -s http://127.0.0.1:8081/audit/recent?limit=20 | jq
-```
-
-Expected for authenticated/admin paths:
-
-```text
-mentor guidance events include lab_template_id and lab_template_domain where applicable
-```
-
-Note: unauthenticated `/mentor/analyze-ticket` calls may not create the same audit footprint as authenticated Zammad guidance routes.
+Audit metadata for `lab_template_id` and `lab_template_domain` remains validated for authenticated Zammad guidance routes from Phase 9C. Future student-facing routes should add explicit student mentor access audit events.
 
 ---
 
 ## Phase 10 Completion Gate
 
-Phase 10 can be marked complete only when:
+Phase 10 completion status:
 
 ```text
-[ ] Ticket-001 missing-evidence and complete-evidence tests pass
-[ ] Ticket-002 complete-evidence test passes
-[ ] Ticket-003 complete-evidence test passes
-[ ] Ticket-004 complete-evidence test passes
-[ ] Ticket-005 complete-evidence test passes
-[ ] Template metadata is returned for all five tickets
-[ ] next_action behavior is acceptable
-[ ] KB retrieval returns relevant lab context
-[ ] No field-tech lab content was moved, overwritten, or reclassified
-[ ] docs/aria-training-lab-inventory.md remains aligned with repo reality
+[x] Ticket-001 missing-evidence and complete-evidence tests pass
+[x] Ticket-002 complete-evidence test passes
+[x] Ticket-003 complete-evidence test passes
+[x] Ticket-004 complete-evidence test passes
+[x] Ticket-005 complete-evidence test passes
+[x] Template metadata is returned for all five tickets
+[x] next_action behavior is acceptable
+[x] KB retrieval returns relevant lab context
+[x] No field-tech lab content was moved, overwritten, or reclassified
+[x] docs/aria-training-lab-inventory.md remains aligned with repo reality
 ```
+
+Phase 10 is complete.
 
 ---
 
