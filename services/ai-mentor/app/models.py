@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field
 
 
@@ -28,6 +28,8 @@ class AnalyzeTicketResponse(BaseModel):
     retrieved_sources: List[str]
     retrieved_context: List[RetrievedContextItem] = []
     timestamp_utc: str
+    lab_template: Optional[Dict[str, Any]] = None
+    lab_template: Optional[Dict[str, Any]] = None
 
 
 class SessionRecord(BaseModel):
@@ -55,3 +57,4 @@ class ZammadDraftGuidanceResponse(BaseModel):
     retrieved_context: List[RetrievedContextItem] = []
     zammad_ticket: dict
     timestamp_utc: str
+    lab_template: Optional[Dict[str, Any]] = None

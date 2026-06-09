@@ -110,3 +110,74 @@ def match_lab_template(text: str) -> Dict[str, Any]:
         "matches": best_matches,
         "template": best_template,
     }
+
+
+def build_lab_template_context(match_result: Dict[str, Any]) -> Dict[str, Any]:
+    template = match_result.get("template") or {}
+
+    if not match_result.get("matched") or not template:
+        return {
+            "matched": False,
+            "score": match_result.get("score", 0),
+            "matches": match_result.get("matches", []),
+        }
+
+    return {
+        "matched": True,
+        "score": match_result.get("score", 0),
+        "matches": match_result.get("matches", []),
+        "template_id": template.get("template_id"),
+        "title": template.get("title"),
+        "domain": template.get("domain"),
+        "difficulty": template.get("difficulty"),
+        "mentor_mode": template.get("mentor_mode"),
+        "required_evidence": template.get("required_evidence", []),
+        "opening_questions": template.get("opening_questions", []),
+        "completion_signals": template.get("completion_signals", []),
+        "mentor_guidance_rules": template.get("mentor_guidance_rules", []),
+        "next_actions": template.get("next_actions", {}),
+    }
+
+
+def append_template_guidance(mentor_response: str, lab_template: Dict[str, Any]) -> str:
+    if not lab_template.get("matched"):
+        return mentor_response
+
+    evidence_lines = []
+    for item in lab_template.get("required_evidence", []):
+        label = item.get("label", "")
+        description = item.get("description", "")
+        if label and description:
+            evidence_lines.append(f"- {label}: {description}")
+        elif label:
+            evidence_lines.append(f"- {label}")
+
+    question_lines = [f"- {question}" for question in lab_template.get("opening_questions", [])]
+    signal_lines = [f"- {signal}" for signal in lab_template.get("completion_signals", [])]
+
+    sections = [
+        mentor_response.strip(),
+        "",
+        "Matched Lab Template",
+        f"- Template: {lab_template.get('template_id')} — {lab_template.get('title')}",
+        f"- Domain: {lab_template.get('domain')}",
+        f"- Difficulty: {lab_template.get('difficulty')}",
+        f"- Mentor mode: {lab_template.get('mentor_mode')}",
+    ]
+
+    if evidence_lines:
+        sections.extend(["", "Required Evidence", *evidence_lines])
+
+    if question_lines:
+        sections.extend(["", "Opening Coaching Questions", *question_lines])
+
+    if signal_lines:
+        sections.extend(["", "Completion Signals", *signal_lines])
+
+    sections.extend([
+        "",
+        "Template Guardrail",
+        "Use the template to coach and validate evidence. Do not give shortcut answers or mark the lab complete without the required evidence.",
+    ])
+
+    return "\n".join(sections).strip()

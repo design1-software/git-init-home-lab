@@ -35,6 +35,8 @@ from app.models import (
 from app.retrieval import kb_status, search_chunks
 from app.llm_client import LLMClientError, enhance_guidance, llm_status
 from app.lab_templates import (
+    append_template_guidance,
+    build_lab_template_context,
     get_lab_template,
     lab_template_status,
     list_lab_template_summaries,
@@ -149,6 +151,13 @@ def build_zammad_draft_guidance_response(ticket: dict, articles: list[dict]) -> 
         kb_results=kb_results,
     )
 
+    lab_template = build_lab_template_context(match_lab_template(kb_query))
+    if lab_template.get("matched"):
+        mentor_response = append_template_guidance(mentor_response, lab_template)
+        template_source = f"lab_template:{lab_template.get('template_id')}"
+        if template_source not in retrieved_sources:
+            retrieved_sources.append(template_source)
+
     response = AnalyzeTicketResponse(
         session_id=session_id,
         mentor_response=mentor_response,
@@ -157,6 +166,7 @@ def build_zammad_draft_guidance_response(ticket: dict, articles: list[dict]) -> 
         retrieved_sources=retrieved_sources,
         retrieved_context=to_context_items(kb_results),
         timestamp_utc=timestamp,
+        lab_template=lab_template,
     )
 
     save_session(
@@ -178,6 +188,7 @@ def build_zammad_draft_guidance_response(ticket: dict, articles: list[dict]) -> 
         retrieved_context=to_context_items(kb_results),
         zammad_ticket=ticket_context,
         timestamp_utc=timestamp,
+        lab_template=lab_template,
     )
 
 
@@ -442,6 +453,13 @@ def mentor_analyze_ticket(request: AnalyzeTicketRequest) -> AnalyzeTicketRespons
         kb_results=kb_results,
     )
 
+    lab_template = build_lab_template_context(match_lab_template(kb_query))
+    if lab_template.get("matched"):
+        mentor_response = append_template_guidance(mentor_response, lab_template)
+        template_source = f"lab_template:{lab_template.get('template_id')}"
+        if template_source not in retrieved_sources:
+            retrieved_sources.append(template_source)
+
     response = AnalyzeTicketResponse(
         session_id=session_id,
         mentor_response=mentor_response,
@@ -450,6 +468,7 @@ def mentor_analyze_ticket(request: AnalyzeTicketRequest) -> AnalyzeTicketRespons
         retrieved_sources=retrieved_sources,
         retrieved_context=to_context_items(kb_results),
         timestamp_utc=timestamp,
+        lab_template=lab_template,
     )
 
     save_session(
@@ -620,6 +639,7 @@ def mentor_analyze_ticket_llm_guidance(request: AnalyzeTicketRequest, user: dict
         "risk_level": deterministic.risk_level,
         "retrieved_sources": deterministic.retrieved_sources,
         "retrieved_context": deterministic.retrieved_context,
+        "lab_template": deterministic.lab_template,
         "deterministic_response": deterministic.mentor_response,
         "llm": enhanced,
         "guardrail": "Deterministic fields are authoritative. LLM output is assistive only.",
@@ -660,6 +680,8 @@ def mentor_zammad_ticket_number_llm_guidance(
             "llm_enabled": enhanced.get("llm_enabled"),
             "llm_provider": enhanced.get("provider"),
             "llm_model": enhanced.get("model"),
+            "lab_template_id": (deterministic.lab_template or {}).get("template_id"),
+            "lab_template_domain": (deterministic.lab_template or {}).get("domain"),
         },
     )
 
@@ -672,6 +694,7 @@ def mentor_zammad_ticket_number_llm_guidance(
         "zammad_ticket": deterministic.zammad_ticket,
         "retrieved_sources": deterministic.retrieved_sources,
         "retrieved_context": deterministic.retrieved_context,
+        "lab_template": deterministic.lab_template,
         "deterministic_response": deterministic.mentor_response,
         "llm": enhanced,
         "guardrail": "Deterministic fields are authoritative. LLM output is assistive only.",
@@ -775,6 +798,8 @@ def mentor_zammad_ticket_number_draft_guidance(
                 "next_action": response.next_action,
                 "risk_level": response.risk_level,
                 "retrieved_sources_count": len(response.retrieved_sources),
+                "lab_template_id": (response.lab_template or {}).get("template_id"),
+                "lab_template_domain": (response.lab_template or {}).get("domain"),
                 "llm_provider": "not_used",
             },
         )
