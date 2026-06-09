@@ -1,0 +1,28 @@
+{
+  "template_id": "identity-iam-ad-user-lifecycle-v1",
+  "title": "Identity/IAM AD User Lifecycle",
+  "category": "identity-iam",
+  "difficulty": "beginner",
+  "estimated_minutes": 45,
+  "summary": "Submit evidence for creating, modifying, disabling, and documenting a training Active Directory user account.",
+  "required_evidence": [
+    "Training user identity and request summary",
+    "OU placement summary",
+    "Group membership summary",
+    "Account status summary",
+    "Validation evidence from ADUC or PowerShell",
+    "Professional resolution note"
+  ],
+  "mentor_prompts": [
+    "Confirm the request scope before changing the account.",
+    "Verify OU placement before group assignment.",
+    "Explain why each group is needed.",
+    "Do not include passwords or secrets.",
+    "Write the final note like a help desk/IAM ticket update."
+  ],
+  "safety_notes": [
+    "Use training accounts only.",
+    "Do not submit real credentials.",
+    "Do not submit sensitive personal information."
+  ]
+}

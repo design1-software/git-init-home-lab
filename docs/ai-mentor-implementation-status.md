@@ -165,7 +165,7 @@ Example:
 | Networking / Cisco / DNS / VLAN / Switching | Workflow coverage started; infrastructure is mature | Ticket-001 DNS, Ticket-002 VLAN, Ticket-004 Cisco SSH, Ticket-005 return path/routing, Ticket-007 VLAN 70 migration | Create dedicated network lab path with show-command evidence, risk, rollback, and Cisco guardrail enforcement |
 | Security / SOC / Wazuh / Incident Review | Workflow prepared; infrastructure pending | Ticket-010 Wazuh Alert Investigation workflow and security-triage evidence model | Deploy Wazuh LXC, agents, alert sources, and real SOC lab events |
 | Automation / SysAdmin / Linux / Proxmox / Field-Tech | Complete v1 | Proxmox, student Linux container, Ticket-003, Ticket-006, Ticket-008, Linux lab submissions, Field-Tech Lab 001/002 submissions, Automation/IaC submissions, Ansible/Netmiko submissions, RESTCONF submissions, runbook-writing submissions, instructor review, audit logging | Domain complete for v1. Keep stable and avoid adding new scope until the remaining domains catch up. |
-| Identity / IAM / Active Directory / GPO / Windows Endpoint Administration | Core domain; not implemented yet | Planning only; local app roles are not a substitute for AD/GPO training | Build simple VM-based AD/GPO lab: Windows Server DC, Windows client, domain join, users, groups, OUs, GPOs, and troubleshooting labs |
+| Identity / IAM / Active Directory / GPO / Windows Endpoint Administration | Partially complete v1 | Domain plan, VLAN 60 switch-side validation, training asset boundary, and evidence templates created. Local app roles remain separate from AD/GPO training. | Deploy Windows Server DC and Windows client after safe Proxmox VLAN 60 workload path is implemented. |
 
 ---
 
@@ -342,6 +342,31 @@ Risk: Outputs are deterministic and less conversational until provider is enable
 Benefit: No token spend, no external inference dependency, and deterministic mentor logic remains authoritative.
 
 ---
+
+
+## Identity / IAM / AD/GPO v1 Progress
+
+Identity / IAM is now partially complete for v1.
+
+Completed:
+
+- Identity/IAM domain plan created.
+- VLAN 60 scope corrected from build to validate.
+- VLAN 60 switch-side validation completed on JLM-LAB-SW1.
+- Training asset management boundary documented.
+- Five Identity/IAM evidence templates created.
+- Runtime templates copied into the AI Mentor template directory.
+- AI Mentor health check passed after restart.
+
+Current infrastructure blocker:
+
+- Proxmox remains stable on access VLAN 70.
+- The attempted Proxmox trunk/native VLAN 70 conversion was rolled back safely.
+- vmbr0 is restored to simple access behavior.
+- AD VM deployment is pending a safer Proxmox VLAN 60 workload design window and Windows Server ISO upload.
+
+Identity/IAM must not be marked fully infrastructure-complete until JLM-DC01 and JLM-WIN01 are deployed and tested.
+
 
 ## Next Domain Priority
 

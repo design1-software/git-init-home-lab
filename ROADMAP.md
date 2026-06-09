@@ -281,8 +281,8 @@ Four distinct telemetry tiers — each scoped to a specific purpose with no over
 - [x] Move Comet from VLAN 1 to VLAN 10 MGMT — 192.168.10.12 · PoE active · KVM + ATX UI confirmed (Jun 5, 2026)
 
 ### Phase D — VLAN 60 schoolmate lab ❌
-- [ ] Build VLAN 60 (LAB, 192.168.60.0/24) on 3560CX
-- [ ] Deploy Active Directory VM on Proxmox — forest: jlm.lab
+- [x] Validate VLAN 60 switch-side LAB path — VLAN/SVI/DHCP/LAB-ACL/trunk/STP/route verified; Proxmox workload path pending safer design window
+- [ ] Deploy Active Directory VM on Proxmox — forest: jlm.lab — pending safe VLAN 60 Proxmox workload path and Windows Server ISO
 - [x] Deploy Zammad help desk LXC on Proxmox — CT 110 `aria-zammad-01` · Docker Compose · helpdesk.aria.local · COMPLETE (Jun 7, 2026)
 - [ ] Deploy M365 admin sandbox (VLAN 60)
 - [ ] Configure Tailscale subnet routing for Ohio schoolmate access
@@ -358,7 +358,7 @@ No new phase should deepen only one domain at the expense of the others. Any imp
 | Networking / Cisco / DNS / VLAN / Switching | Workflow coverage started; infrastructure mature | Add dedicated network lab path with command evidence and Cisco guardrails |
 | Security / SOC / Wazuh / Incident Review | Ticket-010 workflow exists; infrastructure pending | Deploy Wazuh LXC, agents, alert sources, and SOC labs |
 | Automation / SysAdmin / Linux / Proxmox / Field-Tech | Complete v1 | Keep stable. Future expansion should follow `docs/domain-plans/automation-sysadmin-linux-fieldtech-lab-path.md`. |
-| Identity / IAM / Active Directory / GPO / Windows Endpoint Administration | Core domain; not implemented yet | Build simple VM-based AD/GPO lab and mentor evidence templates |
+| Identity / IAM / Active Directory / GPO / Windows Endpoint Administration | Partially complete v1 | Domain plan, VLAN 60 switch-side validation, training asset boundary, and evidence templates complete. AD VM and Windows client deployment pending safe Proxmox VLAN 60 workload path. |
 
 ### Help Desk / Ticketing v1 Closeout
 

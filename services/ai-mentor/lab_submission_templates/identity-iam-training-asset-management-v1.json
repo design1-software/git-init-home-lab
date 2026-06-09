@@ -1,0 +1,29 @@
+{
+  "template_id": "identity-iam-training-asset-management-v1",
+  "title": "Identity/IAM Training Asset Management",
+  "category": "identity-iam",
+  "difficulty": "intermediate",
+  "estimated_minutes": 60,
+  "summary": "Submit evidence for managing training-only assets in the VLAN 60 jlm.lab Active Directory environment.",
+  "required_evidence": [
+    "Training asset name",
+    "Asset type",
+    "OU placement",
+    "Assigned owner or department",
+    "Relevant group or GPO relationship",
+    "Validation evidence",
+    "Professional asset management note"
+  ],
+  "mentor_prompts": [
+    "Confirm this is a training asset, not production infrastructure.",
+    "Place the asset in the correct OU.",
+    "Explain ownership and support responsibility.",
+    "Document group/GPO relationships.",
+    "Keep real infrastructure assets out of the training domain."
+  ],
+  "safety_notes": [
+    "Training AD may manage training assets only.",
+    "Do not add real routers, switches, Proxmox management, Pi-hole, UniFi, or real household devices to the training domain.",
+    "Do not submit secrets or real credentials."
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "template_id": "identity-iam-gpo-validation-v1",
+  "title": "Identity/IAM GPO Validation",
+  "category": "identity-iam",
+  "difficulty": "intermediate",
+  "estimated_minutes": 60,
+  "summary": "Submit evidence for applying and validating a Group Policy Object against a training OU or Windows client.",
+  "required_evidence": [
+    "GPO purpose",
+    "GPO scope/link summary",
+    "Target OU or computer summary",
+    "gpresult or rsop.msc validation",
+    "Event Viewer finding summary if troubleshooting was needed",
+    "Professional resolution note"
+  ],
+  "mentor_prompts": [
+    "Check OU placement before troubleshooting GPO.",
+    "Use gpresult or rsop.msc for validation.",
+    "Explain whether the policy applied or failed.",
+    "Identify blocked inheritance, security filtering, or DNS issues if present.",
+    "Do not submit unrelated screenshots."
+  ],
+  "safety_notes": [
+    "Use training GPOs only.",
+    "Do not apply restrictions to real production systems.",
+    "Do not submit sensitive account data."
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "template_id": "identity-iam-domain-join-v1",
+  "title": "Identity/IAM Windows Domain Join",
+  "category": "identity-iam",
+  "difficulty": "intermediate",
+  "estimated_minutes": 60,
+  "summary": "Submit evidence for joining a Windows training client to the jlm.lab domain and validating domain connectivity.",
+  "required_evidence": [
+    "Windows client hostname",
+    "IP configuration summary",
+    "DNS server configuration",
+    "Domain join result",
+    "Computer object OU placement",
+    "Login validation",
+    "Professional resolution note"
+  ],
+  "mentor_prompts": [
+    "Check DNS before attempting domain join.",
+    "Confirm the client is on the correct VLAN.",
+    "Verify the computer object after joining.",
+    "Document errors exactly if the join fails.",
+    "Do not include domain admin credentials."
+  ],
+  "safety_notes": [
+    "Use training Windows clients only.",
+    "Do not expose admin passwords.",
+    "Do not join real personal devices to the training domain."
+  ]
+}

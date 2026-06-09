@@ -1,0 +1,29 @@
+{
+  "template_id": "identity-iam-ad-group-access-v1",
+  "title": "Identity/IAM AD Group Access Request",
+  "category": "identity-iam",
+  "difficulty": "beginner",
+  "estimated_minutes": 35,
+  "summary": "Submit evidence for reviewing and completing a training group access request in Active Directory.",
+  "required_evidence": [
+    "Access request summary",
+    "Target user summary",
+    "Target group summary",
+    "Business/training justification",
+    "Before and after group membership evidence",
+    "Validation method",
+    "Professional resolution note"
+  ],
+  "mentor_prompts": [
+    "Verify the group requested before making changes.",
+    "Check whether the user is already a member.",
+    "Explain least privilege.",
+    "Document before and after state.",
+    "Avoid exposing unrelated user data."
+  ],
+  "safety_notes": [
+    "Use training groups only.",
+    "Do not grant real production access.",
+    "Do not submit passwords or secrets."
+  ]
+}
