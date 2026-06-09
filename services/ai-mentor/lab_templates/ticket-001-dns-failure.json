@@ -1,0 +1,69 @@
+{
+  "template_id": "ticket-001",
+  "title": "DNS Failure",
+  "domain": "dns",
+  "difficulty": "beginner",
+  "ticket_type": "training",
+  "status": "active",
+  "summary": "Student troubleshoots a basic DNS name resolution failure using evidence-first diagnostics.",
+  "student_goal": "Determine whether the issue is DNS resolution, network reachability, or incorrect client configuration.",
+  "mentor_mode": "guided_troubleshooting",
+  "trigger_terms": [
+    "ticket-001",
+    "dns failure",
+    "dns",
+    "name resolution",
+    "nslookup",
+    "dig",
+    "resolv.conf"
+  ],
+  "required_evidence": [
+    {
+      "id": "ip_connectivity",
+      "label": "IP connectivity test",
+      "description": "Student must test whether the destination or gateway is reachable by IP."
+    },
+    {
+      "id": "dns_query_result",
+      "label": "DNS query result",
+      "description": "Student must provide nslookup, dig, or equivalent DNS query output."
+    },
+    {
+      "id": "client_dns_config",
+      "label": "Client DNS configuration",
+      "description": "Student must verify the configured DNS server on the client."
+    }
+  ],
+  "opening_questions": [
+    "Can the client reach the destination by IP address?",
+    "What DNS server is the client using?",
+    "What result do you get from nslookup or dig?"
+  ],
+  "completion_signals": [
+    "DNS resolution restored",
+    "client DNS configuration verified",
+    "nslookup confirms correct resolution"
+  ],
+  "mentor_guidance_rules": [
+    "Do not assume DNS is the root cause until IP connectivity is tested.",
+    "Ask for query output before recommending configuration changes.",
+    "Separate DNS failure from routing or firewall failure."
+  ],
+  "student_visible": {
+    "allowed": [
+      "student_goal",
+      "opening_questions",
+      "required_evidence labels",
+      "basic DNS troubleshooting reminders"
+    ],
+    "blocked": [
+      "final answer without evidence",
+      "mentor-only diagnostic shortcut"
+    ]
+  },
+  "next_actions": {
+    "missing_evidence": "request_more_evidence",
+    "complete": "validation_complete",
+    "unclear": "manual_review"
+  }
+}
