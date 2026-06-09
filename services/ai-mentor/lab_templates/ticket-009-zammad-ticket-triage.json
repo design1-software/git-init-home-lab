@@ -1,0 +1,69 @@
+{
+  "template_id": "ticket-009",
+  "title": "Zammad Ticket Triage",
+  "domain": "helpdesk",
+  "difficulty": "beginner",
+  "ticket_type": "training",
+  "status": "active",
+  "summary": "Student validates basic Zammad ticket triage workflow, documentation quality, and completion evidence.",
+  "student_goal": "Review a help desk ticket, identify whether required documentation is present, and produce a clear resolution summary.",
+  "mentor_mode": "completion_review",
+  "trigger_terms": [
+    "ticket-009",
+    "zammad ticket triage",
+    "resolution summary",
+    "zammad v1 platform validation",
+    "training-ticket workflow",
+    "98002"
+  ],
+  "required_evidence": [
+    {
+      "id": "resolution_summary",
+      "label": "Resolution summary",
+      "description": "Student must include a clear resolution summary in the ticket."
+    },
+    {
+      "id": "platform_validation",
+      "label": "Zammad v1 platform validation passed",
+      "description": "Student must document that the Zammad v1 platform validation passed."
+    },
+    {
+      "id": "workflow_confirmation",
+      "label": "Training-ticket workflow confirmed",
+      "description": "Student must confirm the basic training-ticket workflow was completed."
+    }
+  ],
+  "opening_questions": [
+    "What part of the Zammad ticket workflow are you validating?",
+    "What evidence did you add to the ticket?",
+    "Did you document the resolution summary clearly enough for another technician to understand?"
+  ],
+  "completion_signals": [
+    "Resolution summary",
+    "Zammad v1 platform validation passed",
+    "Ticket-009 confirms the basic training-ticket workflow"
+  ],
+  "mentor_guidance_rules": [
+    "Do not mark completion unless required evidence is present.",
+    "Do not treat Zammad ticket state as the same as ARIA training completion.",
+    "If evidence is missing, ask for the missing documentation rather than giving a final pass."
+  ],
+  "student_visible": {
+    "allowed": [
+      "student_goal",
+      "opening_questions",
+      "required_evidence labels",
+      "general documentation reminders"
+    ],
+    "blocked": [
+      "mentor-only diagnostic shortcuts",
+      "internal completion matching logic",
+      "raw Zammad API details"
+    ]
+  },
+  "next_actions": {
+    "missing_evidence": "request_more_evidence",
+    "complete": "validation_complete",
+    "unclear": "manual_review"
+  }
+}
