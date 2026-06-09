@@ -70,10 +70,11 @@
 | Port | Connected To | Mode | Role |
 |---|---|---|---|
 | Gi0/1 | C1111 GE0/1/0 | Routed (no switchport) | TRANSIT — 192.168.199.2/30 |
-| Gi0/2 | GS308EP Port 1 | Trunk | Production access-layer switch |
-| Gi0/3 | GS316EP Port 15 | Trunk | Household access-layer switch |
+| Gi0/2 | GS308EP Port 1 | Trunk (native 99) | VLANs 1,10,20,30,31,40,50,60,70,99 — production access-layer switch |
+| Gi0/3 | GS316EP Port 15 | Trunk (native 99) | VLANs 1,10,20,30,31,40,50,99 — household switch (no VLAN 60/70) |
 | Gi0/4 | ARIA Proxmox Server (nic1, Intel I225V via vmbr0) | Access VLAN 70 | ARIA management — 192.168.70.10 |
 | Gi0/5 | Comet GL-RM1PE KVM (PoE) | Access VLAN 10 | Comet management — 192.168.10.12 · PoE active |
+| Gi0/6–Gi0/12 | Unconnected | Access VLAN 1 | Spare — `ip verify source` on Gi0/6–Gi0/8 (inactive: no DHCP snooping on VLAN 1) |
 
 ---
 
@@ -84,7 +85,7 @@
 
 | Port | Device | PVID | VLANs |
 |---|---|---|---|
-| 1 | Trunk to 3560CX Gi0/2 | 99 | 1,10,20,30,31,40,50,99 |
+| 1 | Trunk to 3560CX Gi0/2 | 99 | 1,10,20,30,31,40,50,60,70,99 |
 | 2 | Acer Server (192.168.10.11) | 10 | 10 |
 | 3 | Pi 4B (PoE) | 10 | 10 |
 | 4 | UniFi AP #1 | 99 | 20,30,31,40,50,99 |
@@ -118,18 +119,20 @@
 
 ## VLAN Summary
 
+> **HSRP note:** VLANs 1,10,20,30,31,40,50,99 — gateway `.1` is the HSRP VIP; physical 3560CX SVI is `.2`. VLANs 60 and 70 — **no HSRP configured**; gateway `.1` is the physical 3560CX SVI (single point of failure, no standby peer).
+
 | VLAN | Name | Subnet | Gateway | SSID | ACL | Status |
 |---|---|---|---|---|---|---|
-| 1 | DEFAULT | 192.168.100.0/24 | .1 | — | None | ✅ Active (legacy, retirement planned) |
-| 10 | MGMT | 192.168.10.0/24 | .1 | (wired) | None | ✅ Active |
-| 20 | TRUSTED | 192.168.20.0/24 | .1 | Gorgeous | None | ✅ Active |
-| 30 | IOT | 192.168.30.0/24 | .1 | Gorgeous-IoT | IOT-ACL | ✅ Active |
-| 31 | IOT-AUTO | 192.168.31.0/24 | .1 | Gorgeous-Auto | IOT-AUTO-ACL | ✅ Active |
-| 40 | HOUSEHOLD | 192.168.40.0/24 | .1 | Gorgeous-Home | HOUSEHOLD-ACL | ✅ Active |
-| 50 | JM&G-GUEST | 192.168.50.0/24 | .1 | JM&G-GUEST | GUEST-ACL | ✅ Active |
-| 99 | MGMT/NATIVE | 192.168.99.0/24 | .1 | — | None | ✅ Active (native on trunks) |
-| 60 | LAB | 192.168.60.0/24 | .1 | — | TBD | ❌ Pending Phase D |
-| 70 | SERVER | 192.168.70.0/24 | .1 | — | TBD | ✅ Active Phase C — ARIA Proxmox 192.168.70.10 |
+| 1 | DEFAULT | 192.168.100.0/24 | .1 (HSRP VIP) | — | None | ✅ Active (legacy — VLAN 1 SVI cleanup pending on C1111) |
+| 10 | MGMT | 192.168.10.0/24 | .1 (HSRP VIP) | (wired) | None | ✅ Active |
+| 20 | TRUSTED | 192.168.20.0/24 | .1 (HSRP VIP) | Gorgeous | None | ✅ Active |
+| 30 | IOT | 192.168.30.0/24 | .1 (HSRP VIP) | Gorgeous-IoT | IOT-ACL | ✅ Active |
+| 31 | IOT-AUTO | 192.168.31.0/24 | .1 (HSRP VIP) | Gorgeous-Auto | IOT-AUTO-ACL | ✅ Active |
+| 40 | HOUSEHOLD | 192.168.40.0/24 | .1 (HSRP VIP) | Gorgeous-Home | HOUSEHOLD-ACL | ✅ Active |
+| 50 | JM&G-GUEST | 192.168.50.0/24 | .1 (HSRP VIP) | JM&G-GUEST | GUEST-ACL | ✅ Active |
+| 99 | MGMT/NATIVE | 192.168.99.0/24 | .1 (HSRP VIP) | — | None | ✅ Active (native on trunks) |
+| 60 | LAB | 192.168.60.0/24 | .1 (physical SVI, no HSRP) | — | LAB-ACL | ✅ Active — pre-staged · LAB-ACL live · DHCP pool active · Phase D workloads pending |
+| 70 | SERVER | 192.168.70.0/24 | .1 (physical SVI, no HSRP) | — | None | ✅ Active Phase C — ARIA 192.168.70.10 · Zammad 192.168.70.XX · AI Mentor backend |
 | 199 | TRANSIT | 192.168.199.0/30 | — | — | None | ✅ Active Phase B — routed transit C1111 ↔ 3560CX, OSPFv2 FULL |
 
 ---
@@ -235,4 +238,4 @@ Connect: `ssh aria-student-linux-01`
 
 ---
 
-*Last verified: Jun 5, 2026*
+*Last verified: Jun 9, 2026 (live show commands from JLM-LAB-SW1 and JLM-LAB-R1)*

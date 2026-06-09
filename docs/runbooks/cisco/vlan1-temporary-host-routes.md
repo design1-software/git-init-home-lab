@@ -1,6 +1,6 @@
 # Runbook — VLAN 1 Temporary Host Routes on C1111
 
-**Status:** Two of three removal conditions met (Jun 5, 2026) — pending C1111 Vlan1 SVI removal only.
+**Status:** Still present as of Jun 9, 2026 live verification. Two of three removal conditions met. Routes for 192.168.100.10 (ARIA) and 192.168.100.11 (Comet) are now stale — those devices have moved to VLAN 70 and VLAN 10 respectively. Routes remain in place pending C1111 Vlan1 SVI removal (all three routes removed together).
 
 ---
 
