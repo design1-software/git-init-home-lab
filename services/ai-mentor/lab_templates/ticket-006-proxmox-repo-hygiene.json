@@ -1,0 +1,22 @@
+{
+  "template_id": "ticket-006",
+  "title": "Proxmox Repository Hygiene",
+  "domain": "proxmox",
+  "difficulty": "beginner",
+  "ticket_type": "training",
+  "status": "active",
+  "summary": "Student validates Proxmox repository configuration and removes incorrect enterprise repository errors where appropriate.",
+  "student_goal": "Review Proxmox apt repository configuration and confirm the system uses the intended repositories.",
+  "mentor_mode": "guided_validation",
+  "trigger_terms": ["ticket-006", "proxmox repo hygiene", "enterprise repository", "no subscription", "pve-enterprise", "apt sources"],
+  "required_evidence": [
+    {"id": "apt_update_error", "label": "APT update error", "description": "Student must show the repository-related apt error, if present."},
+    {"id": "repo_files", "label": "Repository source files", "description": "Student must identify relevant files under apt sources configuration."},
+    {"id": "successful_update", "label": "Successful apt update", "description": "Student must confirm apt update works after correction."}
+  ],
+  "opening_questions": ["What apt repository error appears?", "Which Proxmox repository files are enabled?", "Is this a subscription or no-subscription lab system?"],
+  "completion_signals": ["apt update completes without enterprise repository error", "repository configuration documented", "no-subscription repository confirmed where appropriate"],
+  "mentor_guidance_rules": ["Do not remove repositories without confirming lab subscription context.", "Ask for repo file evidence before recommending edits.", "Require successful apt update output for completion."],
+  "student_visible": {"allowed": ["student_goal", "opening_questions", "required_evidence labels", "safe repository-review reminders"], "blocked": ["blind deletion commands", "production subscription assumptions"]},
+  "next_actions": {"missing_evidence": "request_more_evidence", "complete": "validation_complete", "unclear": "manual_review"}
+}
