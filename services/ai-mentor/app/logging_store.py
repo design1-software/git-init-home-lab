@@ -19,3 +19,21 @@ def load_session(session_id: str) -> Optional[dict]:
     if not path.exists():
         return None
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def list_sessions(limit: int = 500) -> list[dict]:
+    """Return recent saved mentor sessions, newest first."""
+    safe_limit = max(1, min(int(limit), 2000))
+    records: list[dict] = []
+
+    for session_path in sorted(SESSIONS_DIR.glob("*.json"), key=lambda p: p.stat().st_mtime, reverse=True)[:safe_limit]:
+        try:
+            records.append(json.loads(session_path.read_text(encoding="utf-8")))
+        except json.JSONDecodeError:
+            records.append({
+                "session_id": session_path.stem,
+                "malformed": True,
+                "path": str(session_path),
+            })
+
+    return records

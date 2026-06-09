@@ -22,7 +22,7 @@ from app.auth import (
     require_roles,
     session_ttl_seconds,
 )
-from app.logging_store import load_session, save_session
+from app.logging_store import list_sessions, load_session, save_session
 from app.mentor_engine import analyze_ticket
 from app.models import (
     AnalyzeTicketRequest,
@@ -494,6 +494,111 @@ def get_session(session_id: str, user: dict = Depends(require_roles("admin", "in
     if record is None:
         raise HTTPException(status_code=404, detail="Session not found")
     return record
+
+
+def normalize_progress_ticket_id(record: dict) -> str:
+    request_data = record.get("request", {}) or {}
+    response_data = record.get("response", {}) or {}
+    lab_template = response_data.get("lab_template", {}) or {}
+
+    template_id = str(lab_template.get("template_id", "") or "")
+    if template_id.startswith("ticket-"):
+        return template_id.replace("ticket-", "").zfill(3)
+
+    raw_ticket_id = str(request_data.get("ticket_id", "") or "").strip()
+    if raw_ticket_id.isdigit():
+        return raw_ticket_id.zfill(3)
+
+    title = str(request_data.get("ticket_title", "") or "").lower()
+    for number in range(1, 11):
+        marker = f"ticket-{number:03d}"
+        if marker in title:
+            return str(number).zfill(3)
+
+    return raw_ticket_id or "unknown"
+
+
+def build_progress_summary(records: list[dict]) -> dict:
+    students: dict[str, dict] = {}
+    latest_by_student_ticket: dict[tuple[str, str], dict] = {}
+
+    for record in records:
+        if record.get("malformed"):
+            continue
+
+        request_data = record.get("request", {}) or {}
+        response_data = record.get("response", {}) or {}
+
+        student = str(request_data.get("student", "") or "unknown").strip() or "unknown"
+        ticket_id = normalize_progress_ticket_id(record)
+        timestamp = str(record.get("timestamp_utc") or response_data.get("timestamp_utc") or "")
+        next_action = str(response_data.get("next_action", "") or "unknown")
+        risk_level = str(response_data.get("risk_level", "") or "unknown")
+
+        lab_template = response_data.get("lab_template", {}) or {}
+        template_id = lab_template.get("template_id")
+        title = lab_template.get("title") or request_data.get("ticket_title") or f"Ticket-{ticket_id}"
+        domain = lab_template.get("domain") or request_data.get("domain") or "unknown"
+        difficulty = lab_template.get("difficulty") or request_data.get("difficulty") or "unknown"
+
+        key = (student, ticket_id)
+        previous = latest_by_student_ticket.get(key)
+
+        if previous is None or timestamp >= previous.get("last_attempt_utc", ""):
+            latest_by_student_ticket[key] = {
+                "ticket_id": ticket_id,
+                "template_id": template_id,
+                "title": title,
+                "domain": domain,
+                "difficulty": difficulty,
+                "last_attempt_utc": timestamp,
+                "last_session_id": record.get("session_id"),
+                "last_next_action": next_action,
+                "last_risk_level": risk_level,
+                "status": "complete" if next_action == "validation_complete" else "in_progress",
+            }
+
+    for (student, ticket_id), ticket_summary in latest_by_student_ticket.items():
+        if student not in students:
+            students[student] = {
+                "student": student,
+                "completed_count": 0,
+                "in_progress_count": 0,
+                "tickets": {},
+            }
+
+        students[student]["tickets"][ticket_id] = ticket_summary
+
+    for student_summary in students.values():
+        completed = 0
+        in_progress = 0
+
+        for ticket in student_summary["tickets"].values():
+            if ticket.get("status") == "complete":
+                completed += 1
+            else:
+                in_progress += 1
+
+        student_summary["completed_count"] = completed
+        student_summary["in_progress_count"] = in_progress
+        student_summary["total_tracked_tickets"] = completed + in_progress
+        student_summary["tickets"] = dict(sorted(student_summary["tickets"].items()))
+
+    return {
+        "students": dict(sorted(students.items())),
+        "student_count": len(students),
+        "session_count": len(records),
+        "scope": "latest session per student per ticket",
+    }
+
+
+@app.get("/progress/summary")
+def get_progress_summary(
+    limit: int = Query(default=500, ge=1, le=2000),
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> dict:
+    records = list_sessions(limit=limit)
+    return build_progress_summary(records)
 
 
 @app.get("/kb/status")
