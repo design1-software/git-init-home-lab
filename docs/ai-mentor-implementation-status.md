@@ -165,7 +165,7 @@ Example:
 | Networking / Cisco / DNS / VLAN / Switching | Workflow coverage started; infrastructure is mature | Ticket-001 DNS, Ticket-002 VLAN, Ticket-004 Cisco SSH, Ticket-005 return path/routing, Ticket-007 VLAN 70 migration | Create dedicated network lab path with show-command evidence, risk, rollback, and Cisco guardrail enforcement |
 | Security / SOC / Wazuh / Incident Review | Workflow prepared; infrastructure pending | Ticket-010 Wazuh Alert Investigation workflow and security-triage evidence model | Deploy Wazuh LXC, agents, alert sources, and real SOC lab events |
 | Automation / SysAdmin / Linux / Proxmox / Field-Tech | Complete v1 | Proxmox, student Linux container, Ticket-003, Ticket-006, Ticket-008, Linux lab submissions, Field-Tech Lab 001/002 submissions, Automation/IaC submissions, Ansible/Netmiko submissions, RESTCONF submissions, runbook-writing submissions, instructor review, audit logging | Domain complete for v1. Keep stable and avoid adding new scope until the remaining domains catch up. |
-| Identity / IAM / Active Directory / GPO / Windows Endpoint Administration | Partially complete v1 | Domain plan, VLAN 60 switch-side validation, training asset boundary, and evidence templates created. Local app roles remain separate from AD/GPO training. | Deploy Windows Server DC and Windows client after safe Proxmox VLAN 60 workload path is implemented. |
+| Identity / IAM / Active Directory / GPO / Windows Endpoint Administration | Network-ready and scaffold-complete v1 | Domain plan, VLAN 60 end-to-end workload path, training asset boundary, and evidence templates created. Local app roles remain separate from AD/GPO training. | Deploy Windows Server DC and Windows client now that VLAN 60 workload path is ready; pending Windows ISO media. |
 
 ---
 
@@ -360,10 +360,10 @@ Completed:
 
 Current infrastructure blocker:
 
-- Proxmox remains stable on access VLAN 70.
-- The attempted Proxmox trunk/native VLAN 70 conversion was rolled back safely.
-- vmbr0 is restored to simple access behavior.
-- AD VM deployment is pending a safer Proxmox VLAN 60 workload design window and Windows Server ISO upload.
+- Proxmox remains stable on access VLAN 70 through vmbr0/nic1/Gi0/4.
+- VLAN 60 workload access is now complete through dedicated vmbr1/nic0/Gi0/6 access VLAN 60.
+- The attempted Proxmox trunk/native VLAN 70 conversion was rolled back safely and replaced with the safer dedicated NIC design.
+- AD VM deployment is now pending Windows Server ISO upload, not VLAN 60 network readiness.
 
 Identity/IAM must not be marked fully infrastructure-complete until JLM-DC01 and JLM-WIN01 are deployed and tested.
 
@@ -403,3 +403,26 @@ Before the next implementation phase begins:
 - Select the next phase based on domain balance, not convenience.
 - Document any out-of-scope ideas in markdown instead of implementing them ad hoc.
 
+
+
+## Phase D VLAN 60 End-to-End Validation
+
+Phase D VLAN 60 is fully proven end-to-end.
+
+Validated path:
+
+LXC container on vmbr1
+  -> untagged frames
+nic0 10:ff:e0:c4:fa:a6
+  -> Cat6
+3560CX Gi0/6 access VLAN 60
+  -> Vlan60 SVI 192.168.60.1
+  -> LAB-ACL inbound
+  -> DHCP snooping + DAI + IP Source Guard
+  -> 3560CX OSPF area 0
+  -> 192.168.199.0/30 transit
+  -> C1111 OSPF + NAT inside for 192.168.60.0/24
+  -> WAN 174.53.28.46
+  -> Internet
+
+VLAN 70 remains dedicated to Proxmox management through vmbr0/nic1/Gi0/4.

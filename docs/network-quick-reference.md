@@ -76,7 +76,7 @@
 | Gi0/3 | GS316EP Port 15 | Trunk (native 99) | VLANs 1,10,20,30,31,40,50,99 — household switch (no VLAN 60/70) |
 | Gi0/4 | ARIA Proxmox Server (nic1, Intel I225V via vmbr0) | Access VLAN 70 | ARIA management — 192.168.70.10 |
 | Gi0/5 | Comet GL-RM1PE KVM (PoE) | Access VLAN 10 | Comet management — 192.168.10.12 · PoE active |
-| Gi0/6 | ARIA nic0 (Realtek RTL8125 via vmbr1) | Access VLAN 60 | VM trunk — LAB VLAN · portfast edge · BPDU guard · IP Source Guard active |
+| Gi0/6 | ARIA nic0 (Realtek RTL8125 via vmbr1) | Access VLAN 60 | VM workload path — LAB VLAN · portfast edge · BPDU guard · IP Source Guard active |
 | Gi0/7–Gi0/12 | Unconnected | Access VLAN 1 | Spare — `ip verify source` on Gi0/7–Gi0/8 (inactive: no DHCP snooping on VLAN 1) |
 
 ---
@@ -242,3 +242,27 @@ Connect: `ssh aria-student-linux-01`
 ---
 
 *Last verified: Jun 9, 2026 — VLAN 60 LXC path confirmed live (vmbr1/nic0/Gi0/6/VLAN 60)*
+
+
+## Proxmox VLAN 60 Workload Path
+
+Phase D VLAN 60 is proven end-to-end using a dedicated Proxmox workload bridge.
+
+LXC/VM workload on vmbr1
+  -> untagged frames
+nic0 10:ff:e0:c4:fa:a6
+  -> 3560CX Gi0/6 access VLAN 60
+  -> Vlan60 SVI 192.168.60.1
+  -> LAB-ACL inbound
+  -> DHCP snooping + DAI + IP Source Guard
+  -> 3560CX OSPF area 0
+  -> C1111 OSPF + NAT inside for 192.168.60.0/24
+  -> Internet
+
+Proxmox management remains separate:
+
+Proxmox management on vmbr0
+  -> nic1
+  -> 3560CX Gi0/4 access VLAN 70
+
+AD/IAM training workloads should use vmbr1 with no VLAN tag while Gi0/6 remains an access VLAN 60 port.

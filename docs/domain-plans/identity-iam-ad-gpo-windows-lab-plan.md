@@ -45,6 +45,43 @@ The Identity / IAM domain is complete for v1 only when the following are impleme
 | Remote access goal | Tailscale subnet routing for remote student access |
 | Current network note | VLAN 60 is documented as active/pre-staged with LAB-ACL live and DHCP pool active; validate live switch, DHCP, ACL, trunk, and Proxmox tagging before deploying AD |
 
+
+
+## Phase D VLAN 60 End-to-End Workload Path
+
+VLAN 60 is now proven end-to-end and ready for AD/IAM training workloads.
+
+Validated path:
+
+LXC container on vmbr1
+  -> untagged frames
+nic0 10:ff:e0:c4:fa:a6
+  -> Cat6
+3560CX Gi0/6 access VLAN 60
+  -> Vlan60 SVI 192.168.60.1
+  -> LAB-ACL inbound
+  -> DHCP snooping + DAI + IP Source Guard
+  -> 3560CX OSPF area 0
+  -> 192.168.199.0/30 transit
+  -> C1111 OSPF + NAT inside for 192.168.60.0/24
+  -> GigabitEthernet0/0/0
+  -> WAN 174.53.28.46
+  -> Internet
+
+### Proxmox Bridge Mapping
+
+| Purpose | Bridge | Physical NIC | Switch Port | VLAN |
+|---|---|---|---|---|
+| Proxmox management | vmbr0 | nic1 | Gi0/4 | Access VLAN 70 |
+| AD/IAM lab workloads | vmbr1 | nic0 | Gi0/6 | Access VLAN 60 |
+
+### VM Placement Rule
+
+JLM-DC01 and JLM-WIN01 should be attached to vmbr1 with no VLAN tag because Gi0/6 is already an access VLAN 60 port.
+
+Do not attach AD/IAM lab VMs to vmbr0 unless the lab is intentionally being redesigned.
+
+
 ## AD Forest / Domain Plan
 
 | Item | Value |
