@@ -34,6 +34,12 @@ from app.models import (
 )
 from app.retrieval import kb_status, search_chunks
 from app.llm_client import LLMClientError, enhance_guidance, llm_status
+from app.lab_templates import (
+    get_lab_template,
+    lab_template_status,
+    list_lab_template_summaries,
+    match_lab_template,
+)
 from app.zammad_client import (
     ZammadClientError,
     get_ticket,
@@ -506,6 +512,86 @@ def rebuild_kb(user: dict = Depends(require_roles("admin"))) -> dict:
         "status": "rebuilt",
         "stdout": result.stdout,
     }
+
+
+
+@app.get("/lab-templates/status")
+def get_lab_templates_status(user: dict = Depends(require_roles("admin", "instructor"))) -> dict:
+    return lab_template_status()
+
+
+@app.get("/lab-templates")
+def list_lab_templates(user: dict = Depends(require_roles("admin", "instructor"))) -> dict:
+    return {
+        "templates": list_lab_template_summaries(),
+    }
+
+
+@app.get("/lab-templates/{template_id}")
+def read_lab_template(
+    template_id: str,
+    request: Request,
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> dict:
+    template = get_lab_template(template_id)
+
+    if not template:
+        write_audit_event(
+            event_type="lab_template.read",
+            request=request,
+            actor=user,
+            outcome="not_found",
+            target_type="lab_template",
+            target_id=template_id,
+        )
+        raise HTTPException(status_code=404, detail="Lab template not found.")
+
+    write_audit_event(
+        event_type="lab_template.read",
+        request=request,
+        actor=user,
+        outcome="success",
+        target_type="lab_template",
+        target_id=template_id,
+        metadata={
+            "domain": template.get("domain"),
+            "difficulty": template.get("difficulty"),
+            "mentor_mode": template.get("mentor_mode"),
+        },
+    )
+
+    return template
+
+
+@app.post("/lab-templates/match")
+def match_lab_template_endpoint(
+    payload: dict,
+    request: Request,
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> dict:
+    text = str(payload.get("text", ""))
+    result = match_lab_template(text)
+
+    template = result.get("template") or {}
+
+    write_audit_event(
+        event_type="lab_template.match",
+        request=request,
+        actor=user,
+        outcome="success" if result.get("matched") else "no_match",
+        target_type="lab_template",
+        target_id=template.get("template_id"),
+        metadata={
+            "matched": result.get("matched"),
+            "score": result.get("score"),
+            "matches": result.get("matches"),
+            "template_id": template.get("template_id"),
+            "domain": template.get("domain"),
+        },
+    )
+
+    return result
+
 
 
 @app.get("/llm/status")
