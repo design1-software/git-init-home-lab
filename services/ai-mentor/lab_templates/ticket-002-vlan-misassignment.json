@@ -1,0 +1,22 @@
+{
+  "template_id": "ticket-002",
+  "title": "VLAN Misassignment",
+  "domain": "switching",
+  "difficulty": "beginner",
+  "ticket_type": "training",
+  "status": "active",
+  "summary": "Student investigates a suspected VLAN access-port misassignment.",
+  "student_goal": "Verify whether the device is connected to the correct VLAN and document the switchport evidence.",
+  "mentor_mode": "guided_troubleshooting",
+  "trigger_terms": ["ticket-002", "vlan misassignment", "wrong vlan", "access vlan", "switchport", "show vlan", "show interfaces status"],
+  "required_evidence": [
+    {"id": "switchport_status", "label": "Switchport status", "description": "Student must provide switchport/interface status evidence."},
+    {"id": "assigned_vlan", "label": "Assigned VLAN", "description": "Student must confirm the access VLAN assigned to the port."},
+    {"id": "expected_vlan", "label": "Expected VLAN", "description": "Student must identify the VLAN the endpoint should be using."}
+  ],
+  "opening_questions": ["Which switchport is the endpoint connected to?", "What VLAN is currently assigned to that port?", "What VLAN should the endpoint be in?"],
+  "completion_signals": ["switchport VLAN corrected", "endpoint placed in correct VLAN", "connectivity restored after VLAN correction"],
+  "mentor_guidance_rules": ["Do not suggest changing a switchport until the current interface and VLAN are identified.", "Ask for evidence from show commands before confirming the fix.", "Confirm whether the port is access or trunk before giving guidance."],
+  "student_visible": {"allowed": ["student_goal", "opening_questions", "required_evidence labels", "safe show-command reminders"], "blocked": ["blind configuration commands", "mentor-only answer key"]},
+  "next_actions": {"missing_evidence": "request_more_evidence", "complete": "validation_complete", "unclear": "manual_review"}
+}
