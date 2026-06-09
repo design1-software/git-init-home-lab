@@ -14,10 +14,13 @@
       --accent: #38bdf8;
       --success: #22c55e;
       --warning: #f59e0b;
+      --danger: #ef4444;
       --border: #374151;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -49,7 +52,8 @@
       padding: 24px;
     }
 
-    .search-card, .section {
+    .search-card,
+    .section {
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 12px;
@@ -92,6 +96,10 @@
       font-size: 16px;
     }
 
+    button:hover {
+      opacity: 0.92;
+    }
+
     button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
@@ -103,7 +111,7 @@
       gap: 12px;
     }
 
-    .metric, .source, details {
+    .metric {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -153,8 +161,18 @@
       overflow-x: auto;
     }
 
-    details { margin-bottom: 10px; }
-    summary { cursor: pointer; font-weight: bold; }
+    details {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: bold;
+    }
 
     .article-body {
       margin-top: 12px;
@@ -165,9 +183,21 @@
       overflow-wrap: anywhere;
     }
 
-    .source { margin-bottom: 10px; }
-    .source small, .muted { color: var(--muted); }
-    .hidden { display: none; }
+    .source {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+
+    .source small {
+      color: var(--muted);
+    }
+
+    .hidden {
+      display: none;
+    }
 
     .error {
       color: #fecaca;
@@ -177,12 +207,43 @@
       border-radius: 10px;
       margin-top: 12px;
     }
+
+    .muted {
+      color: var(--muted);
+    }
   </style>
 </head>
 <body>
   <header>
     <h1>ARIA Mentor Instructor Panel</h1>
     <p>Read-only instructor review for Zammad training tickets. No Zammad writeback, closure, assignment, or priority changes.</p>
+
+
+    <div class="card">
+      <h2>Controlled Zammad Writeback</h2>
+      <p class="muted">Instructor approval only. This writes one approved note to Zammad and marks the local assignment completed. It does not close, prioritize, or change the Zammad ticket state.</p>
+
+      <label for="approvalAssignmentId">Assignment ID</label>
+      <input id="approvalAssignmentId" placeholder="Paste assignment_id from the review queue" />
+
+      <label for="approvalZammadTicketId">Zammad Ticket ID</label>
+      <input id="approvalZammadTicketId" placeholder="Numeric Zammad ticket ID required for writeback" />
+
+      <label for="approvedWritebackText">Approved Note Text</label>
+      <textarea id="approvedWritebackText" placeholder="Paste the exact instructor-approved note to write to Zammad."></textarea>
+
+      <button onclick="approveZammadWriteback()">Approve One-Time Writeback</button>
+      <div id="writebackResult" class="muted" style="margin-top: 12px;"></div>
+    </div>
+
+    <div class="card">
+      <h2>Instructor Review Queue</h2>
+      <p class="muted">Review student assignments, latest mentor progress, and items ready for instructor review. This queue does not write back to Zammad.</p>
+      <button onclick="loadReviewQueue()">Refresh Review Queue</button>
+      <div id="reviewQueueSummary" class="muted" style="margin-top: 12px;"></div>
+      <div id="reviewQueue" style="margin-top: 12px;"></div>
+    </div>
+
   </header>
 
   <main>
@@ -200,14 +261,38 @@
       <section class="section">
         <h2>Ticket Overview</h2>
         <div class="grid">
-          <div class="metric"><div class="label">Visible Ticket Number</div><div class="value" id="ticketNumberValue">-</div></div>
-          <div class="metric"><div class="label">Internal Ticket ID</div><div class="value" id="ticketIdValue">-</div></div>
-          <div class="metric"><div class="label">Title</div><div class="value" id="ticketTitleValue">-</div></div>
-          <div class="metric"><div class="label">Customer</div><div class="value" id="customerValue">-</div></div>
-          <div class="metric"><div class="label">Group / Priority</div><div class="value" id="orgGroupValue">-</div></div>
-          <div class="metric"><div class="label">Zammad Ticket State</div><div class="value" id="zammadStateValue">-</div></div>
-          <div class="metric"><div class="label">ARIA Mentor Status</div><div class="value" id="mentorStatusValue">-</div></div>
-          <div class="metric"><div class="label">Risk Level</div><div class="value" id="riskValue">-</div></div>
+          <div class="metric">
+            <div class="label">Visible Ticket Number</div>
+            <div class="value" id="ticketNumberValue">-</div>
+          </div>
+          <div class="metric">
+            <div class="label">Internal Ticket ID</div>
+            <div class="value" id="ticketIdValue">-</div>
+          </div>
+          <div class="metric">
+            <div class="label">Title</div>
+            <div class="value" id="ticketTitleValue">-</div>
+          </div>
+          <div class="metric">
+            <div class="label">Customer</div>
+            <div class="value" id="customerValue">-</div>
+          </div>
+          <div class="metric">
+            <div class="label">Organization / Group</div>
+            <div class="value" id="orgGroupValue">-</div>
+          </div>
+          <div class="metric">
+            <div class="label">Zammad Ticket State</div>
+            <div class="value" id="zammadStateValue">-</div>
+          </div>
+          <div class="metric">
+            <div class="label">ARIA Mentor Status</div>
+            <div class="value" id="mentorStatusValue">-</div>
+          </div>
+          <div class="metric">
+            <div class="label">Risk Level</div>
+            <div class="value" id="riskValue">-</div>
+          </div>
         </div>
       </section>
 
@@ -238,6 +323,20 @@
   </main>
 
   <script>
+    function statusBadge(value) {
+      const normalized = String(value || '').toLowerCase();
+
+      if (normalized === 'validation_complete') {
+        return '<span class="badge success">validation_complete</span>';
+      }
+
+      if (normalized.includes('required')) {
+        return '<span class="badge warning">' + escapeHtml(value) + '</span>';
+      }
+
+      return '<span class="badge">' + escapeHtml(value || '-') + '</span>';
+    }
+
     function escapeHtml(value) {
       return String(value ?? '')
         .replaceAll('&', '&amp;')
@@ -245,17 +344,6 @@
         .replaceAll('>', '&gt;')
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
-    }
-
-    function statusBadge(value) {
-      const normalized = String(value || '').toLowerCase();
-      if (normalized === 'validation_complete' || normalized === 'low') {
-        return '<span class="badge success">' + escapeHtml(value) + '</span>';
-      }
-      if (normalized.includes('required')) {
-        return '<span class="badge warning">' + escapeHtml(value) + '</span>';
-      }
-      return '<span class="badge">' + escapeHtml(value || '-') + '</span>';
     }
 
     function setText(id, value) {
@@ -276,6 +364,7 @@
 
     async function fetchGuidance() {
       clearError();
+
       const button = document.getElementById('fetchButton');
       const ticketNumber = document.getElementById('ticketNumber').value.trim();
 
@@ -288,12 +377,17 @@
       button.textContent = 'Loading...';
 
       try {
-        const response = await fetch(`/mentor/zammad/ticket-number/${encodeURIComponent(ticketNumber)}/draft-guidance`, { method: 'POST' });
+        const response = await fetch(`/mentor/zammad/ticket-number/${encodeURIComponent(ticketNumber)}/draft-guidance`, {
+          method: 'POST'
+        });
+
         if (!response.ok) {
           const errorPayload = await response.json().catch(() => ({}));
           throw new Error(errorPayload.detail || `Request failed with status ${response.status}`);
         }
-        renderResult(await response.json());
+
+        const data = await response.json();
+        renderResult(data);
       } catch (error) {
         showError(error.message || String(error));
       } finally {
@@ -302,8 +396,10 @@
       }
     }
 
+
     async function fetchLlmGuidance() {
       clearError();
+
       const button = document.getElementById('llmButton');
       const ticketNumber = document.getElementById('ticketNumber').value.trim();
 
@@ -316,12 +412,17 @@
       button.textContent = 'Loading LLM...';
 
       try {
-        const response = await fetch(`/mentor/zammad/ticket-number/${encodeURIComponent(ticketNumber)}/llm-guidance`, { method: 'POST' });
+        const response = await fetch(`/mentor/zammad/ticket-number/${encodeURIComponent(ticketNumber)}/llm-guidance`, {
+          method: 'POST'
+        });
+
         if (!response.ok) {
           const errorPayload = await response.json().catch(() => ({}));
           throw new Error(errorPayload.detail || `Request failed with status ${response.status}`);
         }
-        renderLlmResult(await response.json());
+
+        const data = await response.json();
+        renderLlmResult(data);
       } catch (error) {
         showError(error.message || String(error));
       } finally {
@@ -340,7 +441,9 @@
     }
 
     function renderResult(data) {
-      document.getElementById('resultPanel').classList.remove('hidden');
+      const panel = document.getElementById('resultPanel');
+      panel.classList.remove('hidden');
+
       const ticket = data.zammad_ticket?.ticket || {};
       const articles = data.zammad_ticket?.articles || [];
 
@@ -352,7 +455,9 @@
       setText('zammadStateValue', ticket.state);
       document.getElementById('mentorStatusValue').innerHTML = statusBadge(data.next_action);
       document.getElementById('riskValue').innerHTML = statusBadge(data.risk_level);
+
       document.getElementById('mentorResponse').textContent = data.mentor_response || '';
+
       renderSources(data.retrieved_context || [], data.retrieved_sources || []);
       renderArticles(articles);
     }
@@ -360,10 +465,12 @@
     function renderSources(contextItems, sourcePaths) {
       const container = document.getElementById('sourcesList');
       container.innerHTML = '';
+
       if (!contextItems.length && !sourcePaths.length) {
         container.innerHTML = '<p class="muted">No retrieved sources.</p>';
         return;
       }
+
       if (contextItems.length) {
         contextItems.forEach((item) => {
           const div = document.createElement('div');
@@ -377,6 +484,7 @@
         });
         return;
       }
+
       sourcePaths.forEach((source) => {
         const div = document.createElement('div');
         div.className = 'source';
@@ -388,20 +496,151 @@
     function renderArticles(articles) {
       const container = document.getElementById('articlesList');
       container.innerHTML = '';
+
       if (!articles.length) {
         container.innerHTML = '<p class="muted">No ticket articles found.</p>';
         return;
       }
+
       articles.forEach((article, index) => {
         const detail = document.createElement('details');
         detail.open = index === 0;
+
         detail.innerHTML = `
-          <summary>Article ${index + 1} — ${escapeHtml(article.sender || '-')} — ${escapeHtml(article.from || '-')} — ${escapeHtml(article.created_at || '-')}</summary>
-          <div class="article-body">${article.body || ''}</div>
+          <summary>
+            Article ${index + 1} — ${escapeHtml(article.sender || '-')} — ${escapeHtml(article.from || '-')} — ${escapeHtml(article.created_at || '-')}
+          </summary>
+          <div class="article-body">
+            ${article.body || ''}
+          </div>
         `;
+
         container.appendChild(detail);
       });
     }
+
+    async function loadReviewQueue() {
+      const summary = document.getElementById('reviewQueueSummary');
+      const container = document.getElementById('reviewQueue');
+
+      if (!summary || !container) {
+        return;
+      }
+
+      summary.textContent = 'Loading review queue...';
+      container.innerHTML = '';
+
+      try {
+        const response = await fetch('/review/queue?limit=100');
+
+        if (!response.ok) {
+          throw new Error(`Review queue request failed with HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        renderReviewQueue(data);
+      } catch (error) {
+        summary.textContent = '';
+        container.innerHTML = `<p class="error">${escapeHtml(error.message)}</p>`;
+      }
+    }
+
+    function renderReviewQueue(data) {
+      const summary = document.getElementById('reviewQueueSummary');
+      const container = document.getElementById('reviewQueue');
+      const items = data.items || [];
+      const counts = data.counts || {};
+
+      summary.textContent = `Total: ${data.count || 0} | Needs review: ${counts.needs_instructor_review || 0} | Ready: ${counts.ready_for_instructor_review || 0} | In progress: ${counts.student_work_in_progress || 0} | Assigned: ${counts.assigned || 0} | Completed: ${counts.completed || 0}`;
+
+      if (!items.length) {
+        container.innerHTML = '<p class="muted">No assignments are currently in the instructor review queue.</p>';
+        return;
+      }
+
+      container.innerHTML = items.map((item) => {
+        const sessionText = item.latest_session_id
+          ? `Session: ${escapeHtml(item.latest_session_id)}`
+          : 'Session: none yet';
+
+        return `
+          <div class="source">
+            <strong>${escapeHtml(item.title || 'Untitled assignment')}</strong>
+            <p>
+              Student: ${escapeHtml(item.student || '-')} |
+              Ticket/Lab: ${escapeHtml(item.ticket_id || '-')} |
+              Assignment: ${escapeHtml(item.assignment_status || '-')} |
+              Review: ${escapeHtml(item.review_state || '-')}
+            </p>
+            <p>
+              Zammad: ${escapeHtml(item.zammad_ticket_number || 'not linked')} |
+              Next action: ${escapeHtml(item.latest_next_action || 'none yet')} |
+              Progress: ${escapeHtml(item.latest_progress_status || 'none yet')} |
+              Risk: ${escapeHtml(item.latest_risk_level || 'none yet')}
+            </p>
+            <p class="muted">${sessionText}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+
+    loadReviewQueue();
+
+    async function approveZammadWriteback() {
+      const result = document.getElementById('writebackResult');
+      const assignmentId = document.getElementById('approvalAssignmentId').value.trim();
+      const zammadTicketId = document.getElementById('approvalZammadTicketId').value.trim();
+      const approvedText = document.getElementById('approvedWritebackText').value.trim();
+
+      if (!assignmentId) {
+        result.innerHTML = '<p class="error">Assignment ID is required.</p>';
+        return;
+      }
+
+      if (!zammadTicketId) {
+        result.innerHTML = '<p class="error">Numeric Zammad Ticket ID is required.</p>';
+        return;
+      }
+
+      if (!approvedText) {
+        result.innerHTML = '<p class="error">Approved note text is required.</p>';
+        return;
+      }
+
+      result.textContent = 'Submitting one-time approved writeback...';
+
+      try {
+        const response = await fetch(`/review/queue/${encodeURIComponent(assignmentId)}/approve`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            zammad_ticket_id: zammadTicketId,
+            approved_text: approvedText
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || `Writeback failed with HTTP ${response.status}`);
+        }
+
+        result.innerHTML = `
+          <p><strong>Writeback approved.</strong></p>
+          <p>Assignment status: ${escapeHtml(data.assignment?.status || '-')}</p>
+          <p>Zammad article ID: ${escapeHtml(String(data.zammad_writeback?.article_id || '-'))}</p>
+          <p>Payload hash: ${escapeHtml(data.payload_hash || '-')}</p>
+          <p class="muted">Zammad ticket state was not changed.</p>
+        `;
+
+        loadReviewQueue();
+      } catch (error) {
+        result.innerHTML = `<p class="error">${escapeHtml(error.message)}</p>`;
+      }
+    }
+
+
   </script>
 </body>
 </html>

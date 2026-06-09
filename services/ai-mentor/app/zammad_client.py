@@ -168,3 +168,48 @@ def summarize_ticket_for_mentor(ticket: Dict[str, Any], articles: List[Dict[str,
         },
         "articles": article_summaries,
     }
+
+
+def zammad_post(path: str, payload: dict) -> Any:
+    base_url, _ = get_zammad_config()
+    url = f"{base_url}{path}"
+
+    response = requests.post(
+        url,
+        headers={**zammad_headers(), "Content-Type": "application/json"},
+        json=payload,
+        timeout=10,
+    )
+
+    if response.status_code >= 400:
+        raise ZammadClientError(
+            f"Zammad POST {path} failed with HTTP {response.status_code}: {response.text[:500]}"
+        )
+
+    if not response.text.strip():
+        return {}
+
+    return response.json()
+
+
+def create_zammad_ticket_note(ticket_id: int, body: str) -> Dict[str, Any]:
+    if not body.strip():
+        raise ZammadClientError("Cannot write an empty Zammad note.")
+
+    payload = {
+        "ticket_id": ticket_id,
+        "type": "note",
+        "sender": "Agent",
+        "body": body,
+        "content_type": "text/plain",
+        "internal": False,
+    }
+
+    result = zammad_post("/api/v1/ticket_articles", payload)
+
+    return {
+        "ticket_id": ticket_id,
+        "article_id": result.get("id"),
+        "type": result.get("type") or "note",
+        "internal": result.get("internal", False),
+    }

@@ -347,18 +347,46 @@ No new phase should deepen only one domain at the expense of the others. Any imp
 | Phase 12 - Ticket-006 through Ticket-010 mentor workflows | Complete |
 | Phase 13 - instructor progress summary API | Complete |
 | Zammad PostgreSQL dump backup | Pending |
-| Controlled Zammad writeback / instructor approval workflow | Deferred |
+| Controlled Zammad writeback / instructor approval workflow | Complete |
 | Operational hardening | Pending |
 
 ### Training Domain Status
 
 | Training Domain | Current Status | Next Required Work |
 |---|---|---|
-| Help Desk / Ticketing | Operational v1; strongest domain | Keep stable; defer deeper writeback until other domains advance |
+| Help Desk / Ticketing | Complete v1 | Keep stable. Do not add more Help Desk features until other domains catch up unless the work is shared platform infrastructure. |
 | Networking / Cisco / DNS / VLAN / Switching | Workflow coverage started; infrastructure mature | Add dedicated network lab path with command evidence and Cisco guardrails |
 | Security / SOC / Wazuh / Incident Review | Ticket-010 workflow exists; infrastructure pending | Deploy Wazuh LXC, agents, alert sources, and SOC labs |
 | Automation / SysAdmin / Linux / Proxmox / Field-Tech | Partially live; needs unified lab model | Build non-Zammad lab submission/completion workflow |
 | Identity / IAM / Active Directory / GPO / Windows Endpoint Administration | Core domain; not implemented yet | Build simple VM-based AD/GPO lab and mentor evidence templates |
+
+### Help Desk / Ticketing v1 Closeout
+
+Help Desk / Ticketing is complete for v1.
+
+Completed:
+
+- Zammad deployed on CT 110
+- Help desk ticketing workflow validated
+- Instructor panel live
+- Student-facing mentor panel live
+- Ticket-009 Zammad triage workflow validated
+- Session logging
+- Audit logging
+- Progress summary API
+- Read-only Zammad integration
+- Student assignment model
+- Instructor review queue
+- Controlled one-time Zammad writeback with instructor approval
+- Local assignment completion after writeback
+- Duplicate writeback protection
+- Audit payload hash
+- No Zammad ticket closure, priority change, or state change by ARIA
+
+Guardrail:
+
+No additional Help Desk-only feature work should begin until the other domains catch up, unless the work is shared platform infrastructure.
+
 
 ### Workflow vs Domain Infrastructure
 
@@ -369,6 +397,7 @@ Examples:
 - Ticket-010 Wazuh Alert Investigation workflow exists, but Wazuh infrastructure is not deployed yet.
 - AD/GPO is a required core training domain, but the Windows Server domain controller and Windows client lab are not deployed yet.
 - Ticket workflows provide mentor validation, but domain-specific lab environments still need to be built and tested.
+- Help Desk / Ticketing is complete for v1, including assignment model, instructor review queue, and controlled one-time Zammad writeback.
 
 > Full implementation phase status: `docs/ai-mentor-implementation-status.md`
 

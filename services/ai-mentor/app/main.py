@@ -1,11 +1,19 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 import socket
+import hashlib
 import subprocess
 
 from fastapi import FastAPI, HTTPException, Query, Request, Response, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 
+from app.assignment_store import (
+    create_assignment,
+    list_assignments,
+    update_assignment_status,
+    get_assignment,
+    mark_assignment_approved,
+)
 from app.audit import (
     audit_status,
     read_recent_audit_events,
@@ -49,6 +57,7 @@ from app.zammad_client import (
     get_ticket_articles,
     get_ticket_by_number,
     get_zammad_health,
+    create_zammad_ticket_note,
     summarize_ticket_for_mentor,
 )
 
@@ -488,6 +497,125 @@ def mentor_analyze_ticket(request: AnalyzeTicketRequest) -> AnalyzeTicketRespons
     return response
 
 
+@app.post("/assignments")
+def create_student_assignment(
+    payload: dict,
+    request: Request,
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> dict:
+    student = str(payload.get("student", "")).strip()
+    ticket_id = str(payload.get("ticket_id", "")).strip()
+    title = str(payload.get("title", "")).strip()
+
+    if not student:
+        raise HTTPException(status_code=400, detail="student is required")
+    if not ticket_id:
+        raise HTTPException(status_code=400, detail="ticket_id is required")
+    if not title:
+        raise HTTPException(status_code=400, detail="title is required")
+
+    assignment = create_assignment(
+        student=student,
+        ticket_id=ticket_id,
+        title=title,
+        created_by=str(user.get("username", "unknown")),
+        domain=str(payload.get("domain", "helpdesk")),
+        difficulty=str(payload.get("difficulty", "beginner")),
+        scenario=str(payload.get("scenario", "")),
+        zammad_ticket_number=payload.get("zammad_ticket_number"),
+        zammad_ticket_id=payload.get("zammad_ticket_id"),
+        due_date=payload.get("due_date"),
+        notes=str(payload.get("notes", "")),
+    )
+
+    write_audit_event(
+        event_type="assignment.created",
+        request=request,
+        actor=user,
+        outcome="success",
+        target_type="assignment",
+        target_id=assignment["assignment_id"],
+        metadata={
+            "student": assignment["student"],
+            "ticket_id": assignment["ticket_id"],
+            "domain": assignment["domain"],
+            "zammad_ticket_number": assignment.get("zammad_ticket_number"),
+        },
+    )
+
+    return {"assignment": assignment}
+
+
+@app.get("/assignments")
+def get_assignments(
+    student: str | None = None,
+    status: str | None = None,
+    limit: int = Query(default=200, ge=1, le=1000),
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> dict:
+    assignments = list_assignments(student=student, status=status, limit=limit)
+    return {
+        "assignments": assignments,
+        "count": len(assignments),
+    }
+
+
+@app.get("/student/assignments")
+def get_current_student_assignments(
+    status: str | None = None,
+    limit: int = Query(default=200, ge=1, le=1000),
+    user: dict = Depends(require_roles("admin", "instructor", "student")),
+) -> dict:
+    student = str(user.get("username", "")).strip()
+    assignments = list_assignments(student=student, status=status, limit=limit)
+
+    return {
+        "student": student,
+        "assignments": assignments,
+        "count": len(assignments),
+    }
+
+
+@app.patch("/assignments/{assignment_id}/status")
+def patch_assignment_status(
+    assignment_id: str,
+    payload: dict,
+    request: Request,
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> dict:
+    status = str(payload.get("status", "")).strip()
+    note = str(payload.get("note", "")).strip()
+
+    try:
+        assignment = update_assignment_status(
+            assignment_id,
+            status=status,
+            updated_by=str(user.get("username", "unknown")),
+            note=note,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    if assignment is None:
+        raise HTTPException(status_code=404, detail="Assignment not found")
+
+    write_audit_event(
+        event_type="assignment.status_updated",
+        request=request,
+        actor=user,
+        outcome="success",
+        target_type="assignment",
+        target_id=assignment_id,
+        metadata={
+            "student": assignment.get("student"),
+            "ticket_id": assignment.get("ticket_id"),
+            "status": assignment.get("status"),
+        },
+    )
+
+    return {"assignment": assignment}
+
+
 @app.get("/sessions/{session_id}")
 def get_session(session_id: str, user: dict = Depends(require_roles("admin", "instructor"))) -> dict:
     record = load_session(session_id)
@@ -591,6 +719,200 @@ def build_progress_summary(records: list[dict]) -> dict:
         "scope": "latest session per student per ticket",
     }
 
+
+
+
+def build_instructor_review_queue(limit: int = 200) -> dict:
+    assignments = list_assignments(limit=limit)
+    progress = build_progress_summary(list_sessions(limit=500))
+
+    students = progress.get("students", {})
+    items = []
+
+    for assignment in assignments:
+        student = str(assignment.get("student", "unknown"))
+        ticket_id = str(assignment.get("ticket_id", "unknown"))
+        student_progress = students.get(student, {})
+        ticket_progress = student_progress.get("tickets", {}).get(ticket_id, {})
+
+        assignment_status = assignment.get("status", "unknown")
+        latest_next_action = ticket_progress.get("next_action")
+        latest_risk_level = ticket_progress.get("risk_level")
+        latest_session_id = ticket_progress.get("last_session_id")
+        latest_status = ticket_progress.get("status")
+
+        review_state = "assigned"
+
+        if assignment_status == "cancelled":
+            review_state = "cancelled"
+        elif assignment_status == "completed":
+            review_state = "completed"
+        elif assignment_status == "submitted":
+            review_state = "needs_instructor_review"
+        elif latest_next_action == "validation_complete" or latest_status == "complete":
+            review_state = "ready_for_instructor_review"
+        elif latest_next_action or latest_status == "in_progress":
+            review_state = "student_work_in_progress"
+
+        items.append(
+            {
+                "assignment_id": assignment.get("assignment_id"),
+                "student": student,
+                "ticket_id": ticket_id,
+                "title": assignment.get("title"),
+                "domain": assignment.get("domain"),
+                "difficulty": assignment.get("difficulty"),
+                "assignment_status": assignment_status,
+                "review_state": review_state,
+                "zammad_ticket_number": assignment.get("zammad_ticket_number"),
+                "latest_progress_status": latest_status,
+                "latest_next_action": latest_next_action,
+                "latest_risk_level": latest_risk_level,
+                "latest_session_id": latest_session_id,
+                "updated_at_utc": assignment.get("updated_at_utc"),
+                "created_at_utc": assignment.get("created_at_utc"),
+            }
+        )
+
+    priority = {
+        "needs_instructor_review": 0,
+        "ready_for_instructor_review": 1,
+        "student_work_in_progress": 2,
+        "assigned": 3,
+        "completed": 4,
+        "cancelled": 5,
+    }
+
+    items.sort(
+        key=lambda item: (
+            priority.get(item.get("review_state"), 99),
+            item.get("updated_at_utc") or "",
+        ),
+        reverse=False,
+    )
+
+    counts = {}
+    for item in items:
+        state = item.get("review_state", "unknown")
+        counts[state] = counts.get(state, 0) + 1
+
+    return {
+        "items": items,
+        "count": len(items),
+        "counts": counts,
+        "scope": "student assignments joined with latest mentor progress",
+    }
+
+
+@app.get("/review/queue")
+def get_instructor_review_queue(
+    request: Request,
+    limit: int = Query(default=200, ge=1, le=1000),
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> dict:
+    queue = build_instructor_review_queue(limit=limit)
+
+    write_audit_event(
+        event_type="review.queue_viewed",
+        request=request,
+        actor=user,
+        outcome="success",
+        target_type="review_queue",
+        target_id="helpdesk",
+        metadata={
+            "count": queue.get("count"),
+            "scope": queue.get("scope"),
+        },
+    )
+
+    return queue
+
+
+
+@app.post("/review/queue/{assignment_id}/approve")
+def approve_review_queue_item(
+    assignment_id: str,
+    payload: dict,
+    request: Request,
+    user: dict = Depends(require_roles("admin", "instructor")),
+) -> dict:
+    assignment = get_assignment(assignment_id)
+
+    if assignment is None:
+        raise HTTPException(status_code=404, detail="Assignment not found.")
+
+    if assignment.get("status") == "completed" and assignment.get("approval"):
+        raise HTTPException(
+            status_code=409,
+            detail="Assignment already approved and completed. Duplicate Zammad writeback blocked.",
+        )
+
+    zammad_ticket_id_raw = assignment.get("zammad_ticket_id") or payload.get("zammad_ticket_id")
+    zammad_ticket_number = assignment.get("zammad_ticket_number") or payload.get("zammad_ticket_number")
+    approved_text = str(payload.get("approved_text", "")).strip()
+
+    if not approved_text:
+        raise HTTPException(status_code=400, detail="approved_text is required.")
+
+    if len(approved_text) > 4000:
+        raise HTTPException(status_code=400, detail="approved_text must be 4000 characters or fewer.")
+
+    if not zammad_ticket_id_raw:
+        raise HTTPException(
+            status_code=400,
+            detail="zammad_ticket_id is required for writeback. Resolve the Zammad ticket first, then approve.",
+        )
+
+    try:
+        zammad_ticket_id = int(zammad_ticket_id_raw)
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=400, detail="zammad_ticket_id must be numeric.") from exc
+
+    payload_hash = hashlib.sha256(approved_text.encode("utf-8")).hexdigest()
+
+    zammad_result = create_zammad_ticket_note(
+        ticket_id=zammad_ticket_id,
+        body=approved_text,
+    )
+
+    updated_assignment = mark_assignment_approved(
+        assignment_id,
+        approved_by=str(user.get("username", "unknown")),
+        payload_hash=payload_hash,
+        zammad_article_id=str(zammad_result.get("article_id") or ""),
+        note="Instructor approved writeback. Local assignment marked completed. Zammad ticket state was not changed.",
+    )
+
+    if updated_assignment is None:
+        raise HTTPException(status_code=404, detail="Assignment not found after writeback.")
+
+    write_audit_event(
+        event_type="review.writeback_approved",
+        request=request,
+        actor=user,
+        outcome="success",
+        target_type="assignment",
+        target_id=assignment_id,
+        metadata={
+            "student": assignment.get("student"),
+            "ticket_id": assignment.get("ticket_id"),
+            "zammad_ticket_id": zammad_ticket_id,
+            "zammad_ticket_number": zammad_ticket_number,
+            "zammad_article_id": zammad_result.get("article_id"),
+            "payload_hash": payload_hash,
+            "zammad_state_changed": False,
+            "zammad_priority_changed": False,
+            "zammad_ticket_closed": False,
+        },
+    )
+
+    return {
+        "status": "approved",
+        "assignment": updated_assignment,
+        "zammad_writeback": zammad_result,
+        "payload_hash": payload_hash,
+        "message": "Approved note written to Zammad. Local assignment marked completed. Zammad ticket state was not changed.",
+    }
 
 @app.get("/progress/summary")
 def get_progress_summary(

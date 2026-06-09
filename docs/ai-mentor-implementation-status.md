@@ -61,12 +61,16 @@ The long-term scope includes Field Tech Foundation, Help Desk Documentation, Lin
 Current reality after Phase 13:
 
 - The AI Mentor platform foundation is live on ARIA.
+- Help Desk / Ticketing is complete for v1.
 - Zammad/help desk ticketing is the strongest current domain.
 - Ticket-001 through Ticket-010 mentor workflows are implemented.
 - The student-facing mentor panel is implemented.
 - Instructor progress summary API is implemented.
 - Audit/event logging is implemented.
 - Ticket lab template system is implemented.
+- Student assignment model is implemented.
+- Instructor review queue is implemented.
+- Controlled one-time Zammad writeback is implemented with instructor approval, duplicate-writeback blocking, local completion, and audit hash logging.
 - The service uses repo-grounded knowledge retrieval from JSONL chunks.
 - ChromaDB/vector DB is deferred and not blocking v1.
 - Zammad integration remains read-only and instructor-mediated.
@@ -123,7 +127,7 @@ Example:
 |---|---|---|
 | ChromaDB / vector DB | Deferred | JSONL retrieval is sufficient for v1 validation; vector DB will return when retrieval complexity requires it |
 | Zammad webhook automation | Deferred | Current model is read-only/instructor-mediated to reduce risk |
-| Zammad writeback | Deferred | No AI-generated comments should be posted without instructor approval and audit logging |
+| Controlled Zammad writeback | Complete | Instructor-approved one-time note writeback is implemented. ARIA does not auto-post, auto-close, change priority, or change Zammad ticket state. Duplicate writeback is blocked locally. |
 | LLM live provider use | Disabled | Provider switch remains off even if an API key exists; deterministic mentor output remains authoritative |
 | Field-to-Cyber lab submission model | Pending | Needs a lab completion review workflow distinct from break/fix help desk tickets |
 | Active Directory / GPO / Windows endpoint mentor workflows | Pending | Core training domain; simple VM-based AD/GPO lab must be built |
@@ -148,7 +152,7 @@ Example:
 | 11 | Student-facing mentor panel v1 | Complete |
 | 12 | Implement Ticket-006 through Ticket-010 mentor workflows | Complete |
 | 13 | Instructor progress summary API | Complete |
-| 14 | Controlled Zammad writeback / instructor approval workflow | Pending; do not prioritize before domain-balance review |
+| 14 | Controlled Zammad writeback / instructor approval workflow | Complete |
 | 15 | Operational hardening | Pending |
 
 ---
@@ -157,7 +161,7 @@ Example:
 
 | Training Domain | Current Status | Implemented So Far | Next Required Work |
 |---|---|---|---|
-| Help Desk / Ticketing | Operational v1; strongest domain | Zammad, instructor panel, student panel, Ticket-009, read-only ticket review, audit logging, session logging, progress summary | Avoid over-building this domain before others catch up; controlled writeback remains deferred |
+| Help Desk / Ticketing | Complete v1 | Zammad, help desk workflow, instructor panel, student panel, Ticket-009 workflow, session logging, audit logging, progress summary API, read-only Zammad integration, student assignment model, instructor review queue, controlled one-time Zammad writeback | Domain complete for v1. Do not add more Help Desk features until other domains catch up unless the work is shared platform infrastructure. |
 | Networking / Cisco / DNS / VLAN / Switching | Workflow coverage started; infrastructure is mature | Ticket-001 DNS, Ticket-002 VLAN, Ticket-004 Cisco SSH, Ticket-005 return path/routing, Ticket-007 VLAN 70 migration | Create dedicated network lab path with show-command evidence, risk, rollback, and Cisco guardrail enforcement |
 | Security / SOC / Wazuh / Incident Review | Workflow prepared; infrastructure pending | Ticket-010 Wazuh Alert Investigation workflow and security-triage evidence model | Deploy Wazuh LXC, agents, alert sources, and real SOC lab events |
 | Automation / SysAdmin / Linux / Proxmox / Field-Tech | Partially live; needs unified lab model | Proxmox, student Linux container, Ticket-003, Ticket-006, Ticket-008, field-tech notes | Build non-Zammad lab submission/completion model for Linux, Proxmox, field-tech, runbooks, and automation labs |
@@ -169,7 +173,7 @@ Example:
 
 | Training Environment / Domain | Current Status | Next Required Work |
 |---|---|---|
-| Help Desk / Zammad | Operational v1 foundation | Keep stable; defer deeper writeback until other domains advance |
+| Help Desk / Zammad | Complete v1 | Keep stable. Controlled writeback is limited to one instructor-approved note. No auto-close, priority change, or ticket-state change by ARIA. |
 | DNS / Pi-hole | Ticket workflow implemented | Add real student lab evidence path and domain-specific progress tracking |
 | VLAN / Switching | Ticket workflow implemented | Add Cisco/switching lab evidence model |
 | Linux / Proxmox | Ticket workflows implemented | Add broader Linux/Proxmox lab submission workflow |
@@ -212,6 +216,47 @@ Initial AD/GPO training scenarios should include:
 - Basic Windows endpoint support ticket requiring AD verification
 
 The AI Mentor should guide AD/GPO troubleshooting by requiring evidence such as screenshots, ADUC state, Group Policy Management state, `gpresult`, `rsop.msc`, Event Viewer logs, DNS checks, and professional resolution summaries.
+
+---
+
+## Help Desk / Ticketing Domain Closeout
+
+Help Desk / Ticketing is complete for v1.
+
+Completed capabilities:
+
+- Zammad deployed on CT 110
+- Help desk ticketing workflow validated
+- Instructor panel live
+- Student-facing mentor panel live
+- Ticket-009 Zammad triage workflow validated
+- Session logging
+- Audit logging
+- Progress summary API
+- Read-only Zammad integration
+- Student assignment model
+- Instructor review queue
+- Controlled Zammad writeback / instructor approval workflow
+- Local assignment completion after successful writeback
+- Duplicate writeback protection
+- Audit event with payload hash
+- No Zammad ticket closure, priority change, or state change by ARIA
+
+Controlled writeback boundary:
+
+- ARIA may write one instructor-approved note/article to the linked Zammad ticket.
+- ARIA must not automatically post AI-generated comments.
+- ARIA must not close tickets.
+- ARIA must not change ticket priority.
+- ARIA must not change Zammad ticket state.
+- ARIA must mark the local assignment completed after successful writeback so the instructor review job is not repeated.
+- ARIA must block duplicate writeback for already approved/completed assignments.
+- ARIA must log instructor identity, assignment ID, ticket ID, timestamp, Zammad article ID, and payload hash.
+
+Assessment:
+
+Help Desk / Ticketing is ahead of the other domains and should not receive another major build phase until the other domains catch up, unless the work is shared platform infrastructure.
+
 
 ---
 
