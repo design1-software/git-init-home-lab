@@ -1,0 +1,22 @@
+{
+  "template_id": "ticket-003",
+  "title": "Proxmox APT Egress Failure",
+  "domain": "linux",
+  "difficulty": "beginner",
+  "ticket_type": "training",
+  "status": "active",
+  "summary": "Student diagnoses why a Proxmox host or container cannot reach package repositories.",
+  "student_goal": "Determine whether apt failure is caused by DNS, gateway, repository config, or outbound network access.",
+  "mentor_mode": "guided_troubleshooting",
+  "trigger_terms": ["ticket-003", "apt egress", "apt update", "proxmox apt", "repository unreachable", "temporary failure resolving", "network unreachable"],
+  "required_evidence": [
+    {"id": "apt_error", "label": "APT error output", "description": "Student must provide the relevant apt update error."},
+    {"id": "dns_test", "label": "DNS test", "description": "Student must test name resolution from the affected system."},
+    {"id": "gateway_test", "label": "Gateway or internet reachability test", "description": "Student must test outbound network reachability."}
+  ],
+  "opening_questions": ["What exact apt error are you seeing?", "Can the system resolve repository hostnames?", "Can the system reach its gateway or an external IP?"],
+  "completion_signals": ["apt update completes successfully", "repository access restored", "DNS and gateway confirmed working"],
+  "mentor_guidance_rules": ["Do not assume the repository list is wrong until DNS and routing are tested.", "Ask for the exact apt error before suggesting fixes.", "Separate DNS resolution failure from HTTP repository access failure."],
+  "student_visible": {"allowed": ["student_goal", "opening_questions", "required_evidence labels", "safe diagnostic commands"], "blocked": ["blind package source replacement", "destructive system changes"]},
+  "next_actions": {"missing_evidence": "request_more_evidence", "complete": "validation_complete", "unclear": "manual_review"}
+}
