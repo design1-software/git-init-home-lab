@@ -142,6 +142,112 @@ TICKET_WORKFLOWS: Dict[str, Dict[str, Any]] = {
         ],
         "documentation_prompt": "Write the structured incident summary showing forward-path checks, return-path proof, why the fix is temporary, and what prevents recurrence after cleanup.",
     },
+
+    "006": {
+        "title": "Proxmox Repository Hygiene",
+        "domain": "Proxmox / Linux / Package Management",
+        "situation": "The student is validating Proxmox repository configuration and confirming apt update works without enterprise repository errors.",
+        "evidence_checks": [
+            {
+                "id": "apt_update_error",
+                "label": "APT update error",
+                "keywords": ["apt update", "pve-enterprise", "enterprise.proxmox", "no subscription", "repository error", "401", "403", "apt error"],
+                "prompt": "Provide the apt update output or repository-related error before making changes.",
+            },
+            {
+                "id": "repo_files",
+                "label": "Repository source files",
+                "keywords": ["sources.list", "pve-enterprise.list", "debian.sources", "apt sources", "/etc/apt", "pve-no-subscription", "download.proxmox.com"],
+                "prompt": "Identify the relevant apt source files and show which repository entries are enabled or disabled.",
+            },
+            {
+                "id": "successful_update",
+                "label": "Successful apt update",
+                "keywords": ["apt update completes", "reading package lists", "all packages are up to date", "hit:", "get:", "fetched", "successful apt update", "no enterprise repository error"],
+                "prompt": "Confirm apt update works after the repository correction.",
+            },
+        ],
+        "documentation_prompt": "Write the incident summary showing the original apt symptom, repository files reviewed, correction made, and final successful apt update result.",
+    },
+    "007": {
+        "title": "Proxmox VLAN 70 Migration",
+        "domain": "Proxmox / VLAN / Migration Validation",
+        "situation": "The student is validating that an ARIA service or host was moved to VLAN 70 and remains reachable after migration.",
+        "evidence_checks": [
+            {
+                "id": "ip_addressing",
+                "label": "VLAN 70 IP addressing",
+                "keywords": ["192.168.70", "vlan 70", "vlan70", "ip -br addr", "ip addr", "vmbr0", "addressing", "expected ip", "actual ip"],
+                "prompt": "Document the expected and actual VLAN 70 IP configuration.",
+            },
+            {
+                "id": "gateway_reachability",
+                "label": "Gateway reachability",
+                "keywords": ["192.168.70.1", "gateway", "ping -c", "ping 192.168.70.1", "default route", "ip route"],
+                "prompt": "Confirm the system can reach the VLAN 70 gateway and show the routing evidence.",
+            },
+            {
+                "id": "service_reachability",
+                "label": "Service reachability",
+                "keywords": ["curl", "http", "service", "port", "8081", "zammad", "aria", "reachable", "health", "access validated"],
+                "prompt": "Confirm the ARIA service is reachable after migration.",
+            },
+        ],
+        "documentation_prompt": "Write the change-validation summary showing VLAN 70 addressing, gateway reachability, service reachability, and rollback considerations.",
+    },
+    "008": {
+        "title": "Comet ATX Hard Reset Validation",
+        "domain": "Hardware Ops / Power Control / Recovery Validation",
+        "situation": "The student is validating a controlled ATX hard reset or power-control action and confirming system recovery afterward.",
+        "evidence_checks": [
+            {
+                "id": "precheck",
+                "label": "Pre-reset check",
+                "keywords": ["precheck", "pre-reset", "before reset", "before power cycle", "system state", "status before", "baseline"],
+                "prompt": "Document the system state before performing the reset.",
+            },
+            {
+                "id": "reset_action",
+                "label": "Reset action evidence",
+                "keywords": ["hard reset", "power cycle", "atx", "reset action", "power control", "comet", "reboot initiated", "power reset"],
+                "prompt": "Document the ATX reset or power-control action performed.",
+            },
+            {
+                "id": "postcheck",
+                "label": "Post-reset recovery check",
+                "keywords": ["postcheck", "post-reset", "after reset", "recovered", "booted", "online", "service restored", "ping succeeds", "health check"],
+                "prompt": "Confirm the system recovered after reset and provide recovery evidence.",
+            },
+        ],
+        "documentation_prompt": "Write the validation summary showing pre-reset state, reset action, post-reset recovery, and any safety notes.",
+    },
+    "010": {
+        "title": "Wazuh Alert Investigation",
+        "domain": "Security Monitoring / SOC / Alert Triage",
+        "situation": "The student is investigating a Wazuh security alert and documenting alert details, affected asset, disposition, and next step.",
+        "evidence_checks": [
+            {
+                "id": "alert_details",
+                "label": "Alert details",
+                "keywords": ["wazuh", "rule id", "severity", "timestamp", "alert title", "alert details", "agent", "siem"],
+                "prompt": "Provide the alert title, rule ID, severity, timestamp, and source system.",
+            },
+            {
+                "id": "affected_asset",
+                "label": "Affected asset",
+                "keywords": ["affected asset", "endpoint", "host", "agent", "user", "service", "asset", "source ip", "hostname"],
+                "prompt": "Identify the affected endpoint, user, service, or host.",
+            },
+            {
+                "id": "disposition",
+                "label": "Disposition",
+                "keywords": ["benign", "suspicious", "escalate", "escalation", "false positive", "true positive", "requires escalation", "reasoning", "next step"],
+                "prompt": "Classify the alert as benign, suspicious, or requiring escalation, and explain why.",
+            },
+        ],
+        "documentation_prompt": "Write the security triage summary showing alert details, affected asset, disposition, reasoning, and whether escalation is required.",
+    },
+
 }
 
 
@@ -200,6 +306,17 @@ def normalize_ticket_id(ticket_id: str, title: str = "", body: str = "") -> str:
         "legacy key exchange": "004",
         "return path": "005",
         "asymmetric routing": "005",
+        "repo hygiene": "006",
+        "enterprise repository": "006",
+        "pve-enterprise": "006",
+        "vlan 70 migration": "007",
+        "vlan70": "007",
+        "comet": "008",
+        "hard reset": "008",
+        "atx": "008",
+        "wazuh": "010",
+        "alert investigation": "010",
+        "security alert": "010",
         "zammad ticket triage": "009",
     }
 
