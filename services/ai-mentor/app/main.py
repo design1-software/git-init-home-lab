@@ -42,6 +42,7 @@ from app.lab_templates import (
     list_lab_template_summaries,
     match_lab_template,
 )
+from app.student_routes import router as student_router
 from app.zammad_client import (
     ZammadClientError,
     get_ticket,
@@ -56,6 +57,8 @@ app = FastAPI(
     description="Evidence-first AI mentor backend for the ARIA training platform.",
     version="0.6.0",
 )
+
+app.include_router(student_router)
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -348,10 +351,12 @@ def login(payload: LoginRequest, request: Request, response: Response) -> dict:
         metadata={"role": user.get("role")},
     )
 
+    redirect = "/instructor" if user.get("role") in {"admin", "instructor"} else "/student"
+
     return {
         "status": "ok",
         "user": user,
-        "redirect": "/instructor",
+        "redirect": redirect,
     }
 
 
