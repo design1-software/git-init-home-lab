@@ -59,7 +59,9 @@
 | GE0/1/2 | Available (trunk moved to 3560CX Gi0/3) | — | — |
 | GE0/1/3 | Available | — | — |
 
-> **Phase B trunk cutover COMPLETE (Jun 1, 2026).** 3560CX is the active L3 core. HSRP VIPs active. OSPF FULL. Internet and DNS verified. **Post-cutover cleanup remaining:** remove C1111 VLAN SVIs/DHCP pools, remove 3560CX static default. **Cleanup backlog:** GS308EP DHCP reservation stuck in Selecting (reachable at .95). See also: docs/runbooks/ssh-key-collision.md for SSH host key issues after gateway IP handoffs.
+> **Phase B trunk cutover COMPLETE (Jun 1, 2026).** 3560CX is the active L3 core. HSRP VIPs active. OSPF FULL. Internet and DNS verified. **Post-cutover cleanup remaining:** remove C1111 VLAN SVIs/DHCP pools, remove 3560CX static default. **Cleanup backlog:** GS308EP DHCP reservation stuck in Selecting (reachable at .95).
+>
+> **C1111 NAT-INSIDE ACL** — now includes 192.168.60.0/24 (VLAN 60 LAB) and 192.168.70.0/24 (VLAN 70 SERVER). Traffic from both VLANs reaches C1111 via TRANSIT Vlan199 (`ip nat inside`) and is covered by the NAT-INSIDE ACL.
 
 ---
 
@@ -74,7 +76,8 @@
 | Gi0/3 | GS316EP Port 15 | Trunk (native 99) | VLANs 1,10,20,30,31,40,50,99 — household switch (no VLAN 60/70) |
 | Gi0/4 | ARIA Proxmox Server (nic1, Intel I225V via vmbr0) | Access VLAN 70 | ARIA management — 192.168.70.10 |
 | Gi0/5 | Comet GL-RM1PE KVM (PoE) | Access VLAN 10 | Comet management — 192.168.10.12 · PoE active |
-| Gi0/6–Gi0/12 | Unconnected | Access VLAN 1 | Spare — `ip verify source` on Gi0/6–Gi0/8 (inactive: no DHCP snooping on VLAN 1) |
+| Gi0/6 | ARIA nic0 (Realtek RTL8125 via vmbr1) | Access VLAN 60 | VM trunk — LAB VLAN · portfast edge · BPDU guard · IP Source Guard active |
+| Gi0/7–Gi0/12 | Unconnected | Access VLAN 1 | Spare — `ip verify source` on Gi0/7–Gi0/8 (inactive: no DHCP snooping on VLAN 1) |
 
 ---
 
@@ -238,4 +241,4 @@ Connect: `ssh aria-student-linux-01`
 
 ---
 
-*Last verified: Jun 9, 2026 (live show commands from JLM-LAB-SW1 and JLM-LAB-R1)*
+*Last verified: Jun 9, 2026 — VLAN 60 LXC path confirmed live (vmbr1/nic0/Gi0/6/VLAN 60)*

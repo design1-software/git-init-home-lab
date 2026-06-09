@@ -101,21 +101,25 @@ iface nic0 inet manual
 
 ### NIC Identification
 
-| NIC | Driver | MAC | Role | Status |
-|---|---|---|---|---|
-| nic1 | Intel I225V | 00:1B:41:0A:05:09 | Proxmox management (active) | In use — 3560CX Gi0/4 |
-| nic0 | Realtek RTL8125 2.5GbE | 10:FF:E0:C4:FA:A6 | Future VM trunk | Manual (unused) |
+| NIC | Driver | MAC | Role | Bridge | Switch port |
+|---|---|---|---|---|---|
+| nic1 | Intel I225V | 00:1B:41:0A:05:09 | Proxmox management | vmbr0 — 192.168.70.10/24 | 3560CX Gi0/4 (access VLAN 70) |
+| nic0 | Realtek RTL8125 2.5GbE | 10:FF:E0:C4:FA:A6 | VM trunk | vmbr1 — no IP (LXC/VM bridge) | 3560CX Gi0/6 (access VLAN 60) |
 
-> The Realtek NIC (`nic0`) is the onboard controller visible in BIOS. It was briefly connected to the wrong switchport during initial cabling — the 3560CX learned MAC `10:ff:e0:c4:fa:a6` before the cable was moved to the correct Intel NIC (`nic1`).
+> `vmbr1` carries untagged frames from LXC/VM virtual interfaces to `nic0`. VLAN membership is enforced at the 3560CX access port. Currently Gi0/6 is access VLAN 60 (LAB). Additional ports and VLANs added as new VM workloads require them.
 
-### Target State (Post-Phase-C Cutover)
+ARIA `/etc/network/interfaces` (vmbr1 addition):
 
-- VLAN: 70 (SERVER, 192.168.70.0/24)
-- IP: `192.168.70.10/24`
-- Gateway: `192.168.70.1` (3560CX HSRP VIP)
-- DNS: `192.168.10.16`
-- Switch port: 3560CX Gi0/4 (trunk)
-- Proxmox bridge: `vmbr0` on nic1
+```
+auto nic0
+iface nic0 inet manual
+
+auto vmbr1
+iface vmbr1 inet manual
+    bridge-ports nic0
+    bridge-stp off
+    bridge-fd 0
+```
 
 ## Out-of-Band Management — Comet GL-RM1PE KVM
 
