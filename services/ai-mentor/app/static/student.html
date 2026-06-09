@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ARIA Student Mentor</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --card: #1f2937;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #38bdf8;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --border: #374151;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    header {
+      padding: 24px;
+      border-bottom: 1px solid var(--border);
+      background: #020617;
+    }
+
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+
+    header p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .section {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin: 14px 0 8px;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: #020617;
+      color: var(--text);
+      font-size: 16px;
+    }
+
+    textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    button {
+      margin-top: 16px;
+      padding: 12px 18px;
+      border: 0;
+      border-radius: 8px;
+      background: var(--accent);
+      color: #020617;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+
+    .metric, .source, .evidence-item {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+    }
+
+    .metric .label {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .metric .value {
+      font-size: 17px;
+      font-weight: bold;
+      overflow-wrap: anywhere;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: bold;
+      background: var(--card);
+      border: 1px solid var(--border);
+    }
+
+    .badge.success {
+      background: rgba(34, 197, 94, 0.12);
+      color: #86efac;
+      border-color: rgba(34, 197, 94, 0.45);
+    }
+
+    .badge.warning {
+      background: rgba(245, 158, 11, 0.12);
+      color: #fcd34d;
+      border-color: rgba(245, 158, 11, 0.45);
+    }
+
+    .mentor-response {
+      white-space: pre-wrap;
+      background: #020617;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      overflow-x: auto;
+    }
+
+    .muted { color: var(--muted); }
+    .hidden { display: none; }
+
+    .error {
+      color: #fecaca;
+      background: rgba(239, 68, 68, 0.12);
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 12px;
+    }
+
+    .notice {
+      color: #bfdbfe;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.45);
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 12px;
+    }
+
+    .source { margin-bottom: 10px; }
+    .evidence-item { margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ARIA Student Mentor</h1>
+    <p>Evidence-first coaching for ARIA labs. ARIA will guide your troubleshooting process, not do the work for you.</p>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="grid">
+        <div class="metric"><div class="label">Signed in as</div><div class="value" id="userValue">Loading...</div></div>
+        <div class="metric"><div class="label">Role</div><div class="value" id="roleValue">-</div></div>
+      </div>
+      <div class="notice">Student safety rule: submit the evidence you collected. Do not paste passwords, API keys, private tokens, or unrelated personal information.</div>
+      <button onclick="logout()">Log Out</button>
+    </section>
+
+    <section class="section">
+      <h2>Ask ARIA for Lab Guidance</h2>
+      <p class="muted">Use this for ARIA help desk ticket labs and evidence-based troubleshooting practice.</p>
+
+      <label for="ticketId">Ticket or Lab ID</label>
+      <input id="ticketId" value="001" placeholder="Example: 001" />
+
+      <label for="ticketTitle">Ticket or Lab Title</label>
+      <input id="ticketTitle" value="Ticket-001: DNS Resolution Failing" placeholder="Example: Ticket-001: DNS Resolution Failing" />
+
+      <label for="ticketBody">Scenario</label>
+      <textarea id="ticketBody">Client is connected to WiFi but websites are not loading.</textarea>
+
+      <label for="studentEvidence">Evidence You Collected</label>
+      <textarea id="studentEvidence" placeholder="Paste commands, observations, test results, error messages, or your current findings. Leave blank if you need ARIA to tell you what evidence to collect next."></textarea>
+
+      <button id="submitButton" onclick="submitGuidance()">Get Mentor Guidance</button>
+      <div id="errorBox" class="error hidden"></div>
+    </section>
+
+    <section id="resultPanel" class="hidden">
+      <section class="section">
+        <h2>Mentor Summary</h2>
+        <div class="grid">
+          <div class="metric"><div class="label">Next Action</div><div class="value" id="nextActionValue">-</div></div>
+          <div class="metric"><div class="label">Risk Level</div><div class="value" id="riskValue">-</div></div>
+          <div class="metric"><div class="label">Matched Template</div><div class="value" id="templateValue">-</div></div>
+          <div class="metric"><div class="label">Domain</div><div class="value" id="domainValue">-</div></div>
+        </div>
+      </section>
+
+      <section class="section">
+        <h2>ARIA Guidance</h2>
+        <p class="muted">Use this as coaching. You still need to collect evidence, explain your reasoning, and document the final result.</p>
+        <div id="mentorResponse" class="mentor-response"></div>
+      </section>
+
+      <section class="section">
+        <h2>Required Evidence</h2>
+        <div id="requiredEvidenceList"></div>
+      </section>
+
+      <section class="section">
+        <h2>Sources Used</h2>
+        <p class="muted">Student-safe source paths only. Raw internal chunks and Zammad metadata are not shown here.</p>
+        <div id="sourcesList"></div>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    function escapeHtml(value) {
+      return String(value ?? '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function statusBadge(value) {
+      const normalized = String(value || '').toLowerCase();
+      if (normalized === 'validation_complete' || normalized === 'low') {
+        return '<span class="badge success">' + escapeHtml(value) + '</span>';
+      }
+      if (normalized.includes('evidence') || normalized.includes('review') || normalized === 'medium') {
+        return '<span class="badge warning">' + escapeHtml(value) + '</span>';
+      }
+      return '<span class="badge">' + escapeHtml(value || '-') + '</span>';
+    }
+
+    function showError(message) {
+      const box = document.getElementById('errorBox');
+      box.textContent = message;
+      box.classList.remove('hidden');
+    }
+
+    function clearError() {
+      const box = document.getElementById('errorBox');
+      box.textContent = '';
+      box.classList.add('hidden');
+    }
+
+    async function loadUser() {
+      try {
+        const response = await fetch('/auth/me');
+        if (!response.ok) {
+          window.location.href = '/login';
+          return;
+        }
+        const user = await response.json();
+        document.getElementById('userValue').textContent = user.display_name || user.username || '-';
+        document.getElementById('roleValue').textContent = user.role || '-';
+      } catch (error) {
+        showError(error.message || String(error));
+      }
+    }
+
+    async function logout() {
+      await fetch('/auth/logout', { method: 'POST' });
+      window.location.href = '/login';
+    }
+
+    async function submitGuidance() {
+      clearError();
+      const button = document.getElementById('submitButton');
+      button.disabled = true;
+      button.textContent = 'Thinking...';
+
+      const payload = {
+        ticket_id: document.getElementById('ticketId').value.trim(),
+        student: 'current-user',
+        domain: 'helpdesk',
+        difficulty: 'beginner',
+        ticket_title: document.getElementById('ticketTitle').value.trim(),
+        ticket_body: document.getElementById('ticketBody').value.trim(),
+        student_evidence: document.getElementById('studentEvidence').value.trim()
+      };
+
+      try {
+        const response = await fetch('/mentor/student/analyze-ticket', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const errorPayload = await response.json().catch(() => ({}));
+          throw new Error(errorPayload.detail || `Request failed with status ${response.status}`);
+        }
+
+        renderResult(await response.json());
+      } catch (error) {
+        showError(error.message || String(error));
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Get Mentor Guidance';
+      }
+    }
+
+    function renderResult(data) {
+      document.getElementById('resultPanel').classList.remove('hidden');
+      document.getElementById('nextActionValue').innerHTML = statusBadge(data.next_action);
+      document.getElementById('riskValue').innerHTML = statusBadge(data.risk_level);
+      document.getElementById('mentorResponse').textContent = data.mentor_response || '';
+
+      const template = data.lab_template || {};
+      document.getElementById('templateValue').textContent = template.matched ? `${template.template_id} — ${template.title}` : 'No template matched';
+      document.getElementById('domainValue').textContent = template.domain || '-';
+
+      renderRequiredEvidence(template.required_evidence || []);
+      renderSources(data.retrieved_sources || []);
+    }
+
+    function renderRequiredEvidence(items) {
+      const container = document.getElementById('requiredEvidenceList');
+      container.innerHTML = '';
+
+      if (!items.length) {
+        container.innerHTML = '<p class="muted">No required evidence checklist returned.</p>';
+        return;
+      }
+
+      items.forEach((item) => {
+        const div = document.createElement('div');
+        div.className = 'evidence-item';
+        div.innerHTML = `<strong>${escapeHtml(item.label || item.id || 'Evidence')}</strong><br /><span class="muted">${escapeHtml(item.description || '')}</span>`;
+        container.appendChild(div);
+      });
+    }
+
+    function renderSources(sources) {
+      const container = document.getElementById('sourcesList');
+      container.innerHTML = '';
+
+      if (!sources.length) {
+        container.innerHTML = '<p class="muted">No sources returned.</p>';
+        return;
+      }
+
+      sources.forEach((source) => {
+        const div = document.createElement('div');
+        div.className = 'source';
+        div.textContent = source;
+        container.appendChild(div);
+      });
+    }
+
+    loadUser();
+  </script>
+</body>
+</html>
