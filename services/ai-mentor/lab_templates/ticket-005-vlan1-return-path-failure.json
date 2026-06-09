@@ -1,0 +1,22 @@
+{
+  "template_id": "ticket-005",
+  "title": "VLAN 1 Return Path Failure",
+  "domain": "networking",
+  "difficulty": "intermediate",
+  "ticket_type": "training",
+  "status": "active",
+  "summary": "Student investigates asymmetric reachability or return-path failure involving VLAN 1.",
+  "student_goal": "Determine whether traffic can leave but return traffic is blocked, misrouted, or on the wrong VLAN path.",
+  "mentor_mode": "guided_troubleshooting",
+  "trigger_terms": ["ticket-005", "vlan1", "vlan 1", "return path", "asymmetric routing", "cannot reply", "one way traffic"],
+  "required_evidence": [
+    {"id": "source_destination", "label": "Source and destination", "description": "Student must identify the source, destination, and expected path."},
+    {"id": "forward_path", "label": "Forward path evidence", "description": "Student must document whether traffic leaves the source network."},
+    {"id": "return_path", "label": "Return path evidence", "description": "Student must document whether replies return correctly."}
+  ],
+  "opening_questions": ["What source and destination are you testing?", "Does traffic fail in both directions or only on the return path?", "Which VLANs and gateways are involved?"],
+  "completion_signals": ["return path restored", "asymmetric path identified", "VLAN 1 path issue documented"],
+  "mentor_guidance_rules": ["Do not treat one-way failure as simple host downtime.", "Ask for both forward and return path evidence.", "Confirm VLAN and gateway assumptions before suggesting changes."],
+  "student_visible": {"allowed": ["student_goal", "opening_questions", "required_evidence labels", "path-tracing reminders"], "blocked": ["undocumented routing changes", "mentor-only topology assumptions"]},
+  "next_actions": {"missing_evidence": "request_more_evidence", "complete": "validation_complete", "unclear": "manual_review"}
+}
