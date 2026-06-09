@@ -11,6 +11,140 @@ COMPLETION_PHRASES = [
 ]
 
 
+TICKET_WORKFLOWS: Dict[str, Dict[str, Any]] = {
+    "001": {
+        "title": "DNS Resolution Failing",
+        "domain": "DNS / Pi-hole",
+        "situation": "The student is troubleshooting a client that has network connectivity but cannot resolve names.",
+        "evidence_checks": [
+            {
+                "id": "ip_connectivity",
+                "label": "IP connectivity test",
+                "keywords": ["ping 8.8.8.8", "gateway", "ip connectivity", "icmp", "reachable by ip"],
+                "prompt": "Provide proof that the client can or cannot reach a destination by IP address.",
+            },
+            {
+                "id": "dns_query_result",
+                "label": "DNS query result",
+                "keywords": ["nslookup", "dig", "ping google.com", "name resolution", "dns query", "resolve"],
+                "prompt": "Provide nslookup, dig, or equivalent DNS query output from the affected client.",
+            },
+            {
+                "id": "client_dns_config",
+                "label": "Client DNS configuration",
+                "keywords": ["dns server", "ipconfig", "resolvectl", "networksetup", "resolv.conf", "192.168.10.16"],
+                "prompt": "Show which DNS server the client is actually configured to use.",
+            },
+        ],
+        "documentation_prompt": "Write the incident summary showing symptom, tests used to isolate DNS, root cause, action taken, and final nslookup verification.",
+    },
+    "002": {
+        "title": "Device on Wrong VLAN",
+        "domain": "VLAN / Switching / DHCP",
+        "situation": "The student is verifying whether an endpoint landed on the wrong VLAN or received the wrong DHCP scope.",
+        "evidence_checks": [
+            {
+                "id": "switchport_status",
+                "label": "Switchport or SSID status",
+                "keywords": ["show interfaces status", "switchport", "port", "ssid", "gorgeous-iot", "ap port"],
+                "prompt": "Identify the switchport, AP port, or SSID path associated with the affected device.",
+            },
+            {
+                "id": "assigned_vlan",
+                "label": "Assigned VLAN or observed subnet",
+                "keywords": ["192.168.100", "vlan 1", "vlan1", "access vlan", "assigned vlan", "pvid"],
+                "prompt": "Show the VLAN or subnet the device is currently using.",
+            },
+            {
+                "id": "expected_vlan",
+                "label": "Expected VLAN",
+                "keywords": ["192.168.30", "vlan 30", "iot", "expected vlan", "correct vlan"],
+                "prompt": "State the expected VLAN or subnet and compare it against the observed address.",
+            },
+        ],
+        "documentation_prompt": "Write the incident summary showing observed IP, expected VLAN, misconfiguration location, correction, and DHCP verification after reconnect.",
+    },
+    "003": {
+        "title": "Proxmox Host Cannot Run apt update",
+        "domain": "Linux / Proxmox / Package Management",
+        "situation": "The student is separating package repository failure from DNS, routing, and outbound egress failure.",
+        "evidence_checks": [
+            {
+                "id": "apt_error",
+                "label": "APT error output",
+                "keywords": ["apt update", "network is unreachable", "temporary failure resolving", "401", "404", "enterprise.proxmox", "pve-no-subscription"],
+                "prompt": "Provide the exact apt update error output before changing repository files.",
+            },
+            {
+                "id": "dns_test",
+                "label": "DNS test",
+                "keywords": ["download.proxmox.com", "nslookup", "dig", "temporary failure resolving", "resolve"],
+                "prompt": "Test name resolution for the repository host from the affected Proxmox system.",
+            },
+            {
+                "id": "gateway_test",
+                "label": "Gateway or internet reachability test",
+                "keywords": ["ping -c 3 8.8.8.8", "ping 8.8.8.8", "gateway", "ip route", "internet reachability"],
+                "prompt": "Show whether the host can reach its gateway or an external IP.",
+            },
+        ],
+        "documentation_prompt": "Write the incident summary showing the apt symptom, network checks, repository/source findings, changes made, and final apt update result.",
+    },
+    "004": {
+        "title": "Cannot SSH Into Switch — Legacy Key Exchange",
+        "domain": "Cisco / SSH / Security",
+        "situation": "The student is distinguishing a reachable device with SSH negotiation failure from basic network downtime.",
+        "evidence_checks": [
+            {
+                "id": "ssh_error",
+                "label": "SSH error message",
+                "keywords": ["no matching key exchange", "unable to negotiate", "host key", "ssh-rsa", "diffie-hellman", "kex"],
+                "prompt": "Provide the exact SSH error message instead of summarizing it.",
+            },
+            {
+                "id": "ssh_verbose_output",
+                "label": "Verbose SSH output",
+                "keywords": ["ssh -v", "debug1", "kexalgorithms", "hostkeyalgorithms", "their offer"],
+                "prompt": "Provide safe verbose SSH output showing where negotiation fails.",
+            },
+            {
+                "id": "risk_statement",
+                "label": "Security risk statement",
+                "keywords": ["legacy", "temporary", "security risk", "weaken", "upgrade", "long-term remediation", "controlled lab"],
+                "prompt": "Acknowledge that legacy algorithms are a temporary compatibility workaround, not a permanent security posture.",
+            },
+        ],
+        "documentation_prompt": "Write the incident summary showing device, SSH error type, evidence from verbose output, temporary compatibility path, and long-term remediation note.",
+    },
+    "005": {
+        "title": "VLAN 1 Return Path Failure",
+        "domain": "Routing / NAT / Transitional Network Architecture",
+        "situation": "The student is proving a return-path or asymmetric-routing failure rather than assuming a simple internet outage.",
+        "evidence_checks": [
+            {
+                "id": "source_destination",
+                "label": "Source and destination",
+                "keywords": ["192.168.100.10", "8.8.8.8", "source", "destination", "aria", "vlan 1"],
+                "prompt": "Identify the source, destination, and expected path for the failed test.",
+            },
+            {
+                "id": "forward_path",
+                "label": "Forward path evidence",
+                "keywords": ["ping -c 3 192.168.100.1", "gateway", "nslookup", "ip route get", "forward path", "default route"],
+                "prompt": "Show whether traffic leaves the source network and which route is selected.",
+            },
+            {
+                "id": "return_path",
+                "label": "Return path evidence",
+                "keywords": ["return path", "asymmetric", "show ip route 192.168.100.0", "show ip nat translations", "source vlan 1", "vlan1 svi", "arp fails"],
+                "prompt": "Provide evidence that replies are or are not returning through the expected VLAN path.",
+            },
+        ],
+        "documentation_prompt": "Write the structured incident summary showing forward-path checks, return-path proof, why the fix is temporary, and what prevents recurrence after cleanup.",
+    },
+}
+
+
 def normalize_for_detection(text: str) -> str:
     normalized = text.lower()
     normalized = re.sub(r"<[^>]+>", " ", normalized)
@@ -43,6 +177,131 @@ def unique_sources(kb_results: List[Dict[str, Any]]) -> List[str]:
         if source and source not in sources:
             sources.append(source)
     return sources
+
+
+def normalize_ticket_id(ticket_id: str, title: str = "", body: str = "") -> str:
+    combined = f"{ticket_id} {title} {body}".lower()
+
+    explicit_match = re.search(r"ticket[-\s_]*(\d{1,3})", combined)
+    if explicit_match:
+        return explicit_match.group(1).zfill(3)
+
+    numeric_match = re.fullmatch(r"\d{1,3}", str(ticket_id).strip())
+    if numeric_match:
+        return numeric_match.group(0).zfill(3)
+
+    title_map = {
+        "dns": "001",
+        "vlan misassignment": "002",
+        "wrong vlan": "002",
+        "apt": "003",
+        "proxmox host cannot run apt": "003",
+        "ssh legacy": "004",
+        "legacy key exchange": "004",
+        "return path": "005",
+        "asymmetric routing": "005",
+        "zammad ticket triage": "009",
+    }
+
+    for marker, mapped_id in title_map.items():
+        if marker in combined:
+            return mapped_id
+
+    return str(ticket_id).strip().zfill(3)
+
+
+def evaluate_evidence(evidence_text: str, checks: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]]]:
+    normalized = normalize_for_detection(evidence_text)
+    present: List[Dict[str, Any]] = []
+    missing: List[Dict[str, Any]] = []
+
+    for check in checks:
+        keywords = [str(keyword).lower() for keyword in check.get("keywords", [])]
+        if any(keyword in normalized for keyword in keywords):
+            present.append(check)
+        else:
+            missing.append(check)
+
+    return present, missing
+
+
+def format_evidence_list(items: List[Dict[str, Any]], empty_message: str) -> str:
+    if not items:
+        return empty_message
+
+    return "\n".join(f"{index}. {item.get('label')}" for index, item in enumerate(items, start=1))
+
+
+def format_missing_prompts(items: List[Dict[str, Any]]) -> str:
+    if not items:
+        return "No missing evidence detected."
+
+    return "\n".join(
+        f"{index}. {item.get('label')}: {item.get('prompt')}"
+        for index, item in enumerate(items, start=1)
+    )
+
+
+def build_ticket_workflow_response(
+    ticket_id: str,
+    workflow: Dict[str, Any],
+    request: AnalyzeTicketRequest,
+    kb_results: List[Dict[str, Any]],
+) -> Tuple[str, str, str, List[str]]:
+    evidence = (request.student_evidence or "").strip()
+    ticket_text = f"{request.ticket_title}\n{request.ticket_body}\n{evidence}".strip()
+    sources_text = format_sources(kb_results)
+    retrieved_sources = unique_sources(kb_results)
+
+    default_source = f"labs/helpdesk/ticket-{ticket_id}-{workflow['title'].lower().replace(' ', '-').replace('—', '').replace('/', '-')}.md"
+    if not retrieved_sources:
+        retrieved_sources = [default_source]
+
+    present, missing = evaluate_evidence(ticket_text, workflow["evidence_checks"])
+
+    if not evidence:
+        next_action = "request_more_evidence"
+        assessment = "No student evidence has been provided yet. ARIA should coach the student through evidence collection before any fix is confirmed."
+    elif missing:
+        next_action = "request_more_evidence"
+        assessment = "Some evidence is present, but the workflow is not ready for completion because required evidence is still missing."
+    else:
+        next_action = "validation_complete"
+        assessment = "The submitted evidence appears to cover the required validation points. Instructor review can verify the work and capture the portfolio-ready summary."
+
+    mentor_response = f"""--- ARIA Mentor ---
+
+Situation Summary:
+Ticket-{ticket_id} is mapped to the {workflow['title']} workflow.
+{workflow['situation']}
+
+Source Context Used:
+{sources_text}
+
+Assessment:
+{assessment}
+
+Evidence Detected:
+{format_evidence_list(present, 'No required evidence detected yet.')}
+
+Evidence Still Needed:
+{format_missing_prompts(missing)}
+
+Coaching Direction:
+1. Do not jump straight to a fix.
+2. Prove the issue domain with command output or observed system state.
+3. Compare the observed state against the expected state.
+4. Document what changed and how the fix was verified.
+
+Documentation Standard:
+{workflow['documentation_prompt']}
+
+Next Step:
+{next_action}
+
+--- End ---"""
+
+    return mentor_response, "low", next_action, retrieved_sources
 
 
 def build_ticket_009_completion_response(
@@ -153,12 +412,21 @@ def analyze_ticket(
 ) -> Tuple[str, str, str, List[str]]:
     kb_results = kb_results or []
     normalized_title = request.ticket_title.lower()
-    retrieved_sources = unique_sources(kb_results)
+    normalized_ticket_id = normalize_ticket_id(request.ticket_id, request.ticket_title, request.ticket_body)
 
-    if request.ticket_id in {"009", "4"} or "zammad ticket triage" in normalized_title:
+    if normalized_ticket_id in TICKET_WORKFLOWS:
+        return build_ticket_workflow_response(
+            ticket_id=normalized_ticket_id,
+            workflow=TICKET_WORKFLOWS[normalized_ticket_id],
+            request=request,
+            kb_results=kb_results,
+        )
+
+    if normalized_ticket_id == "009" or request.ticket_id in {"009", "4"} or "zammad ticket triage" in normalized_title:
         return build_ticket_009_response(request, kb_results)
 
     sources_text = format_sources(kb_results)
+    retrieved_sources = unique_sources(kb_results)
 
     mentor_response = f"""--- ARIA Mentor ---
 
