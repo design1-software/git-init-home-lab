@@ -29,7 +29,6 @@ class AnalyzeTicketResponse(BaseModel):
     retrieved_context: List[RetrievedContextItem] = []
     timestamp_utc: str
     lab_template: Optional[Dict[str, Any]] = None
-    lab_template: Optional[Dict[str, Any]] = None
 
 
 class SessionRecord(BaseModel):
