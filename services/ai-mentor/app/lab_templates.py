@@ -159,7 +159,7 @@ def append_template_guidance(mentor_response: str, lab_template: Dict[str, Any])
         mentor_response.strip(),
         "",
         "Matched Lab Template",
-        f"- Template: {lab_template.get('template_id')} — {lab_template.get('title')}",
+        f"- Template: {lab_template.get('template_id')} - {lab_template.get('title')}",
         f"- Domain: {lab_template.get('domain')}",
         f"- Difficulty: {lab_template.get('difficulty')}",
         f"- Mentor mode: {lab_template.get('mentor_mode')}",
