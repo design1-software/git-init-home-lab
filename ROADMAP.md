@@ -298,36 +298,79 @@ Four distinct telemetry tiers — each scoped to a specific purpose with no over
 
 ---
 
-## Phase AI: IT Enterprise Training Platform 🔄 IN PROGRESS
+## Phase AI: IT Enterprise Training Platform - IN PROGRESS
 
-> ARIA is an **IT Enterprise Training Platform**. The AI Mentor is the coaching layer for all ARIA training — Field Tech Foundation, Help Desk, Linux & Security, Network Troubleshooting, and Cybersecurity Readiness.
+> ARIA is an **IT Enterprise Training Platform**. The AI Mentor is the coaching layer for all ARIA training: Help Desk/Ticketing, Networking, Security/SOC, Automation/SysAdmin/Linux/Field-Tech, and Identity/Active Directory/GPO/Windows Endpoint Administration.
 >
 > **Implementation source of truth:** `docs/ai-mentor-implementation-status.md`
+>
+> **Documentation rule:** After every implementation session, ARIA documentation must be updated before starting the next build phase.
 
-### Design Phases — All Complete ✅
+### Domain Balance Rule
+
+ARIA must continue building across all five training domains:
+
+1. Help Desk / Ticketing
+2. Networking / Cisco / DNS / VLAN / Switching
+3. Security / SOC / Wazuh / Incident Review
+4. Automation / SysAdmin / Linux / Proxmox / Field-Tech
+5. Identity / IAM / Active Directory / GPO / Windows Endpoint Administration
+
+No new phase should deepen only one domain at the expense of the others. Any improvement or future enhancement outside the active approved phase must be documented in markdown instead of implemented ad hoc.
+
+### Design Phases - All Complete
 
 | Phase | Document | Status |
 |---|---|---|
-| AI-1 | `docs/ai-mentor-architecture.md` | ✅ Complete (Jun 4, 2026) |
-| AI-2 | `docs/ai-mentor-knowledge-base-plan.md` | ✅ Complete (Jun 4, 2026) |
-| AI-3 | `docs/ai-mentor-ticketing-integration.md` | ✅ Complete (Jun 4, 2026) |
-| AI-4 | `docs/ai-mentor-model-decision.md` | ✅ Complete (Jun 4, 2026) |
-| AI-5 | `docs/ai-mentor-guardrails-expanded.md` | ✅ Complete (Jun 4, 2026) |
-| AI-6 | `labs/helpdesk/ticket-001` through `ticket-010` | ✅ Complete (Jun 4, 2026) |
+| AI-1 | `docs/ai-mentor-architecture.md` | Complete |
+| AI-2 | `docs/ai-mentor-knowledge-base-plan.md` | Complete |
+| AI-3 | `docs/ai-mentor-ticketing-integration.md` | Complete |
+| AI-4 | `docs/ai-mentor-model-decision.md` | Complete |
+| AI-5 | `docs/ai-mentor-guardrails-expanded.md` | Complete |
+| AI-6 | `labs/helpdesk/ticket-001` through `ticket-010` | Complete as written scenarios |
 
-### Deployment Gate — Infrastructure and Service Foundation ✅
+### Deployment and AI Mentor Implementation Status
 
-- [x] ATX control board installed and validated (Jun 5, 2026)
-- [x] ARIA on VLAN 70 — 192.168.70.10 (Jun 5, 2026)
-- [x] Proxmox `vmbr0` bridge configured (Jun 5, 2026)
-- [x] Zammad — CT 110 `aria-zammad-01` · Docker Compose · `helpdesk.aria.local` (Jun 7, 2026)
-- [x] AI Mentor backend — CT 120 `aria-ai-mentor-01` · FastAPI · systemd · instructor panel (Jun 7–8, 2026)
-- [x] KB ingestion — `scripts/ingest_docs.py` · JSONL v1 retrieval · ChromaDB deferred (Jun 8, 2026)
-- [x] Auth + role separation v1 (Jun 8, 2026)
-- [ ] Zammad PostgreSQL dump backup
-- [ ] Phase 8: audit/event logging — next implementation phase
+| Item | Status |
+|---|---|
+| ATX control board installed and validated | Complete |
+| ARIA on VLAN 70 - 192.168.70.10 | Complete |
+| Proxmox `vmbr0` bridge configured | Complete |
+| Zammad - CT 110 `aria-zammad-01` | Complete |
+| AI Mentor backend - CT 120 `aria-ai-mentor-01` | Complete |
+| KB ingestion - JSONL v1 retrieval | Complete |
+| Auth + role separation v1 | Complete |
+| Phase 8 - audit/event logging | Complete |
+| Phase 9 - ticket lab template system | Complete |
+| Phase 10 - Ticket-001 through Ticket-005 mentor workflows | Complete |
+| Phase 11 - student-facing mentor panel v1 | Complete |
+| Phase 12 - Ticket-006 through Ticket-010 mentor workflows | Complete |
+| Phase 13 - instructor progress summary API | Complete |
+| Zammad PostgreSQL dump backup | Pending |
+| Controlled Zammad writeback / instructor approval workflow | Deferred |
+| Operational hardening | Pending |
 
-> Full implementation phase status (Phases 1–15): `docs/ai-mentor-implementation-status.md`
+### Training Domain Status
+
+| Training Domain | Current Status | Next Required Work |
+|---|---|---|
+| Help Desk / Ticketing | Operational v1; strongest domain | Keep stable; defer deeper writeback until other domains advance |
+| Networking / Cisco / DNS / VLAN / Switching | Workflow coverage started; infrastructure mature | Add dedicated network lab path with command evidence and Cisco guardrails |
+| Security / SOC / Wazuh / Incident Review | Ticket-010 workflow exists; infrastructure pending | Deploy Wazuh LXC, agents, alert sources, and SOC labs |
+| Automation / SysAdmin / Linux / Proxmox / Field-Tech | Partially live; needs unified lab model | Build non-Zammad lab submission/completion workflow |
+| Identity / IAM / Active Directory / GPO / Windows Endpoint Administration | Core domain; not implemented yet | Build simple VM-based AD/GPO lab and mentor evidence templates |
+
+### Workflow vs Domain Infrastructure
+
+Workflow implemented does not always mean the full domain is operational.
+
+Examples:
+
+- Ticket-010 Wazuh Alert Investigation workflow exists, but Wazuh infrastructure is not deployed yet.
+- AD/GPO is a required core training domain, but the Windows Server domain controller and Windows client lab are not deployed yet.
+- Ticket workflows provide mentor validation, but domain-specific lab environments still need to be built and tested.
+
+> Full implementation phase status: `docs/ai-mentor-implementation-status.md`
 
 ---
 

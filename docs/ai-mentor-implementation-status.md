@@ -1,6 +1,6 @@
 # AI Mentor — Implementation Status
 
-> **Status:** Current source of truth as of Jun 8, 2026. This document reconciles the original AI Mentor design plan with the deployed ARIA implementation.
+> **Status:** Current source of truth as of Jun 9, 2026. This document reconciles the original AI Mentor design plan with the deployed ARIA implementation after Phase 13.
 
 ---
 
@@ -16,24 +16,71 @@ Any ad hoc change must be explicitly approved before implementation and must inc
 4. Rollback path
 5. Required repository documentation update
 
-No implementation change that alters the AI Mentor architecture, security model, retrieval model, Zammad integration model, or training workflow should be treated as informal or undocumented.
+No implementation change that alters the AI Mentor architecture, security model, retrieval model, Zammad integration model, training workflow, or training-domain roadmap should be treated as informal or undocumented.
+
+---
+
+## Documentation Accuracy Rule
+
+After every implementation session, ARIA documentation must be updated before starting the next build phase.
+
+No new build phase begins until:
+
+1. The source-of-truth AI Mentor status document reflects the deployed state.
+2. `ROADMAP.md` reflects the current phase status.
+3. Any workflow/domain distinction is clearly documented.
+4. Any future ideas are placed in markdown planning docs instead of being implemented ad hoc.
+5. Any knowledge-base source documentation change is followed by KB rebuild validation when appropriate.
+
+---
+
+## Domain Balance Rule
+
+ARIA must continue building across all five training domains:
+
+1. Help Desk / Ticketing
+2. Networking / Cisco / DNS / VLAN / Switching
+3. Security / SOC / Wazuh / Incident Review
+4. Automation / SysAdmin / Linux / Proxmox / Field-Tech
+5. Identity / IAM / Active Directory / GPO / Windows Endpoint Administration
+
+No new phase should deepen only one domain at the expense of the others.
+
+Any improvement, suggestion, or future enhancement that is not part of the active approved phase must be documented in a markdown planning document instead of being implemented immediately.
+
+The purpose of ARIA is to build a training platform. Infrastructure, services, and mentor features should exist to support directed, mentored, hands-on learning across the five domains.
 
 ---
 
 ## Executive Summary
 
-The AI Mentor is the coaching layer for all ARIA training, not only help desk ticketing. The long-term scope includes Field Tech Foundation, Help Desk Documentation, Linux and Security Foundation, Network Troubleshooting, Cybersecurity Readiness Labs, Active Directory, Windows support, Cisco, Proxmox, SIEM, documentation coaching, and interview preparation.
+The AI Mentor is the coaching layer for all ARIA training, not only help desk ticketing.
 
-Current reality:
+The long-term scope includes Field Tech Foundation, Help Desk Documentation, Linux and Security Foundation, Network Troubleshooting, Cybersecurity Readiness Labs, Active Directory, GPO, Windows endpoint administration, Cisco, Proxmox, SIEM, documentation coaching, and interview preparation.
+
+Current reality after Phase 13:
 
 - The AI Mentor platform foundation is live on ARIA.
-- The first working domain is Zammad/help desk ticketing.
+- Zammad/help desk ticketing is the strongest current domain.
+- Ticket-001 through Ticket-010 mentor workflows are implemented.
+- The student-facing mentor panel is implemented.
+- Instructor progress summary API is implemented.
+- Audit/event logging is implemented.
+- Ticket lab template system is implemented.
 - The service uses repo-grounded knowledge retrieval from JSONL chunks.
 - ChromaDB/vector DB is deferred and not blocking v1.
-- Zammad integration is read-only and instructor-mediated.
+- Zammad integration remains read-only and instructor-mediated.
 - LLM integration is implemented as an assistive layer, but the provider is disabled until explicitly enabled.
 - Auth and role separation v1 are implemented.
-- Cross-environment mentor workflows are not yet implemented beyond the help desk/Zammad foundation.
+- Not all underlying domain infrastructure is operational yet.
+
+Important distinction:
+
+> Workflow implemented does not always mean the full domain is operational.
+
+Example:
+
+> Ticket-010 Wazuh Alert Investigation workflow exists, but Wazuh infrastructure is not deployed yet.
 
 ---
 
@@ -59,10 +106,14 @@ Current reality:
 | KB ingestion | Live | `scripts/ingest_docs.py`; approved repo docs chunked to `data/kb/chunks.jsonl` |
 | Retrieval layer | Live v1 | JSONL lexical/scored retrieval; ChromaDB deferred |
 | Session logging | Live | Local JSON session records tied to mentor requests |
+| Audit/event logging | Live | Login, protected access, mentor usage, student/instructor panel access, and related events are recorded |
 | Zammad read-only API | Live | Ticket read, article read, ticket lookup by visible ticket number |
 | Instructor panel | Live | `/instructor`; protected by local auth; read-only review of Zammad ticket + mentor guidance |
+| Student panel | Live | `/student`; protected by local auth; student-facing mentor guidance |
+| Progress summary API | Live | `/progress/summary`; admin/instructor only; summarizes latest student status by ticket |
+| Ticket lab template system | Live | Template matching and required-evidence guidance for Ticket-001 through Ticket-010 |
 | Assistive LLM layer | Built, disabled | `/llm/status` and LLM guidance endpoints exist; provider remains disabled until explicitly enabled |
-| Auth + role separation | Live v1 | Local users, signed HTTP-only cookie, admin/instructor protected routes |
+| Auth + role separation | Live v1 | Local users, signed HTTP-only cookie, admin/instructor/student/viewer role separation |
 
 ---
 
@@ -74,10 +125,9 @@ Current reality:
 | Zammad webhook automation | Deferred | Current model is read-only/instructor-mediated to reduce risk |
 | Zammad writeback | Deferred | No AI-generated comments should be posted without instructor approval and audit logging |
 | LLM live provider use | Disabled | Provider switch remains off even if an API key exists; deterministic mentor output remains authoritative |
-| Student-facing panel | Pending | Should follow audit/event logging and reusable lab workflow templates |
 | Field-to-Cyber lab submission model | Pending | Needs a lab completion review workflow distinct from break/fix help desk tickets |
-| AD/Windows mentor workflows | Pending | Planned domain, not yet implemented |
-| SIEM/Wazuh mentor workflows | Pending | Planned domain, not yet implemented |
+| Active Directory / GPO / Windows endpoint mentor workflows | Pending | Core training domain; simple VM-based AD/GPO lab must be built |
+| Full SIEM/Wazuh infrastructure | Pending | Ticket-010 workflow exists, but Wazuh LXC and agents are not deployed yet |
 
 ---
 
@@ -92,14 +142,26 @@ Current reality:
 | 5 | Instructor draft panel | Complete |
 | 6 | Assistive LLM foundation/display | Complete, provider disabled |
 | 7 | Auth + role separation v1 | Complete |
-| 8 | Audit/event logging | Pending |
-| 9 | Ticket lab template system | Pending |
-| 10 | Implement Ticket-001 through Ticket-005 mentor workflows | Pending |
-| 11 | Student-facing mentor panel v1 | Pending |
-| 12 | Implement Ticket-006 through Ticket-010 mentor workflows | Pending |
-| 13 | Instructor review queue | Pending |
-| 14 | Controlled Zammad writeback / instructor approval workflow | Pending |
+| 8 | Audit/event logging | Complete |
+| 9 | Ticket lab template system | Complete |
+| 10 | Implement Ticket-001 through Ticket-005 mentor workflows | Complete |
+| 11 | Student-facing mentor panel v1 | Complete |
+| 12 | Implement Ticket-006 through Ticket-010 mentor workflows | Complete |
+| 13 | Instructor progress summary API | Complete |
+| 14 | Controlled Zammad writeback / instructor approval workflow | Pending; do not prioritize before domain-balance review |
 | 15 | Operational hardening | Pending |
+
+---
+
+## Training Domain Status
+
+| Training Domain | Current Status | Implemented So Far | Next Required Work |
+|---|---|---|---|
+| Help Desk / Ticketing | Operational v1; strongest domain | Zammad, instructor panel, student panel, Ticket-009, read-only ticket review, audit logging, session logging, progress summary | Avoid over-building this domain before others catch up; controlled writeback remains deferred |
+| Networking / Cisco / DNS / VLAN / Switching | Workflow coverage started; infrastructure is mature | Ticket-001 DNS, Ticket-002 VLAN, Ticket-004 Cisco SSH, Ticket-005 return path/routing, Ticket-007 VLAN 70 migration | Create dedicated network lab path with show-command evidence, risk, rollback, and Cisco guardrail enforcement |
+| Security / SOC / Wazuh / Incident Review | Workflow prepared; infrastructure pending | Ticket-010 Wazuh Alert Investigation workflow and security-triage evidence model | Deploy Wazuh LXC, agents, alert sources, and real SOC lab events |
+| Automation / SysAdmin / Linux / Proxmox / Field-Tech | Partially live; needs unified lab model | Proxmox, student Linux container, Ticket-003, Ticket-006, Ticket-008, field-tech notes | Build non-Zammad lab submission/completion model for Linux, Proxmox, field-tech, runbooks, and automation labs |
+| Identity / IAM / Active Directory / GPO / Windows Endpoint Administration | Core domain; not implemented yet | Planning only; local app roles are not a substitute for AD/GPO training | Build simple VM-based AD/GPO lab: Windows Server DC, Windows client, domain join, users, groups, OUs, GPOs, and troubleshooting labs |
 
 ---
 
@@ -107,17 +169,49 @@ Current reality:
 
 | Training Environment / Domain | Current Status | Next Required Work |
 |---|---|---|
-| Help Desk / Zammad | Operational v1 foundation | Add audit logging and reusable ticket templates |
-| DNS / Pi-hole | Scenario written, not implemented as workflow | Implement Ticket-001 mentor workflow |
-| VLAN / Switching | Scenario written, not implemented as workflow | Implement Ticket-002 mentor workflow |
-| Linux / Proxmox | Scenario written, not implemented as workflow | Implement Ticket-003 and Proxmox evidence rules |
-| Cisco / SSH / Switching | Scenario written, not implemented as workflow | Implement Ticket-004 and Cisco guardrail path |
-| WiFi / UniFi | Scenario written, not implemented as workflow | Validate Ticket-005 or revise scenario mapping |
-| Proxmox recovery | Scenario written, live validation partial | Implement Ticket-007 workflow after evidence model is finalized |
-| SIEM / Wazuh | Planned | Deploy Wazuh workload, then implement Ticket-010 workflow |
-| Active Directory / Windows | Planned | Deploy AD/Windows lab, define evidence model and ticket workflow |
-| Field Tech Foundation Labs | Instructor notes exist | Design lab completion ticket/submission workflow |
+| Help Desk / Zammad | Operational v1 foundation | Keep stable; defer deeper writeback until other domains advance |
+| DNS / Pi-hole | Ticket workflow implemented | Add real student lab evidence path and domain-specific progress tracking |
+| VLAN / Switching | Ticket workflow implemented | Add Cisco/switching lab evidence model |
+| Linux / Proxmox | Ticket workflows implemented | Add broader Linux/Proxmox lab submission workflow |
+| Cisco / SSH / Switching | Ticket workflow implemented | Add strict Cisco config-change guardrail workflow |
+| WiFi / UniFi | Ticket workflow implemented where mapped | Validate AP/SSID evidence model when WiFi labs expand |
+| Proxmox recovery / hardware operations | Ticket workflows implemented | Expand into field-tech and operational recovery labs |
+| SIEM / Wazuh | Ticket workflow implemented; infrastructure pending | Deploy Wazuh workload, agents, and real alert-generation labs |
+| Active Directory / GPO / Windows Endpoint Administration | Planned core domain; not implemented | Deploy simple AD/GPO VM lab and create evidence templates |
+| Field Tech Foundation Labs | Instructor notes exist | Design lab completion ticket/submission workflow distinct from break/fix tickets |
 | Cybersecurity Readiness Labs | Planned | Requires Wazuh/SIEM workload and incident-review templates |
+
+---
+
+## Active Directory / GPO Domain Requirement
+
+Active Directory and GPO are part of the original ARIA training mission and must remain visible in the core plan.
+
+This domain can begin with a simple VM-based lab:
+
+- One Windows Server VM as the Domain Controller
+- One Windows client VM joined to the domain
+- A test domain such as `jlm.lab`
+- OUs for Students, Workstations, Help Desk, Disabled Users, and Admin Testing
+- Test users, groups, and security roles
+- Foundational GPOs for password policy, account lockout, login banner, mapped resources, local administrator restrictions, desktop controls, and Windows security settings
+
+Initial AD/GPO training scenarios should include:
+
+- User cannot log in
+- Account locked out
+- Password expired or reset required
+- User placed in wrong group
+- User missing access due to group membership
+- Computer cannot join the domain
+- DNS misconfiguration preventing domain join
+- GPO not applying
+- Wrong OU placement
+- Local admin rights incorrectly assigned
+- Login banner or desktop policy not applying
+- Basic Windows endpoint support ticket requiring AD verification
+
+The AI Mentor should guide AD/GPO troubleshooting by requiring evidence such as screenshots, ADUC state, Group Policy Management state, `gpresult`, `rsop.msc`, Event Viewer logs, DNS checks, and professional resolution summaries.
 
 ---
 
@@ -153,17 +247,37 @@ Benefit: No token spend, no external inference dependency, and deterministic men
 
 ---
 
-## Required Before Phase 8
+## Next Domain Priority
 
-Before Phase 8 begins, the repo must reflect the deployed state. This document is the baseline. Architecture, KB, ticketing, and roadmap docs should point here when their original design status is superseded by implementation reality.
+Before any Help Desk-only enhancement, choose the next missing-domain milestone.
 
-Phase 8 should begin with audit/event logging for:
+Recommended next-domain priorities:
 
-- login and logout
-- protected endpoint access
-- mentor guidance requests
-- ticket number reviewed
-- user role
-- request outcome
-- LLM provider state
-- Zammad read-only access events
+1. Identity / IAM / Active Directory / GPO / Windows Endpoint Administration
+   - Build simple VM-based AD/GPO lab.
+   - Create initial evidence templates.
+   - Add AD/GPO mentor workflows after the lab exists.
+
+2. Security / SOC / Wazuh / Incident Review
+   - Deploy Wazuh LXC and agents.
+   - Generate real alert examples.
+   - Connect Ticket-010 workflow to real evidence.
+
+3. Automation / SysAdmin / Linux / Proxmox / Field-Tech
+   - Create non-Zammad lab submission model.
+   - Connect field-tech and Linux labs to progress tracking.
+
+No next build phase should proceed until the roadmap is reviewed against the Domain Balance Rule.
+
+---
+
+## Required Before Next Build Phase
+
+Before the next implementation phase begins:
+
+- Confirm Phase 13 is complete and documented.
+- Confirm `ROADMAP.md` Phase AI status is updated.
+- Rebuild the AI Mentor KB if documentation changes are intended to be available to mentor retrieval.
+- Select the next phase based on domain balance, not convenience.
+- Document any out-of-scope ideas in markdown instead of implementing them ad hoc.
+
