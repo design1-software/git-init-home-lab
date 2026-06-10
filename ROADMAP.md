@@ -566,3 +566,23 @@ Phase D VLAN 60 is now proven end-to-end using a dedicated Proxmox lab workload 
 - Internet path through WAN 174.53.28.46
 
 VLAN 70 remains the Proxmox management path on vmbr0/nic1/Gi0/4.
+
+## Identity/IAM AD Lab Live Milestone
+
+The Identity/IAM domain now has a live Active Directory training foundation.
+
+Completed:
+
+- JLM-DC01 domain controller and DNS server
+- jlm.lab forest/domain
+- ARIA-Lab OU structure
+- Baseline ARIA groups
+- student01 training account
+- JLM-WIN01 domain-joined Windows client
+- Verified login as JLM\student01
+- Verified domain controller discovery with nltest
+- Verified Group Policy processing with gpresult
+
+Detailed milestone documentation:
+
+- docs/domain-plans/identity-iam-ad-lab-live-milestone.md
