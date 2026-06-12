@@ -355,10 +355,10 @@ No new phase should deepen only one domain at the expense of the others. Any imp
 | Training Domain | Current Status | Next Required Work |
 |---|---|---|
 | Help Desk / Ticketing | Complete v1 | Keep stable. Do not add more Help Desk features until other domains catch up unless the work is shared platform infrastructure. |
-| Networking / Cisco / DNS / VLAN / Switching | Workflow coverage started; infrastructure mature | Add dedicated network lab path with command evidence and Cisco guardrails |
+| Networking / Cisco / DNS / VLAN / Switching | Next active domain | Build six-lab Networking/Cisco foundational path from `docs/domain-plans/networking-cisco-training-domain-plan.md`. Start with read-only discovery lab. |
 | Security / SOC / Wazuh / Incident Review | Ticket-010 workflow exists; infrastructure pending | Deploy Wazuh LXC, agents, alert sources, and SOC labs |
 | Automation / SysAdmin / Linux / Proxmox / Field-Tech | Complete v1 | Keep stable. Future expansion should follow `docs/domain-plans/automation-sysadmin-linux-fieldtech-lab-path.md`. |
-| Identity / IAM / Active Directory / GPO / Windows Endpoint Administration | Network-ready and scaffold-complete v1 | Domain plan, VLAN 60 end-to-end workload path, training asset boundary, and evidence templates complete. AD VM and Windows client deployment pending Windows ISO media. |
+| Identity / IAM / Active Directory / GPO / Windows Endpoint Administration | Foundational v1 complete | Six validated GPO/AD labs complete, live JLM-DC01/JLM-WIN01 environment operational, and future IAM labs roadmap documented. Keep stable until other domains catch up. |
 
 ### Help Desk / Ticketing v1 Closeout
 
@@ -413,6 +413,77 @@ Completed:
 Guardrail:
 
 No additional Automation / SysAdmin / Linux / Field-Tech-only feature work should begin until the remaining domains catch up, unless the work is shared platform infrastructure.
+
+
+### Identity / IAM / Active Directory / GPO v1 Closeout
+
+Identity / IAM / Active Directory / GPO / Windows Endpoint Administration is complete for foundational v1.
+
+Completed:
+
+- Live Active Directory training environment on VLAN 60
+- JLM-DC01 domain controller and DNS server
+- jlm.lab forest/domain
+- ARIA-Lab OU structure
+- Baseline ARIA groups
+- student01 training account
+- JLM-WIN01 domain-joined Windows client
+- Lab 001 - Login Banner
+- Lab 002 - Idle Screen Lock Policy
+- Lab 003 - Mapped Drives by Security Group
+- Lab 004 - Password Policy + Weak Password Failure
+- Lab 005 - Account Lockout Policy + Unlock Workflow
+- Lab 006 - PowerShell Logging
+- Future IAM labs roadmap documented
+
+Documentation:
+
+- docs/domain-plans/identity-iam-ad-lab-live-milestone.md
+- docs/domain-plans/identity-iam-gpo-lab-001-login-banner.md
+- docs/domain-plans/identity-iam-gpo-lab-002-idle-screen-lock.md
+- docs/domain-plans/identity-iam-gpo-lab-003-mapped-drives-by-security-group.md
+- docs/domain-plans/identity-iam-gpo-lab-004-password-policy-weak-password-failure.md
+- docs/domain-plans/identity-iam-gpo-lab-005-account-lockout-unlock-workflow.md
+- docs/domain-plans/identity-iam-gpo-lab-006-powershell-logging.md
+- docs/domain-plans/identity-iam-future-labs-roadmap.md
+
+Guardrail:
+
+No additional Identity/IAM-only feature work should begin until the remaining training domains catch up, unless the work is shared platform infrastructure.
+
+
+### Networking / Cisco / DNS / VLAN / Switching - Next Active Training Domain
+
+Networking / Cisco / DNS / VLAN / Switching is the next active ARIA training domain.
+
+Reason:
+
+- Help Desk / Ticketing is complete v1.
+- Automation / SysAdmin / Linux / Proxmox / Field-Tech is complete v1.
+- Identity / IAM / Active Directory / GPO is foundational v1 complete.
+- Networking infrastructure is already mature and live.
+- The next gap is student-facing network labs with command evidence, troubleshooting paths, and Cisco guardrails.
+
+Planning document:
+
+- docs/domain-plans/networking-cisco-training-domain-plan.md
+
+Planned six-lab Networking/Cisco foundational block:
+
+1. Network Baseline and Device Discovery
+2. VLANs, Subnets, and Default Gateways
+3. Trunk vs Access Port Troubleshooting
+4. DNS and DHCP Troubleshooting
+5. Inter-VLAN ACL Verification
+6. Switch Security Basics: PortFast, BPDU Guard, DHCP Snooping, DAI, and IP Source Guard
+
+Completion criteria:
+
+- Six student-facing labs documented
+- Each lab includes objective, commands, evidence, troubleshooting path, and ARIA Mentor questions
+- At least one lab validated end to end against the live ARIA network
+- ROADMAP.md updated after each validated lab
+- No Security/SOC build begins until Networking v1 is stable
 
 
 ### Workflow vs Domain Infrastructure
@@ -549,7 +620,7 @@ Live configurations:
 
 ---
 
-*Last updated: Jun 7, 2026 (Zammad LXC deployed: CT 110 aria-zammad-01 · Docker Compose · helpdesk.aria.local · Proxmox backup PASS · AI Mentor ticketing platform live)*
+*Last updated: Jun 11, 2026 (Identity/IAM/AD/GPO foundational v1 complete · six validated GPO labs · live JLM-DC01/JLM-WIN01 environment · Networking/Cisco next active training domain)*
 
 ## Phase D VLAN 60 Status
 
