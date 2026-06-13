@@ -30,6 +30,36 @@
     FirstName, LastName, SamAccountName, Degree
 #>
 
+function New-AriaTempPassword {
+    [CmdletBinding()]
+    param(
+        [int]$Length = 18
+    )
+
+    if ($Length -lt 16) {
+        throw "Temporary password length must be at least 16 characters."
+    }
+
+    $upper   = 'ABCDEFGHJKLMNPQRSTUVWXYZ'.ToCharArray()
+    $lower   = 'abcdefghijkmnopqrstuvwxyz'.ToCharArray()
+    $digits  = '23456789'.ToCharArray()
+    $special = '!#$%&*?'.ToCharArray()
+    $all     = $upper + $lower + $digits + $special
+
+    $required = @(
+        ($upper   | Get-Random -Count 1)
+        ($lower   | Get-Random -Count 1)
+        ($digits  | Get-Random -Count 1)
+        ($special | Get-Random -Count 1)
+    )
+
+    $remaining = 1..($Length - $required.Count) | ForEach-Object {
+        $all | Get-Random -Count 1
+    }
+
+    return -join (($required + $remaining) | Sort-Object { Get-Random })
+}
+
 function New-AriaStudent {
     [CmdletBinding()]
     param(
@@ -48,7 +78,7 @@ function New-AriaStudent {
 
     $existingUser = Get-ADUser -Filter "SamAccountName -eq '$SamAccountName'" -ErrorAction SilentlyContinue
     if ($existingUser) {
-        Write-Warning "$SamAccountName already exists. Aborting."
+        Write-Warning "$SamAccountName already exists. No duplicate account will be created."
         Get-ADUser $SamAccountName -Properties DisplayName,UserPrincipalName,Enabled,Description |
             Select-Object SamAccountName,DisplayName,UserPrincipalName,Enabled,Description
         Get-ADPrincipalGroupMembership $SamAccountName | Select-Object Name
@@ -56,10 +86,7 @@ function New-AriaStudent {
     }
 
     if ($GeneratePassword) {
-        $plain = -join ((48..57) + (65..90) + (97..122) + (33,35,36,37,38,42) |
-            Get-Random -Count 16 |
-            ForEach-Object { [char]$_ })
-
+        $plain = New-AriaTempPassword -Length 18
         $Password = ConvertTo-SecureString $plain -AsPlainText -Force
         Write-Host "Temp password for ${SamAccountName}: $plain" -ForegroundColor Yellow
     }
@@ -80,12 +107,18 @@ function New-AriaStudent {
         Enabled               = $true
         ChangePasswordAtLogon = $true
         Description           = "ARIA $SamAccountName - Degree pending: $Degree"
+        ErrorAction           = 'Stop'
     }
 
-    New-ADUser @params
-    Add-ADGroupMember -Identity $Group -Members $SamAccountName
-
-    Write-Host "Created ARIA student account: $display ($SamAccountName)" -ForegroundColor Green
+    try {
+        New-ADUser @params
+        Add-ADGroupMember -Identity $Group -Members $SamAccountName -ErrorAction Stop
+        Write-Host "Created ARIA student account: $display ($SamAccountName)" -ForegroundColor Green
+    }
+    catch {
+        Write-Error "Failed to create ARIA student account $SamAccountName. $($_.Exception.Message)"
+        return
+    }
 
     Get-ADUser $SamAccountName -Properties DisplayName,UserPrincipalName,Enabled,Description |
         Select-Object SamAccountName,DisplayName,UserPrincipalName,Enabled,Description
