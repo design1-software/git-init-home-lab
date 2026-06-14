@@ -5,18 +5,36 @@
   "difficulty": "intermediate",
   "ticket_type": "training",
   "status": "active",
-  "summary": "Student investigates a Wazuh alert and documents triage, evidence, and disposition.",
+  "summary": "Student investigates an instructor-provided Wazuh alert or sample alert and documents triage, evidence, and disposition.",
   "student_goal": "Review a security alert, identify the affected asset and event details, and document whether it is benign, suspicious, or requires escalation.",
   "mentor_mode": "security_triage",
   "trigger_terms": ["ticket-010", "wazuh", "alert investigation", "security alert", "agent", "rule id", "siem", "escalation"],
   "required_evidence": [
-    {"id": "alert_details", "label": "Alert details", "description": "Student must provide alert title, rule ID, severity, and timestamp."},
-    {"id": "affected_asset", "label": "Affected asset", "description": "Student must identify the affected endpoint, user, or service."},
+    {"id": "alert_source", "label": "Alert source", "description": "Student must state whether the alert came from the live Wazuh dashboard, an instructor-provided screenshot, or a sample alert."},
+    {"id": "alert_details", "label": "Alert details", "description": "Student must provide alert title, rule ID, severity, timestamp, and source system."},
+    {"id": "affected_asset", "label": "Affected asset", "description": "Student must identify the affected endpoint, user, service, or monitored agent."},
     {"id": "disposition", "label": "Disposition", "description": "Student must classify the alert as benign, suspicious, or requiring escalation with reasoning."}
   ],
-  "opening_questions": ["What rule ID and severity triggered the alert?", "Which host, user, or service is affected?", "What evidence supports benign, suspicious, or escalation status?"],
-  "completion_signals": ["alert details documented", "affected asset identified", "disposition and next step documented"],
-  "mentor_guidance_rules": ["Do not close a security alert without evidence and disposition.", "Ask for rule ID, severity, asset, and timestamp before conclusion.", "Escalate if evidence suggests compromise or if impact is unclear."],
-  "student_visible": {"allowed": ["student_goal", "opening_questions", "required_evidence labels", "safe security triage reminders"], "blocked": ["dismissal without evidence", "sensitive secrets or credentials"]},
+  "student_workflow": [
+    "Open the Zammad ticket and identify the alert source provided by the instructor.",
+    "Open ARIA AI Mentor and load the assigned ticket.",
+    "Review the Wazuh alert or sample alert without exposing secrets, tokens, or private credentials.",
+    "Collect rule ID, severity, timestamp, affected asset, and observable event details.",
+    "Document whether the alert is benign, suspicious, or requires escalation with evidence-based reasoning."
+  ],
+  "opening_questions": [
+    "Was this alert from the live Wazuh dashboard or an instructor-provided sample?",
+    "What rule ID, severity, timestamp, and source system are shown?",
+    "Which host, user, service, or agent is affected?",
+    "What evidence supports benign, suspicious, or escalation status?"
+  ],
+  "completion_signals": ["alert source documented", "alert details documented", "affected asset identified", "disposition and next step documented"],
+  "mentor_guidance_rules": [
+    "Do not close a security alert without evidence and disposition.",
+    "Ask for alert source, rule ID, severity, asset, and timestamp before conclusion.",
+    "Escalate if evidence suggests compromise or if impact is unclear.",
+    "Do not ask students to paste secrets, tokens, passwords, or private credentials."
+  ],
+  "student_visible": {"allowed": ["student_goal", "opening_questions", "required_evidence labels", "safe security triage reminders", "sample-alert boundary"], "blocked": ["dismissal without evidence", "sensitive secrets or credentials", "private tokens or passwords"]},
   "next_actions": {"missing_evidence": "request_more_evidence", "complete": "validation_complete", "unclear": "manual_review", "suspicious": "escalate"}
 }
