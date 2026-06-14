@@ -24,6 +24,10 @@ def get_zammad_config() -> tuple[str, str]:
     return base_url, token
 
 
+def get_zammad_web_url() -> str:
+    return os.getenv("ZAMMAD_WEB_URL", os.getenv("ZAMMAD_BASE_URL", "")).rstrip("/")
+
+
 def zammad_headers() -> dict:
     _, token = get_zammad_config()
     return {
@@ -89,6 +93,10 @@ def search_ticket_by_number(ticket_number: str) -> List[Dict[str, Any]]:
         },
     )
 
+    return normalize_ticket_search_result(result)
+
+
+def normalize_ticket_search_result(result: Any) -> List[Dict[str, Any]]:
     if isinstance(result, list):
         return result
 
@@ -99,8 +107,77 @@ def search_ticket_by_number(ticket_number: str) -> List[Dict[str, Any]]:
             tickets = result["assets"].get("Ticket")
             if isinstance(tickets, dict):
                 return list(tickets.values())
+        if isinstance(result.get("assets"), list):
+            return result["assets"]
 
     return []
+
+
+def search_tickets(query: str, limit: int = 20) -> List[Dict[str, Any]]:
+    result = zammad_get(
+        "/api/v1/tickets/search",
+        params={
+            "query": query,
+            "limit": limit,
+            "expand": "true",
+        },
+    )
+    return normalize_ticket_search_result(result)
+
+
+def ticket_identity(ticket: Dict[str, Any]) -> str:
+    return str(ticket.get("id") or ticket.get("number") or "")
+
+
+def normalize_student_ticket(ticket: Dict[str, Any]) -> Dict[str, Any]:
+    web_url = get_zammad_web_url()
+    number = str(ticket.get("number") or "")
+    internal_id = ticket.get("id")
+    ticket_url = f"{web_url}/#ticket/zoom/{internal_id}" if web_url and internal_id else ""
+
+    return {
+        "id": internal_id,
+        "number": number,
+        "title": ticket.get("title") or f"Zammad Ticket {number or internal_id}",
+        "state": ticket.get("state"),
+        "priority": ticket.get("priority"),
+        "group": ticket.get("group"),
+        "customer": ticket.get("customer"),
+        "owner": ticket.get("owner"),
+        "created_at": ticket.get("created_at"),
+        "updated_at": ticket.get("updated_at"),
+        "url": ticket_url,
+    }
+
+
+def get_student_tickets(zammad_login: str, limit: int = 25) -> List[Dict[str, Any]]:
+    login = str(zammad_login or "").strip()
+    if not login:
+        return []
+
+    queries = [
+        f"owner:{login}",
+        f"customer:{login}",
+        f"{login}",
+    ]
+
+    tickets_by_id: Dict[str, Dict[str, Any]] = {}
+    errors: List[str] = []
+
+    for query in queries:
+        try:
+            for ticket in search_tickets(query=query, limit=limit):
+                identity = ticket_identity(ticket)
+                if identity:
+                    tickets_by_id[identity] = ticket
+        except ZammadClientError as exc:
+            errors.append(str(exc))
+            continue
+
+    tickets = [normalize_student_ticket(ticket) for ticket in tickets_by_id.values()]
+    tickets.sort(key=lambda item: str(item.get("updated_at") or ""), reverse=True)
+
+    return tickets[:limit]
 
 
 def get_ticket_by_number(ticket_number: str) -> Dict[str, Any]:
@@ -165,6 +242,7 @@ def summarize_ticket_for_mentor(ticket: Dict[str, Any], articles: List[Dict[str,
             "owner": ticket.get("owner"),
             "created_at": ticket.get("created_at"),
             "updated_at": ticket.get("updated_at"),
+            "url": f"{get_zammad_web_url()}/#ticket/zoom/{ticket.get('id')}" if get_zammad_web_url() and ticket.get("id") else "",
         },
         "articles": article_summaries,
     }
