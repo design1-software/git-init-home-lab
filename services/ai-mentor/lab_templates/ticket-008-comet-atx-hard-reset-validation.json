@@ -1,64 +1,80 @@
 {
   "template_id": "ticket-008",
-  "title": "Comet ATX Hard Reset Validation",
+  "title": "Comet ATX Recovery Validation",
   "domain": "hardware-ops",
   "difficulty": "intermediate",
   "ticket_type": "training",
   "status": "active",
-  "summary": "Student validates Comet ATX hard reset behavior and documents safe power-control evidence.",
-  "student_goal": "Confirm that Comet ATX power control behaves as expected and that recovery evidence is documented.",
+  "summary": "Student documents an instructor-supervised hardware recovery validation and records safe pre-check and post-check evidence.",
+  "student_goal": "Confirm that a supervised recovery workflow produced the expected result and that recovery evidence is documented clearly.",
   "mentor_mode": "validation",
   "trigger_terms": [
     "ticket-008",
     "comet",
     "atx",
-    "hard reset",
-    "power control",
-    "reset validation",
-    "power cycle"
+    "recovery validation",
+    "hardware operations",
+    "power-control evidence"
   ],
   "required_evidence": [
     {
-      "id": "precheck",
-      "label": "Pre-reset check",
-      "description": "Student must document system state before reset."
+      "id": "authorization",
+      "label": "Instructor authorization",
+      "description": "Student must document that the hardware recovery validation was authorized or directly supervised by the instructor."
     },
     {
-      "id": "reset_action",
-      "label": "Reset action evidence",
-      "description": "Student must document the ATX reset or power-control action."
+      "id": "precheck",
+      "label": "Pre-action check",
+      "description": "Student must document system state before the supervised recovery action, including service status or reachability as instructed."
+    },
+    {
+      "id": "recovery_action",
+      "label": "Recovery action evidence",
+      "description": "Student must document the single approved recovery action that was performed under instructor direction."
     },
     {
       "id": "postcheck",
-      "label": "Post-reset recovery check",
-      "description": "Student must confirm the system recovered after reset."
+      "label": "Post-action recovery check",
+      "description": "Student must confirm the system recovered using service, network, console, or instructor-approved evidence."
     }
   ],
+  "student_workflow": [
+    "Open the Zammad ticket and confirm the system being validated.",
+    "Open ARIA AI Mentor and load the assigned ticket.",
+    "Do not perform any hardware recovery action unless the instructor authorizes or supervises it.",
+    "Document pre-action system state before the supervised action.",
+    "Document the approved action and post-action recovery evidence."
+  ],
   "opening_questions": [
-    "What system state did you confirm before reset?",
-    "What exact power-control action did you perform?",
+    "Did the instructor authorize or supervise this hardware recovery validation?",
+    "What system state did you confirm before the action?",
+    "What approved recovery action was performed?",
     "What evidence shows the system recovered correctly?"
   ],
   "completion_signals": [
-    "pre-reset state documented",
-    "hard reset action documented",
-    "post-reset recovery confirmed"
+    "authorization documented",
+    "pre-action state documented",
+    "approved recovery action documented",
+    "post-action recovery confirmed"
   ],
   "mentor_guidance_rules": [
-    "Do not recommend hard reset before pre-check evidence is captured.",
-    "Require post-reset validation before completion.",
-    "Emphasize safe physical/power operations."
+    "Do not approve completion before instructor authorization and pre-check evidence are captured.",
+    "Require post-action validation before completion.",
+    "Emphasize safe hardware operations.",
+    "Do not encourage repeated or unsupervised recovery actions."
   ],
   "student_visible": {
     "allowed": [
       "student_goal",
       "opening_questions",
       "required_evidence labels",
-      "safe power-control reminders"
+      "safe hardware-operation reminders",
+      "instructor-supervised boundary"
     ],
     "blocked": [
-      "unsafe repeated reset behavior",
-      "skipping recovery validation"
+      "unsafe repeated recovery behavior",
+      "skipping recovery validation",
+      "unsupervised hardware action"
     ]
   },
   "next_actions": {
