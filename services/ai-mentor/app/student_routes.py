@@ -36,6 +36,40 @@ from app.zammad_client import (
 router = APIRouter()
 
 
+PLACEHOLDER_EVIDENCE_PATTERNS = [
+    r"\[\s*paste[^\]]*\]",
+    r"\[\s*actual output\s*\]",
+    r"\[\s*output[^\]]*\]",
+    r"paste actual output",
+    r"paste output here",
+    r"actual output",
+    r"sample output",
+    r"example output",
+    r"placeholder",
+    r"not collected yet",
+    r"no evidence",
+    r"no lab target system was provided",
+    r"tbd",
+    r"todo",
+]
+
+COMMAND_EVIDENCE_MARKERS = [
+    "whoami",
+    "hostname",
+    "ip addr",
+    "ip -br addr",
+    "ip route",
+    "cat /etc/resolv.conf",
+    "ping",
+    "nslookup",
+    "dig",
+    "ipconfig",
+    "tracert",
+    "tracepath",
+    "systemctl",
+]
+
+
 def clean_zammad_text(value: str) -> str:
     text = str(value or "")
     text = re.sub(r"<\s*br\s*/?\s*>", "\n", text, flags=re.IGNORECASE)
@@ -150,12 +184,39 @@ def build_evidence_guidance(lab_template: dict[str, Any], profile: dict[str, Any
     return {"message": "Collect real command output or observed results before validating evidence.", "required_evidence": required_evidence, "windows_commands": windows_commands, "linux_commands": linux_commands, "target_systems": profile.get("target_systems", []), "safety_rule": "Do not paste secrets or unrelated personal information."}
 
 
+def evidence_quality_issues(evidence: str, next_action: str) -> list[str]:
+    text = str(evidence or "").strip()
+    normalized = text.lower()
+    issues: list[str] = []
+
+    if not text:
+        issues.append("No evidence was provided.")
+
+    if len(text) < 80:
+        issues.append("Evidence is too short for a final ticket note. Paste real command output or observed results first.")
+
+    for pattern in PLACEHOLDER_EVIDENCE_PATTERNS:
+        if re.search(pattern, normalized, flags=re.IGNORECASE):
+            issues.append("Evidence contains placeholder text. Replace placeholders with real command output before drafting a final note.")
+            break
+
+    marker_count = sum(1 for marker in COMMAND_EVIDENCE_MARKERS if marker in normalized)
+    if marker_count < 2:
+        issues.append("Evidence does not include enough command/test markers. Include at least two real checks such as whoami, hostname, ip addr, ip route, ping, nslookup, dig, or ipconfig.")
+
+    if str(next_action or "").strip() != "validation_complete":
+        issues.append("Evidence has not been validated as complete by ARIA yet. Click Validate My Evidence and resolve missing evidence first.")
+
+    return issues
+
+
 def build_final_note(payload: dict[str, Any], username: str) -> str:
     ticket_title = str(payload.get("ticket_title") or "Ticket").strip()
     evidence = str(payload.get("student_evidence") or "").strip()
     next_action = str(payload.get("next_action") or "").strip()
-    if not evidence:
-        raise ValueError("student_evidence is required before drafting a final note.")
+    issues = evidence_quality_issues(evidence, next_action)
+    if issues:
+        raise ValueError("Final note blocked. " + " ".join(issues))
     return f"""Summary:
 Worked on {ticket_title}. The reported issue was reviewed through the ARIA evidence-first workflow.
 
