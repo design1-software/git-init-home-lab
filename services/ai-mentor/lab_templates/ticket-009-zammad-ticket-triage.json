@@ -5,55 +5,66 @@
   "difficulty": "beginner",
   "ticket_type": "training",
   "status": "active",
-  "summary": "Student validates basic Zammad ticket triage workflow, documentation quality, and completion evidence.",
-  "student_goal": "Review a help desk ticket, identify whether required documentation is present, and produce a clear resolution summary.",
+  "summary": "Student validates the basic Zammad ticket triage workflow, documentation quality, and instructor-review readiness.",
+  "student_goal": "Review a help desk ticket, identify whether required documentation is present, and produce a clear resolution summary that another technician could understand.",
   "mentor_mode": "completion_review",
   "trigger_terms": [
     "ticket-009",
     "zammad ticket triage",
     "resolution summary",
-    "zammad v1 platform validation",
+    "ticket workflow validation",
     "training-ticket workflow",
     "98002"
   ],
   "required_evidence": [
     {
-      "id": "resolution_summary",
-      "label": "Resolution summary",
-      "description": "Student must include a clear resolution summary in the ticket."
+      "id": "ticket_review",
+      "label": "Ticket review completed",
+      "description": "Student must identify the ticket number, issue summary, requester/customer, and current ticket state."
     },
     {
-      "id": "platform_validation",
-      "label": "Zammad v1 platform validation passed",
-      "description": "Student must document that the Zammad v1 platform validation passed."
+      "id": "resolution_summary",
+      "label": "Resolution summary",
+      "description": "Student must include a clear resolution or status summary in help desk language."
     },
     {
       "id": "workflow_confirmation",
       "label": "Training-ticket workflow confirmed",
-      "description": "Student must confirm the basic training-ticket workflow was completed."
+      "description": "Student must confirm that the ticket was reviewed in Zammad, evidence was checked in ARIA, and the final note is ready for instructor review."
     }
   ],
+  "student_workflow": [
+    "Open the assigned Zammad ticket.",
+    "Open ARIA AI Mentor and load the ticket workflow.",
+    "Review the ticket number, requester/customer, issue summary, and current state.",
+    "Write a clear help desk summary with evidence and next step.",
+    "Do not close the ticket unless the instructor specifically tells you to close it."
+  ],
   "opening_questions": [
-    "What part of the Zammad ticket workflow are you validating?",
-    "What evidence did you add to the ticket?",
-    "Did you document the resolution summary clearly enough for another technician to understand?"
+    "What ticket are you reviewing?",
+    "What is the issue summary and current ticket state?",
+    "What evidence or note did you add to the ticket workflow?",
+    "Is the final note clear enough for another technician to understand?"
   ],
   "completion_signals": [
-    "Resolution summary",
-    "Zammad v1 platform validation passed",
-    "Ticket-009 confirms the basic training-ticket workflow"
+    "ticket number and state documented",
+    "resolution summary documented",
+    "training-ticket workflow confirmed",
+    "final note ready for instructor review"
   ],
   "mentor_guidance_rules": [
     "Do not mark completion unless required evidence is present.",
     "Do not treat Zammad ticket state as the same as ARIA training completion.",
-    "If evidence is missing, ask for the missing documentation rather than giving a final pass."
+    "If evidence is missing, ask for the missing documentation rather than giving a final pass.",
+    "Require clear help desk language, not vague completion statements."
   ],
   "student_visible": {
     "allowed": [
       "student_goal",
       "opening_questions",
       "required_evidence labels",
-      "general documentation reminders"
+      "general documentation reminders",
+      "do-not-close-ticket reminder"
     ],
     "blocked": [
       "mentor-only diagnostic shortcuts",
