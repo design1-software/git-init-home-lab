@@ -89,6 +89,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Create a Zammad lab ticket and ARIA assignment.")
     parser.add_argument("--student", required=True, help="ARIA student username, such as student02")
     parser.add_argument("--template", required=True, help="Lab template ID or filename, such as ticket-001 or ticket-001-dns-failure")
+    parser.add_argument("--customer", default=None, help="Optional Zammad customer lookup value, such as the student's Zammad email/login")
     parser.add_argument("--created-by", default="instructor", help="Instructor username for local assignment audit field")
     parser.add_argument("--group", default=None, help="Optional Zammad group override")
     parser.add_argument("--priority", default="2 normal", help="Zammad priority, default: 2 normal")
@@ -97,7 +98,7 @@ def main() -> int:
     args = parser.parse_args()
 
     profile = get_student_profile(args.student)
-    zammad_login = profile.get("zammad_login") or args.student
+    zammad_customer = args.customer or profile.get("zammad_login") or args.student
     requested_template = args.template
     normalized_template = normalize_template_id(requested_template)
     template = get_lab_template(normalized_template)
@@ -111,7 +112,7 @@ def main() -> int:
 
     zammad_ticket = create_zammad_ticket(
         title=title,
-        customer=str(zammad_login),
+        customer=str(zammad_customer),
         body=body,
         group=args.group,
         priority=args.priority,
@@ -128,10 +129,11 @@ def main() -> int:
         zammad_ticket_number=str(zammad_ticket.get("number") or ""),
         zammad_ticket_id=str(zammad_ticket.get("id") or ""),
         due_date=args.due_date,
-        notes="Created by ARIA lab ticket creation script.",
+        notes=f"Created by ARIA lab ticket creation script. Zammad customer lookup: {zammad_customer}",
     )
 
     print("Zammad ticket created and ARIA assignment linked.")
+    print(f"Zammad customer lookup: {zammad_customer}")
     print(f"Zammad ticket number: {zammad_ticket.get('number')}")
     print(f"Zammad ticket id: {zammad_ticket.get('id')}")
     print(f"Zammad URL: {zammad_ticket.get('url')}")
