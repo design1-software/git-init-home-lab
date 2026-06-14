@@ -4,7 +4,7 @@ from typing import Any, Dict
 STUDENT_PROFILES: Dict[str, Dict[str, Any]] = {
     "student01": {
         "display_name": "Sha Neal Prather",
-        "zammad_login": "student01",
+        "zammad_login": "student01@jlm.lab",
         "linux_host": "student-linux-01",
         "linux_ssh": "ssh student01@100.76.81.39",
         "target_systems": [
@@ -18,7 +18,7 @@ STUDENT_PROFILES: Dict[str, Dict[str, Any]] = {
     },
     "student02": {
         "display_name": "Dominique Davis",
-        "zammad_login": "student02",
+        "zammad_login": "student02@jlm.lab",
         "linux_host": "student-linux-02",
         "linux_ssh": "ssh student02@100.91.190.9",
         "target_systems": [
