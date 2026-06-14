@@ -52,6 +52,7 @@
       padding: 24px;
     }
 
+    .card,
     .search-card,
     .section {
       background: var(--panel);
@@ -64,7 +65,7 @@
     label {
       display: block;
       font-weight: bold;
-      margin-bottom: 8px;
+      margin: 12px 0 8px;
     }
 
     .row {
@@ -74,15 +75,26 @@
       align-items: center;
     }
 
-    input {
-      flex: 1;
-      min-width: 220px;
+    input,
+    textarea {
+      width: 100%;
       padding: 12px;
       border-radius: 8px;
       border: 1px solid var(--border);
       background: #020617;
       color: var(--text);
       font-size: 16px;
+    }
+
+    input {
+      flex: 1;
+      min-width: 220px;
+    }
+
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+      font-family: Arial, Helvetica, sans-serif;
     }
 
     button {
@@ -103,6 +115,11 @@
     button:disabled {
       opacity: 0.5;
       cursor: not-allowed;
+    }
+
+    .small-button {
+      padding: 8px 12px;
+      font-size: 14px;
     }
 
     .grid {
@@ -208,6 +225,15 @@
       margin-top: 12px;
     }
 
+    .success-box {
+      color: #bbf7d0;
+      background: rgba(34, 197, 94, 0.12);
+      border: 1px solid rgba(34, 197, 94, 0.45);
+      padding: 12px;
+      border-radius: 10px;
+      margin-top: 12px;
+    }
+
     .muted {
       color: var(--muted);
     }
@@ -216,37 +242,35 @@
 <body>
   <header>
     <h1>ARIA Mentor Instructor Panel</h1>
-    <p>Read-only instructor review for Zammad training tickets. No Zammad writeback, closure, assignment, or priority changes.</p>
+    <p>Instructor review for Zammad training tickets. Writeback is instructor-approved only and does not close or change ticket state.</p>
+  </header>
 
-
-    <div class="card">
+  <main>
+    <div class="card" id="writebackCard">
       <h2>Controlled Zammad Writeback</h2>
       <p class="muted">Instructor approval only. This writes one approved note to Zammad and marks the local assignment completed. It does not close, prioritize, or change the Zammad ticket state.</p>
 
       <label for="approvalAssignmentId">Assignment ID</label>
-      <input id="approvalAssignmentId" placeholder="Paste assignment_id from the review queue" />
+      <input id="approvalAssignmentId" placeholder="Click Prepare Writeback in the review queue or paste assignment_id" />
 
       <label for="approvalZammadTicketId">Zammad Ticket ID</label>
-      <input id="approvalZammadTicketId" placeholder="Numeric Zammad ticket ID required for writeback" />
+      <input id="approvalZammadTicketId" placeholder="Optional if assignment already has a stored numeric Zammad ticket ID" />
 
       <label for="approvedWritebackText">Approved Note Text</label>
       <textarea id="approvedWritebackText" placeholder="Paste the exact instructor-approved note to write to Zammad."></textarea>
 
-      <button onclick="approveZammadWriteback()">Approve One-Time Writeback</button>
+      <button onclick="approveZammadWriteback()">Approve & Write to Zammad</button>
       <div id="writebackResult" class="muted" style="margin-top: 12px;"></div>
     </div>
 
     <div class="card">
       <h2>Instructor Review Queue</h2>
-      <p class="muted">Review student assignments, latest mentor progress, and items ready for instructor review. This queue does not write back to Zammad.</p>
+      <p class="muted">Review student assignments, latest mentor progress, and items ready for instructor review. Use Prepare Writeback to load the selected assignment into the controlled writeback form above.</p>
       <button onclick="loadReviewQueue()">Refresh Review Queue</button>
       <div id="reviewQueueSummary" class="muted" style="margin-top: 12px;"></div>
       <div id="reviewQueue" style="margin-top: 12px;"></div>
     </div>
 
-  </header>
-
-  <main>
     <section class="search-card">
       <label for="ticketNumber">Zammad Ticket Number</label>
       <div class="row">
@@ -316,7 +340,7 @@
 
       <section class="section">
         <h2>Ticket Articles</h2>
-        <p class="muted">Displayed for instructor review only. No data is written back to Zammad from this panel.</p>
+        <p class="muted">Displayed for instructor review only.</p>
         <div id="articlesList"></div>
       </section>
     </section>
@@ -395,7 +419,6 @@
         button.textContent = 'Fetch Mentor Guidance';
       }
     }
-
 
     async function fetchLlmGuidance() {
       clearError();
@@ -508,7 +531,7 @@
 
         detail.innerHTML = `
           <summary>
-            Article ${index + 1} — ${escapeHtml(article.sender || '-')} — ${escapeHtml(article.from || '-')} — ${escapeHtml(article.created_at || '-')}
+            Article ${index + 1} - ${escapeHtml(article.sender || '-')} - ${escapeHtml(article.from || '-')} - ${escapeHtml(article.created_at || '-')}
           </summary>
           <div class="article-body">
             ${article.body || ''}
@@ -562,6 +585,8 @@
         const sessionText = item.latest_session_id
           ? `Session: ${escapeHtml(item.latest_session_id)}`
           : 'Session: none yet';
+        const canPrepare = item.review_state === 'ready_for_instructor_review' || item.review_state === 'needs_instructor_review';
+        const zammadLabel = item.zammad_ticket_number || 'not linked';
 
         return `
           <div class="source">
@@ -573,19 +598,46 @@
               Review: ${escapeHtml(item.review_state || '-')}
             </p>
             <p>
-              Zammad: ${escapeHtml(item.zammad_ticket_number || 'not linked')} |
+              Assignment ID: ${escapeHtml(item.assignment_id || '-')}<br />
+              Zammad: ${escapeHtml(zammadLabel)} |
               Next action: ${escapeHtml(item.latest_next_action || 'none yet')} |
               Progress: ${escapeHtml(item.latest_progress_status || 'none yet')} |
               Risk: ${escapeHtml(item.latest_risk_level || 'none yet')}
             </p>
             <p class="muted">${sessionText}</p>
+            <button
+              class="small-button"
+              ${canPrepare ? '' : 'disabled'}
+              data-assignment-id="${escapeHtml(item.assignment_id || '')}"
+              data-zammad-ticket-id="${escapeHtml(item.zammad_ticket_id || '')}"
+              data-zammad-ticket-number="${escapeHtml(item.zammad_ticket_number || '')}"
+              onclick="prepareWritebackFromButton(this)">
+              Prepare Writeback
+            </button>
           </div>
         `;
       }).join('');
     }
 
+    function prepareWritebackFromButton(button) {
+      const assignmentId = button.getAttribute('data-assignment-id') || '';
+      const zammadTicketId = button.getAttribute('data-zammad-ticket-id') || '';
+      const zammadTicketNumber = button.getAttribute('data-zammad-ticket-number') || '';
 
-    loadReviewQueue();
+      document.getElementById('approvalAssignmentId').value = assignmentId;
+      document.getElementById('approvalZammadTicketId').value = zammadTicketId;
+
+      const result = document.getElementById('writebackResult');
+      result.innerHTML = `
+        <p><strong>Selected assignment for writeback.</strong></p>
+        <p>Assignment ID: ${escapeHtml(assignmentId || '-')}</p>
+        <p>Zammad ticket number: ${escapeHtml(zammadTicketNumber || '-')}</p>
+        <p class="muted">Paste the instructor-approved note, then click Approve & Write to Zammad.</p>
+      `;
+
+      document.getElementById('writebackCard').scrollIntoView({behavior: 'smooth', block: 'start'});
+      document.getElementById('approvedWritebackText').focus();
+    }
 
     async function approveZammadWriteback() {
       const result = document.getElementById('writebackResult');
@@ -598,11 +650,6 @@
         return;
       }
 
-      if (!zammadTicketId) {
-        result.innerHTML = '<p class="error">Numeric Zammad Ticket ID is required.</p>';
-        return;
-      }
-
       if (!approvedText) {
         result.innerHTML = '<p class="error">Approved note text is required.</p>';
         return;
@@ -611,13 +658,15 @@
       result.textContent = 'Submitting one-time approved writeback...';
 
       try {
+        const payload = {approved_text: approvedText};
+        if (zammadTicketId) {
+          payload.zammad_ticket_id = zammadTicketId;
+        }
+
         const response = await fetch(`/review/queue/${encodeURIComponent(assignmentId)}/approve`, {
           method: 'POST',
           headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({
-            zammad_ticket_id: zammadTicketId,
-            approved_text: approvedText
-          })
+          body: JSON.stringify(payload)
         });
 
         const data = await response.json();
@@ -627,11 +676,13 @@
         }
 
         result.innerHTML = `
-          <p><strong>Writeback approved.</strong></p>
-          <p>Assignment status: ${escapeHtml(data.assignment?.status || '-')}</p>
-          <p>Zammad article ID: ${escapeHtml(String(data.zammad_writeback?.article_id || '-'))}</p>
-          <p>Payload hash: ${escapeHtml(data.payload_hash || '-')}</p>
-          <p class="muted">Zammad ticket state was not changed.</p>
+          <div class="success-box">
+            <p><strong>Writeback approved.</strong></p>
+            <p>Assignment status: ${escapeHtml(data.assignment?.status || '-')}</p>
+            <p>Zammad article ID: ${escapeHtml(String(data.zammad_writeback?.article_id || '-'))}</p>
+            <p>Payload hash: ${escapeHtml(data.payload_hash || '-')}</p>
+            <p class="muted">Zammad ticket state was not changed.</p>
+          </div>
         `;
 
         loadReviewQueue();
@@ -640,7 +691,7 @@
       }
     }
 
-
+    loadReviewQueue();
   </script>
 </body>
 </html>
