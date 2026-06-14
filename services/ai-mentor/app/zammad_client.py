@@ -87,12 +87,8 @@ def get_ticket(ticket_id: int) -> Dict[str, Any]:
 def search_ticket_by_number(ticket_number: str) -> List[Dict[str, Any]]:
     result = zammad_get(
         "/api/v1/tickets/search",
-        params={
-            "query": f"number:{ticket_number}",
-            "expand": "true",
-        },
+        params={"query": f"number:{ticket_number}", "expand": "true"},
     )
-
     return normalize_ticket_search_result(result)
 
 
@@ -116,11 +112,7 @@ def normalize_ticket_search_result(result: Any) -> List[Dict[str, Any]]:
 def search_tickets(query: str, limit: int = 20) -> List[Dict[str, Any]]:
     result = zammad_get(
         "/api/v1/tickets/search",
-        params={
-            "query": query,
-            "limit": limit,
-            "expand": "true",
-        },
+        params={"query": query, "limit": limit, "expand": "true"},
     )
     return normalize_ticket_search_result(result)
 
@@ -155,14 +147,8 @@ def get_student_tickets(zammad_login: str, limit: int = 25) -> List[Dict[str, An
     if not login:
         return []
 
-    queries = [
-        f"owner:{login}",
-        f"customer:{login}",
-        f"{login}",
-    ]
-
+    queries = [f"owner:{login}", f"customer:{login}", f"{login}"]
     tickets_by_id: Dict[str, Dict[str, Any]] = {}
-    errors: List[str] = []
 
     for query in queries:
         try:
@@ -170,23 +156,17 @@ def get_student_tickets(zammad_login: str, limit: int = 25) -> List[Dict[str, An
                 identity = ticket_identity(ticket)
                 if identity:
                     tickets_by_id[identity] = ticket
-        except ZammadClientError as exc:
-            errors.append(str(exc))
+        except ZammadClientError:
             continue
 
     tickets = [normalize_student_ticket(ticket) for ticket in tickets_by_id.values()]
     tickets.sort(key=lambda item: str(item.get("updated_at") or ""), reverse=True)
-
     return tickets[:limit]
 
 
 def get_ticket_by_number(ticket_number: str) -> Dict[str, Any]:
     matches = search_ticket_by_number(ticket_number)
-
-    exact_matches = [
-        ticket for ticket in matches
-        if str(ticket.get("number")) == str(ticket_number)
-    ]
+    exact_matches = [ticket for ticket in matches if str(ticket.get("number")) == str(ticket_number)]
 
     if not exact_matches:
         raise ZammadClientError(f"No Zammad ticket found for ticket number {ticket_number}.")
@@ -206,10 +186,8 @@ def get_ticket_articles(ticket_id: int) -> List[Dict[str, Any]]:
 
     if isinstance(result, list):
         return result
-
     if isinstance(result, dict) and "articles" in result:
         return result["articles"]
-
     return []
 
 
@@ -268,6 +246,55 @@ def zammad_post(path: str, payload: dict) -> Any:
         return {}
 
     return response.json()
+
+
+def create_zammad_ticket(
+    *,
+    title: str,
+    customer: str,
+    body: str,
+    group: str | None = None,
+    priority: str = "2 normal",
+    state: str = "new",
+    tags: Optional[List[str]] = None,
+) -> Dict[str, Any]:
+    if not title.strip():
+        raise ZammadClientError("Cannot create a Zammad ticket without a title.")
+    if not customer.strip():
+        raise ZammadClientError("Cannot create a Zammad ticket without a customer.")
+    if not body.strip():
+        raise ZammadClientError("Cannot create a Zammad ticket without a body.")
+
+    payload: Dict[str, Any] = {
+        "title": title.strip(),
+        "group": group or os.getenv("ZAMMAD_DEFAULT_GROUP", "Users"),
+        "customer": customer.strip(),
+        "state": state,
+        "priority": priority,
+        "article": {
+            "subject": title.strip(),
+            "body": body.strip(),
+            "type": "note",
+            "internal": False,
+            "content_type": "text/plain",
+        },
+    }
+
+    if tags:
+        payload["tags"] = tags
+
+    result = zammad_post("/api/v1/tickets", payload)
+
+    return {
+        "id": result.get("id"),
+        "number": result.get("number"),
+        "title": result.get("title") or title,
+        "group": result.get("group") or payload.get("group"),
+        "customer": result.get("customer") or customer,
+        "state": result.get("state") or state,
+        "priority": result.get("priority") or priority,
+        "url": f"{get_zammad_web_url()}/#ticket/zoom/{result.get('id')}" if get_zammad_web_url() and result.get("id") else "",
+    }
 
 
 def create_zammad_ticket_note(ticket_id: int, body: str) -> Dict[str, Any]:
