@@ -5,18 +5,36 @@
   "difficulty": "intermediate",
   "ticket_type": "training",
   "status": "active",
-  "summary": "Student investigates asymmetric reachability or return-path failure involving VLAN 1.",
-  "student_goal": "Determine whether traffic can leave but return traffic is blocked, misrouted, or on the wrong VLAN path.",
+  "summary": "Student investigates asymmetric reachability or return-path failure involving VLAN 1 using path evidence before recommending any change.",
+  "student_goal": "Determine whether traffic can leave the source network but return traffic is blocked, misrouted, or using an unexpected VLAN 1 path.",
   "mentor_mode": "guided_troubleshooting",
   "trigger_terms": ["ticket-005", "vlan1", "vlan 1", "return path", "asymmetric routing", "cannot reply", "one way traffic"],
   "required_evidence": [
-    {"id": "source_destination", "label": "Source and destination", "description": "Student must identify the source, destination, and expected path."},
-    {"id": "forward_path", "label": "Forward path evidence", "description": "Student must document whether traffic leaves the source network."},
-    {"id": "return_path", "label": "Return path evidence", "description": "Student must document whether replies return correctly."}
+    {"id": "source_destination", "label": "Source and destination", "description": "Student must identify the source IP, destination IP, expected gateway, and expected VLAN/path."},
+    {"id": "forward_path", "label": "Forward path evidence", "description": "Student must document whether traffic leaves the source network using ping, traceroute, route table, ARP, interface counter, or equivalent evidence."},
+    {"id": "return_path", "label": "Return path evidence", "description": "Student must document whether replies return correctly or identify the point where return traffic appears to fail."},
+    {"id": "no_unsafe_changes", "label": "No unauthorized network changes", "description": "Student must state whether any configuration changes were made. VLAN, gateway, or switch changes require instructor approval before implementation."}
   ],
-  "opening_questions": ["What source and destination are you testing?", "Does traffic fail in both directions or only on the return path?", "Which VLANs and gateways are involved?"],
-  "completion_signals": ["return path restored", "asymmetric path identified", "VLAN 1 path issue documented"],
-  "mentor_guidance_rules": ["Do not treat one-way failure as simple host downtime.", "Ask for both forward and return path evidence.", "Confirm VLAN and gateway assumptions before suggesting changes."],
-  "student_visible": {"allowed": ["student_goal", "opening_questions", "required_evidence labels", "path-tracing reminders"], "blocked": ["undocumented routing changes", "mentor-only topology assumptions"]},
+  "student_workflow": [
+    "Open the Zammad ticket and identify the reported source, destination, and symptom.",
+    "Open ARIA AI Mentor and load the assigned ticket.",
+    "Collect source IP, destination IP, gateway, VLAN, route, and reachability evidence.",
+    "Do not change VLANs, gateways, trunk/access settings, or switch configuration unless the instructor explicitly authorizes the change.",
+    "Submit findings and recommended next step to ARIA for validation."
+  ],
+  "opening_questions": [
+    "What source and destination are you testing?",
+    "What is the expected VLAN and gateway path?",
+    "Does traffic fail in both directions or only on the return path?",
+    "What evidence shows where the return path fails?"
+  ],
+  "completion_signals": ["return path restored", "asymmetric path identified", "VLAN 1 path issue documented", "safe recommendation submitted"],
+  "mentor_guidance_rules": [
+    "Do not treat one-way failure as simple host downtime.",
+    "Ask for both forward and return path evidence.",
+    "Confirm VLAN and gateway assumptions before suggesting changes.",
+    "Do not recommend production network changes without instructor approval."
+  ],
+  "student_visible": {"allowed": ["student_goal", "opening_questions", "required_evidence labels", "path-tracing reminders", "no-change safety boundary"], "blocked": ["undocumented routing changes", "mentor-only topology assumptions", "blind VLAN changes"]},
   "next_actions": {"missing_evidence": "request_more_evidence", "complete": "validation_complete", "unclear": "manual_review"}
 }
