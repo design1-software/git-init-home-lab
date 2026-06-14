@@ -1,4 +1,6 @@
 from datetime import datetime, timezone
+from html import unescape
+import re
 from typing import Any
 from uuid import uuid4
 
@@ -32,6 +34,26 @@ from app.zammad_client import (
 )
 
 router = APIRouter()
+
+
+def clean_zammad_text(value: str) -> str:
+    text = str(value or "")
+    text = re.sub(r"<\s*br\s*/?\s*>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"</\s*(div|p|li|tr|h[1-6])\s*>", "\n", text, flags=re.IGNORECASE)
+    text = re.sub(r"<[^>]+>", "", text)
+    text = unescape(text)
+    text = text.replace("\r\n", "\n").replace("\r", "\n")
+    text = re.sub(r"[ \t]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
+def lab_ticket_id_from_template(lab_template: dict[str, Any], fallback: str) -> str:
+    template_id = str(lab_template.get("template_id") or "")
+    match = re.search(r"ticket-(\d{1,3})", template_id)
+    if match:
+        return match.group(1).zfill(3)
+    return str(fallback or "").strip()
 
 
 def build_student_kb_query(request: AnalyzeTicketRequest) -> str:
@@ -83,8 +105,8 @@ def build_student_safe_response(response: AnalyzeTicketResponse) -> dict[str, An
 def article_text_for_student(articles: list[dict]) -> str:
     safe_parts = []
     for article in articles:
-        body = str(article.get("body") or "").strip()
-        subject = str(article.get("subject") or "").strip()
+        body = clean_zammad_text(str(article.get("body") or ""))
+        subject = clean_zammad_text(str(article.get("subject") or ""))
         if subject or body:
             safe_parts.append("\n".join(part for part in [subject, body] if part))
     return "\n\n".join(safe_parts).strip()
@@ -103,11 +125,13 @@ def build_ticket_context(ticket: dict, articles: list[dict], username: str) -> d
     ticket_summary = summarize_ticket_for_mentor(ticket, articles)
     ticket_meta = ticket_summary.get("ticket", {})
     profile = get_student_profile(username)
-    title = str(ticket_meta.get("title") or "")
+    title = clean_zammad_text(str(ticket_meta.get("title") or ""))
     body = article_text_for_student(articles) or title
-    kb_query = f"{ticket_meta.get('number')} {title} {body}"
+    zammad_number = str(ticket_meta.get("number") or ticket_meta.get("id") or "")
+    kb_query = f"{zammad_number} {title} {body}"
     lab_template = build_lab_template_context(match_lab_template(kb_query))
-    return {"zammad_ticket": ticket_summary, "student_profile": profile, "mentor_prefill": {"ticket_id": str(ticket_meta.get("number") or ticket_meta.get("id") or ""), "ticket_title": title, "ticket_body": body, "domain": lab_template.get("domain") or "helpdesk", "difficulty": lab_template.get("difficulty") or "beginner"}, "lab_template": lab_template, "workflow": build_student_workflow(profile, lab_template)}
+    mentor_ticket_id = lab_ticket_id_from_template(lab_template, zammad_number)
+    return {"zammad_ticket": ticket_summary, "student_profile": profile, "mentor_prefill": {"ticket_id": mentor_ticket_id, "zammad_ticket_number": zammad_number, "ticket_title": title, "ticket_body": body, "domain": lab_template.get("domain") or "helpdesk", "difficulty": lab_template.get("difficulty") or "beginner"}, "lab_template": lab_template, "workflow": build_student_workflow(profile, lab_template)}
 
 
 def build_evidence_guidance(lab_template: dict[str, Any], profile: dict[str, Any]) -> dict[str, Any]:
@@ -221,8 +245,8 @@ def get_zammad_ticket_context_by_number(ticket_number: str, request: Request, us
 @router.post("/mentor/student/evidence-guidance")
 def mentor_student_evidence_guidance(payload: dict, user: dict = Depends(require_roles("admin", "instructor", "student"))) -> dict:
     ticket_id = str(payload.get("ticket_id") or "").strip()
-    title = str(payload.get("ticket_title") or "").strip()
-    body = str(payload.get("ticket_body") or "").strip()
+    title = clean_zammad_text(str(payload.get("ticket_title") or ""))
+    body = clean_zammad_text(str(payload.get("ticket_body") or ""))
     kb_query = f"{ticket_id} {title} {body}".strip()
     lab_template = build_lab_template_context(match_lab_template(kb_query))
     profile = get_student_profile(str(user.get("username") or ""))
