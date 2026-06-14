@@ -17,164 +17,36 @@
       --danger: #ef4444;
       --border: #374151;
     }
-
     * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-    }
-
-    header {
-      padding: 24px;
-      border-bottom: 1px solid var(--border);
-      background: #020617;
-    }
-
-    header h1 {
-      margin: 0 0 8px;
-      font-size: 28px;
-    }
-
-    header p {
-      margin: 0;
-      color: var(--muted);
-    }
-
-    main {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 24px;
-    }
-
-    .section {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-
-    label {
-      display: block;
-      font-weight: bold;
-      margin: 14px 0 8px;
-    }
-
-    input, textarea, select {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: #020617;
-      color: var(--text);
-      font-size: 16px;
-    }
-
-    textarea {
-      min-height: 120px;
-      resize: vertical;
-    }
-
-    button {
-      margin-top: 16px;
-      padding: 12px 18px;
-      border: 0;
-      border-radius: 8px;
-      background: var(--accent);
-      color: #020617;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 16px;
-    }
-
-    button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
-    }
-
-    .metric, .source, .evidence-item {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px;
-    }
-
-    .metric .label {
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 6px;
-    }
-
-    .metric .value {
-      font-size: 17px;
-      font-weight: bold;
-      overflow-wrap: anywhere;
-    }
-
-    .badge {
-      display: inline-block;
-      padding: 5px 10px;
-      border-radius: 999px;
-      font-size: 13px;
-      font-weight: bold;
-      background: var(--card);
-      border: 1px solid var(--border);
-    }
-
-    .badge.success {
-      background: rgba(34, 197, 94, 0.12);
-      color: #86efac;
-      border-color: rgba(34, 197, 94, 0.45);
-    }
-
-    .badge.warning {
-      background: rgba(245, 158, 11, 0.12);
-      color: #fcd34d;
-      border-color: rgba(245, 158, 11, 0.45);
-    }
-
-    .mentor-response {
-      white-space: pre-wrap;
-      background: #020617;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
-      overflow-x: auto;
-    }
-
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+    header { padding: 24px; border-bottom: 1px solid var(--border); background: #020617; }
+    header h1 { margin: 0 0 8px; font-size: 28px; }
+    header p { margin: 0; color: var(--muted); }
+    main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+    .section { background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    label { display: block; font-weight: bold; margin: 14px 0 8px; }
+    input, textarea, select { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border); background: #020617; color: var(--text); font-size: 16px; }
+    textarea { min-height: 120px; resize: vertical; }
+    button { margin-top: 16px; margin-right: 8px; padding: 12px 18px; border: 0; border-radius: 8px; background: var(--accent); color: #020617; font-weight: bold; cursor: pointer; font-size: 16px; }
+    button.secondary { background: #334155; color: var(--text); border: 1px solid var(--border); }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .metric, .source, .evidence-item, .ticket-card, .workflow-item, .draft-box { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+    .metric .label { color: var(--muted); font-size: 13px; margin-bottom: 6px; }
+    .metric .value { font-size: 17px; font-weight: bold; overflow-wrap: anywhere; }
+    .badge { display: inline-block; padding: 5px 10px; border-radius: 999px; font-size: 13px; font-weight: bold; background: var(--card); border: 1px solid var(--border); }
+    .badge.success { background: rgba(34, 197, 94, 0.12); color: #86efac; border-color: rgba(34, 197, 94, 0.45); }
+    .badge.warning { background: rgba(245, 158, 11, 0.12); color: #fcd34d; border-color: rgba(245, 158, 11, 0.45); }
+    .mentor-response, .draft-box { white-space: pre-wrap; background: #020617; border: 1px solid var(--border); border-radius: 10px; padding: 16px; overflow-x: auto; }
     .muted { color: var(--muted); }
     .hidden { display: none; }
-
-    .error {
-      color: #fecaca;
-      background: rgba(239, 68, 68, 0.12);
-      border: 1px solid rgba(239, 68, 68, 0.45);
-      padding: 12px;
-      border-radius: 10px;
-      margin-top: 12px;
-    }
-
-    .notice {
-      color: #bfdbfe;
-      background: rgba(59, 130, 246, 0.12);
-      border: 1px solid rgba(59, 130, 246, 0.45);
-      padding: 12px;
-      border-radius: 10px;
-      margin-top: 12px;
-    }
-
-    .source { margin-bottom: 10px; }
-    .evidence-item { margin-bottom: 10px; }
+    .error { color: #fecaca; background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.45); padding: 12px; border-radius: 10px; margin-top: 12px; }
+    .notice { color: #bfdbfe; background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.45); padding: 12px; border-radius: 10px; margin-top: 12px; }
+    .ticket-card { margin-bottom: 10px; cursor: pointer; }
+    .ticket-card:hover { border-color: var(--accent); }
+    .ticket-title { font-weight: bold; }
+    .source, .evidence-item, .workflow-item { margin-bottom: 10px; }
+    .small { font-size: 13px; }
   </style>
 </head>
 <body>
@@ -188,14 +60,30 @@
       <div class="grid">
         <div class="metric"><div class="label">Signed in as</div><div class="value" id="userValue">Loading...</div></div>
         <div class="metric"><div class="label">Role</div><div class="value" id="roleValue">-</div></div>
+        <div class="metric"><div class="label">Linux Lab</div><div class="value" id="linuxValue">-</div></div>
       </div>
-      <div class="notice">Student safety rule: submit the evidence you collected. Do not paste passwords, API keys, private tokens, or unrelated personal information.</div>
+      <div class="notice">Student safety rule: submit the evidence you collected. Do not paste secrets or unrelated personal information.</div>
       <button onclick="logout()">Log Out</button>
     </section>
 
     <section class="section">
-      <h2>Ask ARIA for Lab Guidance</h2>
-      <p class="muted">Use this for ARIA help desk ticket labs and evidence-based troubleshooting practice.</p>
+      <h2>1. My Assigned Zammad Tickets</h2>
+      <p class="muted">Start here. Load your Zammad tickets, then click the ticket you are working.</p>
+      <button onclick="loadTickets()">Load My Zammad Tickets</button>
+      <div id="ticketList" style="margin-top: 16px;"></div>
+      <div id="ticketError" class="error hidden"></div>
+    </section>
+
+    <section id="workflowPanel" class="section hidden">
+      <h2>2. Student Workflow</h2>
+      <p class="muted">This tells you what to open and where to do the actual work.</p>
+      <div id="workflowList"></div>
+      <div id="targetSystems"></div>
+    </section>
+
+    <section class="section">
+      <h2>3. Ask ARIA for Lab Guidance</h2>
+      <p class="muted">Load a Zammad ticket above or enter a lab manually. Questions and evidence are separate on purpose.</p>
 
       <label for="ticketId">Ticket or Lab ID</label>
       <input id="ticketId" value="001" placeholder="Example: 001" />
@@ -206,10 +94,14 @@
       <label for="ticketBody">Scenario</label>
       <textarea id="ticketBody">Client is connected to WiFi but websites are not loading.</textarea>
 
-      <label for="studentEvidence">Evidence You Collected</label>
-      <textarea id="studentEvidence" placeholder="Paste commands, observations, test results, error messages, or your current findings. Leave blank if you need ARIA to tell you what evidence to collect next."></textarea>
+      <button class="secondary" onclick="getEvidenceGuidance()">What Evidence Do I Need?</button>
+      <div id="evidenceGuidancePanel" class="notice hidden"></div>
 
-      <button id="submitButton" onclick="submitGuidance()">Get Mentor Guidance</button>
+      <label for="studentEvidence">Evidence You Collected</label>
+      <textarea id="studentEvidence" placeholder="Paste actual command output, observations, test results, or error messages. Do not paste plans like 'I will run nslookup.' Paste what actually happened after you ran the test."></textarea>
+
+      <button id="submitButton" onclick="submitGuidance()">Validate My Evidence</button>
+      <button class="secondary" onclick="draftFinalNote()">Draft Final Zammad Note</button>
       <div id="errorBox" class="error hidden"></div>
     </section>
 
@@ -241,26 +133,27 @@
         <div id="sourcesList"></div>
       </section>
     </section>
+
+    <section id="draftPanel" class="section hidden">
+      <h2>Draft Final Zammad Note</h2>
+      <p class="muted">Copy this into Zammad after student/instructor review. This does not write to Zammad.</p>
+      <div id="draftNote" class="draft-box"></div>
+    </section>
   </main>
 
   <script>
+    let currentUser = null;
+    let currentProfile = null;
+    let lastMentorResult = null;
+
     function escapeHtml(value) {
-      return String(value ?? '')
-        .replaceAll('&', '&amp;')
-        .replaceAll('<', '&lt;')
-        .replaceAll('>', '&gt;')
-        .replaceAll('"', '&quot;')
-        .replaceAll("'", '&#039;');
+      return String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;').replaceAll("'", '&#039;');
     }
 
     function statusBadge(value) {
       const normalized = String(value || '').toLowerCase();
-      if (normalized === 'validation_complete' || normalized === 'low') {
-        return '<span class="badge success">' + escapeHtml(value) + '</span>';
-      }
-      if (normalized.includes('evidence') || normalized.includes('review') || normalized === 'medium') {
-        return '<span class="badge warning">' + escapeHtml(value) + '</span>';
-      }
+      if (normalized === 'validation_complete' || normalized === 'low') return '<span class="badge success">' + escapeHtml(value) + '</span>';
+      if (normalized.includes('evidence') || normalized.includes('review') || normalized === 'medium') return '<span class="badge warning">' + escapeHtml(value) + '</span>';
       return '<span class="badge">' + escapeHtml(value || '-') + '</span>';
     }
 
@@ -279,16 +172,20 @@
     async function loadUser() {
       try {
         const response = await fetch('/auth/me');
-        if (!response.ok) {
-          window.location.href = '/login';
-          return;
-        }
-        const user = await response.json();
-        document.getElementById('userValue').textContent = user.display_name || user.username || '-';
-        document.getElementById('roleValue').textContent = user.role || '-';
-      } catch (error) {
-        showError(error.message || String(error));
-      }
+        if (!response.ok) { window.location.href = '/login'; return; }
+        currentUser = await response.json();
+        document.getElementById('userValue').textContent = currentUser.display_name || currentUser.username || '-';
+        document.getElementById('roleValue').textContent = currentUser.role || '-';
+        await loadProfile();
+      } catch (error) { showError(error.message || String(error)); }
+    }
+
+    async function loadProfile() {
+      const response = await fetch('/student/profile');
+      if (!response.ok) return;
+      const data = await response.json();
+      currentProfile = data.profile || {};
+      document.getElementById('linuxValue').textContent = currentProfile.linux_ssh || '-';
     }
 
     async function logout() {
@@ -296,13 +193,78 @@
       window.location.href = '/login';
     }
 
-    async function submitGuidance() {
-      clearError();
-      const button = document.getElementById('submitButton');
-      button.disabled = true;
-      button.textContent = 'Thinking...';
+    async function loadTickets() {
+      const list = document.getElementById('ticketList');
+      const error = document.getElementById('ticketError');
+      error.classList.add('hidden');
+      error.textContent = '';
+      list.innerHTML = '<p class="muted">Loading tickets...</p>';
+      try {
+        const response = await fetch('/student/zammad/tickets');
+        if (!response.ok) throw new Error((await response.json()).detail || 'Could not load Zammad tickets.');
+        const data = await response.json();
+        if (!data.tickets.length) {
+          list.innerHTML = '<p class="muted">No assigned tickets were found. Instructor may need to assign/create a Zammad ticket first.</p>';
+          return;
+        }
+        list.innerHTML = '';
+        data.tickets.forEach((ticket) => {
+          const div = document.createElement('div');
+          div.className = 'ticket-card';
+          div.onclick = () => loadTicketContext(ticket.id);
+          div.innerHTML = `<div class="ticket-title">#${escapeHtml(ticket.number)} - ${escapeHtml(ticket.title)}</div><div class="muted small">State: ${escapeHtml(ticket.state || '-')} | Priority: ${escapeHtml(ticket.priority || '-')} | Updated: ${escapeHtml(ticket.updated_at || '-')}</div>`;
+          list.appendChild(div);
+        });
+      } catch (err) {
+        list.innerHTML = '';
+        error.textContent = err.message || String(err);
+        error.classList.remove('hidden');
+      }
+    }
 
-      const payload = {
+    async function loadTicketContext(ticketId) {
+      clearError();
+      const response = await fetch(`/student/zammad/tickets/${ticketId}/context`);
+      if (!response.ok) { showError((await response.json()).detail || 'Could not load ticket context.'); return; }
+      const data = await response.json();
+      const prefill = data.mentor_prefill || {};
+      document.getElementById('ticketId').value = prefill.ticket_id || '';
+      document.getElementById('ticketTitle').value = prefill.ticket_title || '';
+      document.getElementById('ticketBody').value = prefill.ticket_body || '';
+      renderWorkflow(data.workflow || {}, data.lab_template || {});
+      await getEvidenceGuidance();
+      window.scrollTo({top: 0, behavior: 'smooth'});
+    }
+
+    function renderWorkflow(workflow, labTemplate) {
+      document.getElementById('workflowPanel').classList.remove('hidden');
+      const list = document.getElementById('workflowList');
+      list.innerHTML = '<h3>What to Open</h3>';
+      (workflow.what_to_open || []).forEach((item) => {
+        const div = document.createElement('div');
+        div.className = 'workflow-item';
+        div.textContent = item;
+        list.appendChild(div);
+      });
+      list.innerHTML += '<h3>Student Steps</h3>';
+      (workflow.student_steps || []).forEach((item) => {
+        const div = document.createElement('div');
+        div.className = 'workflow-item';
+        div.textContent = item;
+        list.appendChild(div);
+      });
+      const targets = document.getElementById('targetSystems');
+      targets.innerHTML = '<h3>Assigned Target System</h3>';
+      (workflow.target_systems || []).forEach((target) => {
+        const div = document.createElement('div');
+        div.className = 'workflow-item';
+        div.innerHTML = `<strong>${escapeHtml(target.name || 'Target')}</strong><br /><span class="muted">${escapeHtml(target.access || '')}</span><br /><span class="muted">${escapeHtml(target.purpose || '')}</span>`;
+        targets.appendChild(div);
+      });
+    }
+
+    function currentPayload() {
+      return {
         ticket_id: document.getElementById('ticketId').value.trim(),
         student: 'current-user',
         domain: 'helpdesk',
@@ -311,26 +273,39 @@
         ticket_body: document.getElementById('ticketBody').value.trim(),
         student_evidence: document.getElementById('studentEvidence').value.trim()
       };
+    }
 
+    async function getEvidenceGuidance() {
+      clearError();
+      const panel = document.getElementById('evidenceGuidancePanel');
+      panel.classList.remove('hidden');
+      panel.textContent = 'Loading evidence guidance...';
       try {
-        const response = await fetch('/mentor/student/analyze-ticket', {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-          const errorPayload = await response.json().catch(() => ({}));
-          throw new Error(errorPayload.detail || `Request failed with status ${response.status}`);
-        }
-
-        renderResult(await response.json());
-      } catch (error) {
-        showError(error.message || String(error));
-      } finally {
-        button.disabled = false;
-        button.textContent = 'Get Mentor Guidance';
+        const response = await fetch('/mentor/student/evidence-guidance', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(currentPayload()) });
+        if (!response.ok) throw new Error((await response.json()).detail || 'Could not load evidence guidance.');
+        const data = await response.json();
+        const guidance = data.guidance || {};
+        const required = (guidance.required_evidence || []).map((item) => `- ${item.label || item.id}: ${item.description || item.prompt || ''}`).join('\n') || '- No specific evidence checklist returned.';
+        const windows = (guidance.windows_commands || []).map((cmd) => `  ${cmd}`).join('\n');
+        const linux = (guidance.linux_commands || []).map((cmd) => `  ${cmd}`).join('\n');
+        panel.textContent = `${guidance.message || ''}\n\nRequired evidence:\n${required}\n\nWindows commands, if this is a Windows target:\n${windows || '  None listed'}\n\nLinux commands, if this is a Linux target:\n${linux || '  None listed'}\n\nSafety: ${guidance.safety_rule || ''}`;
+      } catch (err) {
+        panel.textContent = err.message || String(err);
       }
+    }
+
+    async function submitGuidance() {
+      clearError();
+      const button = document.getElementById('submitButton');
+      button.disabled = true;
+      button.textContent = 'Validating...';
+      try {
+        const response = await fetch('/mentor/student/analyze-ticket', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(currentPayload()) });
+        if (!response.ok) throw new Error((await response.json()).detail || `Request failed with status ${response.status}`);
+        lastMentorResult = await response.json();
+        renderResult(lastMentorResult);
+      } catch (error) { showError(error.message || String(error)); }
+      finally { button.disabled = false; button.textContent = 'Validate My Evidence'; }
     }
 
     function renderResult(data) {
@@ -338,11 +313,9 @@
       document.getElementById('nextActionValue').innerHTML = statusBadge(data.next_action);
       document.getElementById('riskValue').innerHTML = statusBadge(data.risk_level);
       document.getElementById('mentorResponse').textContent = data.mentor_response || '';
-
       const template = data.lab_template || {};
-      document.getElementById('templateValue').textContent = template.matched ? `${template.template_id} — ${template.title}` : 'No template matched';
+      document.getElementById('templateValue').textContent = template.matched ? `${template.template_id} - ${template.title}` : 'No template matched';
       document.getElementById('domainValue').textContent = template.domain || '-';
-
       renderRequiredEvidence(template.required_evidence || []);
       renderSources(data.retrieved_sources || []);
     }
@@ -350,12 +323,7 @@
     function renderRequiredEvidence(items) {
       const container = document.getElementById('requiredEvidenceList');
       container.innerHTML = '';
-
-      if (!items.length) {
-        container.innerHTML = '<p class="muted">No required evidence checklist returned.</p>';
-        return;
-      }
-
+      if (!items.length) { container.innerHTML = '<p class="muted">No required evidence checklist returned.</p>'; return; }
       items.forEach((item) => {
         const div = document.createElement('div');
         div.className = 'evidence-item';
@@ -367,18 +335,27 @@
     function renderSources(sources) {
       const container = document.getElementById('sourcesList');
       container.innerHTML = '';
-
-      if (!sources.length) {
-        container.innerHTML = '<p class="muted">No sources returned.</p>';
-        return;
-      }
-
+      if (!sources.length) { container.innerHTML = '<p class="muted">No sources returned.</p>'; return; }
       sources.forEach((source) => {
         const div = document.createElement('div');
         div.className = 'source';
         div.textContent = source;
         container.appendChild(div);
       });
+    }
+
+    async function draftFinalNote() {
+      clearError();
+      try {
+        const payload = currentPayload();
+        payload.mentor_response = lastMentorResult ? lastMentorResult.mentor_response : '';
+        payload.next_action = lastMentorResult ? lastMentorResult.next_action : '';
+        const response = await fetch('/mentor/student/draft-final-note', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload) });
+        if (!response.ok) throw new Error((await response.json()).detail || 'Could not draft final note.');
+        const data = await response.json();
+        document.getElementById('draftPanel').classList.remove('hidden');
+        document.getElementById('draftNote').textContent = data.draft_note || '';
+      } catch (err) { showError(err.message || String(err)); }
     }
 
     loadUser();
